@@ -3,6 +3,19 @@ on:
   push:
     tags:
       - 'v*' # Trigger on version tags like v1.0.0
+  # allow manual runs from Actions UI
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v1.2.3). If omitted, workflow will use current tag or release payload.'
+        required: false
+  # also allow triggering when a GitHub Release is published via the UI
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -34,20 +47,37 @@ jobs:
           chmod +x ./scripts/build.sh
           ./scripts/build.sh
 
+      - name: Set artifact names
+        id: set_names
+        run: |
+          version=$(node -e "try{console.log(require('./package.json').version||'')}catch(e){console.log('')}" ) || version=""
+          if [ -z "$version" ]; then
+            echo "ERROR: cannot read version from package.json" >&2
+            exit 1
+          fi
+          echo "ART_TAR=dreamview-frontend-${version}.tar.gz" >> $GITHUB_ENV
+          echo "ART_SHA=dreamview-frontend-${version}.tar.gz.sha256" >> $GITHUB_ENV
+
       - name: Upload build artifact (tar)
         uses: actions/upload-artifact@v4
         with:
           name: dreamview-frontend-tar
           path: |
-            dreamview-frontend.tar.gz
-            dreamview-frontend.tar.gz.sha256
+            ${{ env.ART_TAR }}
+            ${{ env.ART_SHA }}
 
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
+          # prefer release payload tag, then tag ref, then manual input
+          tag_name: ${{ github.event.release.tag_name || github.ref_name || github.event.inputs.tag }}
+          name: ${{ github.event.release.tag_name || github.ref_name || github.event.inputs.tag }}
           files: |
-            dreamview-frontend.tar.gz
-            dreamview-frontend.tar.gz.sha256
+            ${{ env.ART_TAR }}
+            ${{ env.ART_SHA }}
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   verify:
     needs: build
@@ -72,7 +102,8 @@ jobs:
       - name: Unpack artifact
         run: |
           mkdir -p unpack
-          tar -xzf artifact/dreamview-frontend.tar.gz -C unpack
+          # Support both versioned and unversioned tarball names
+          tar -xzf artifact/*.tar.gz -C unpack
 
       - name: Serve dist and smoke test
         run: |

@@ -8,15 +8,18 @@ echo "Installing dependencies..."
 if [ -f yarn.lock ]; then
   if command -v yarn >/dev/null 2>&1; then
     yarn install --frozen-lockfile
+    BUILD_CMD="yarn build"
   else
-    npm ci
+    echo "ERROR: yarn.lock exists but 'yarn' command not found. Please enable Corepack or install Yarn and retry." >&2
+    exit 1
   fi
 else
   npm ci
+  BUILD_CMD="npm run build"
 fi
 
 echo "Building production bundle..."
-npm run build
+${BUILD_CMD}
 
 echo "Packing dist, proto_bundle and BUILD into dreamview-frontend.tar.gz..."
 
