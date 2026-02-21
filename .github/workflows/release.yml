@@ -1,0 +1,30 @@
+name: Build and Release Frontend
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on version tags like v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install and Build
+        run: |
+          npm ci
+          npm run build
+          npm run pack-dist
+
+      - name: Calculate SHA256
+        run: sha256sum dreamview-frontend.tar.gz > dreamview-frontend.tar.gz.sha256
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dreamview-frontend.tar.gz
+            dreamview-frontend.tar.gz.sha256
