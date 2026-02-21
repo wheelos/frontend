@@ -1,0 +1,11 @@
+node_modules
+.git
+.github
+dist
+dist_offline
+.env
+.env.*
+.cache
+yarn-error.log
+npm-debug.log
+coverage

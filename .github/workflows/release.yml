@@ -11,16 +11,36 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
 
-      - name: Install and Build
+      - name: Enable Corepack and pin Yarn
         run: |
-          npm ci
-          npm run build
-          npm run pack-dist
+          corepack enable
+          corepack prepare yarn@1.22.22 --activate
 
-      - name: Calculate SHA256
-        run: sha256sum dreamview-frontend.tar.gz > dreamview-frontend.tar.gz.sha256
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/yarn
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-deps-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deps-
+
+      - name: Build and Pack
+        run: |
+          chmod +x ./scripts/build.sh
+          ./scripts/build.sh
+
+      - name: Upload build artifact (tar)
+        uses: actions/upload-artifact@v4
+        with:
+          name: dreamview-frontend-tar
+          path: |
+            dreamview-frontend.tar.gz
+            dreamview-frontend.tar.gz.sha256
 
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -28,3 +48,35 @@ jobs:
           files: |
             dreamview-frontend.tar.gz
             dreamview-frontend.tar.gz.sha256
+
+  verify:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Enable Corepack and pin Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@1.22.22 --activate
+
+      - name: Restore artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dreamview-frontend-tar
+          path: ./artifact
+
+      - name: Unpack artifact
+        run: |
+          mkdir -p unpack
+          tar -xzf artifact/dreamview-frontend.tar.gz -C unpack
+
+      - name: Serve dist and smoke test
+        run: |
+          cd unpack/dist
+          nohup npx http-server -p 8081 -c-1 >/tmp/http-server.log 2>&1 &
+          sleep 2
+          curl -I http://localhost:8081 | head -n 5

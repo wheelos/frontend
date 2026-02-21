@@ -115,4 +115,11 @@
   "plugins": [
     "react"
   ]
+  ,
+  "extends": ["airbnb"],
+  "settings": {
+    "import/resolver": {
+      "webpack": "webpack.config.js"
+    }
+  }
 }

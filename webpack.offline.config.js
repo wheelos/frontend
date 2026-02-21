@@ -6,6 +6,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const FaviconsWebpackPlugin = require("favicons-webpack-plugin");
 const ProgressBarPlugin = require("progress-bar-webpack-plugin");
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const ESLintPlugin = require('eslint-webpack-plugin');
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = {
@@ -51,22 +52,30 @@ module.exports = {
                 test: /\.js$/,
                 exclude: /node_modules/,
                 use: [
-                    {
-                        loader: "babel-loader",
-                        options: {
-                            // Use env so that async/await are available.
-                            presets: ["env", "stage-0", "react"],
-                            // Enable decorators for mobx.
-                            plugins: ["transform-decorators-legacy",
-                                      "transform-runtime"],
+                        {
+                            loader: "babel-loader",
+                            options: {
+                                presets: [
+                                    '@babel/preset-env',
+                                    '@babel/preset-react'
+                                ],
+                                plugins: [
+                                    ['@babel/plugin-proposal-decorators', { legacy: true }],
+                                    '@babel/plugin-proposal-class-properties',
+                                    '@babel/plugin-proposal-optional-chaining',
+                                    [
+                                      '@babel/plugin-transform-modules-commonjs',
+                                      { allowTopLevelThis: true }
+                                    ],
+                                    [
+                                      'import',
+                                      { libraryName: 'antd', libraryDirectory: 'es', style: true },
+                                      'antd'
+                                    ],
+                                ].filter(Boolean),
+                            }
                         }
-                    }
-                ],
-            }, {
-                // Run eslint. See .eslinrc for configuration.
-                test: /\.js$/,
-                enforce: "pre",
-                loader: "eslint-loader",
+                    ],
             }, {
                 test: /\.yml$/,
                 exclude: /node_modules/,
@@ -201,6 +210,11 @@ module.exports = {
                 to: 'fonts',
             }
         ]),
+        new ESLintPlugin({
+            fix: true,
+            lintDirtyModulesOnly: true,
+            extensions: ['js', 'jsx'],
+        }),
         // As of moment 2.18, all locales are bundled together with the core library
         // use the IgnorePlugin to stop any locale being bundled with moment:
         new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
@@ -221,12 +235,16 @@ module.exports = {
     ],
 
     devServer: {
-        contentBase: path.join(__dirname, "src"),
+        client: { progress: true },
+        static: {
+            directory: path.join(__dirname, 'src'),
+            watch: true,
+        },
         host: '0.0.0.0',
         port: 8080,
         // Ask react-router instead of the server to handle routes.
         historyApiFallback: true,
-        disableHostCheck: true
+        compress: true,
     },
 
     // Disable the warning of large size bundle files.

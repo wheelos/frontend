@@ -14,7 +14,7 @@ const pointCloudMessage = pointCloudRoot.lookupType('apollo.dreamview.PointCloud
 
 self.addEventListener('message', (event) => {
   let message = null;
-  const data = event.data.data;
+  const { data } = event.data;
   switch (event.data.source) {
     case 'realtime':
       if (typeof data === 'string') {
@@ -38,15 +38,11 @@ self.addEventListener('message', (event) => {
       if (typeof data === 'string') {
         message = JSON.parse(data);
       } else {
-        message = pointCloudMessage.toObject(
-          pointCloudMessage.decode(new Uint8Array(data)), { arrays: true },
-        );
+        message = pointCloudMessage.toObject(pointCloudMessage.decode(new Uint8Array(data)), { arrays: true });
       }
       break;
     case 'camera':
-      message = cameraMessage.toObject(
-        cameraMessage.decode(new Uint8Array(data)), { enums: String },
-      );
+      message = cameraMessage.toObject(cameraMessage.decode(new Uint8Array(data)), { enums: String });
       message.type = 'CameraData';
       break;
     case 'teleop':
