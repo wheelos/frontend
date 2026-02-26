@@ -6,6 +6,7 @@ import Header from 'components/Header';
 import MainView from 'components/Layouts/MainView';
 import ToolView from 'components/Layouts/ToolView';
 import MonitorPanel from 'components/Layouts/MonitorPanel';
+import MultiCameraWorkspace from 'components/MultiCameraWorkspace';
 import SideBar from 'components/SideBar';
 
 import ApplicationGuideModal from 'components/ApplicationGuideModal';
@@ -76,6 +77,7 @@ export default class Dreamview extends React.Component {
   render() {
     const { dimension, options, hmi } = this.props.store;
     const { currentVehicleType } = hmi;
+    const { multiCameraWorkspace } = this.props.store;
 
     return (
             <div>
@@ -105,6 +107,7 @@ export default class Dreamview extends React.Component {
                 // When the current vehicle is dkit series, the safety pop-up is displayed
                 (currentVehicleType > 0 && currentVehicleType <= 7) &&
                 <ApplicationGuideModal />}
+              {multiCameraWorkspace.isOpen && <MultiCameraWorkspace />}
             </div>
     );
   }

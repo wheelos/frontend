@@ -8,6 +8,7 @@ import Dimension from 'store/dimension';
 import Latency from 'store/latency';
 import Meters from 'store/meters';
 import Monitor from 'store/monitor';
+import MultiCameraWorkspaceStore from 'store/multi_camera_workspace';
 import Options from 'store/options';
 import PlanningData from 'store/planning_data';
 import Playback from 'store/playback';
@@ -55,6 +56,8 @@ class DreamviewStore {
     @observable teleop = new Teleop();
 
     @observable dimension = new Dimension(this.hmi, this.options);
+
+    @observable multiCameraWorkspace = new MultiCameraWorkspaceStore();
 
     @observable newDisengagementReminder = false;
 
