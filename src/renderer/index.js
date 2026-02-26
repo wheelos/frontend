@@ -18,6 +18,7 @@ import Routing from 'renderer/routing.js';
 import RoutingEditor from 'renderer/routing_editor.js';
 import Gnss from 'renderer/gnss.js';
 import PointCloud from 'renderer/point_cloud.js';
+import LocalizationHistory from 'renderer/localization_history.js';
 
 const _ = require('lodash');
 
@@ -88,6 +89,9 @@ class Renderer {
     this.gnss = new Gnss();
 
     this.pointCloud = new PointCloud();
+
+    // Localization history & pose visualization
+    this.localizationHistory = new LocalizationHistory();
 
     this.checkPoints = OFFLINE_PLAYBACK && new CheckPoints(this.coordinates, this.scene);
 
@@ -497,6 +501,7 @@ class Renderer {
     this.updateRouting(world.routingTime, world.routePath);
     this.gnss.update(world, this.coordinates, this.scene);
     this.map.update(world);
+    this.localizationHistory.update(world, this.coordinates, this.scene);
 
     const planningAdcPose = _.get(world, 'planningData.initPoint.pathPoint');
     if (this.planningAdc && planningAdcPose) {

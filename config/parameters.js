@@ -276,6 +276,10 @@ module.exports = {
       default: false,
       menuId: 'positionShadow',
     },
+    showPoseHistory: {
+      default: false,
+      menuId: 'positionPoseHistory',
+    },
     showMapCrosswalk: {
       default: true,
       menuId: 'mapCrosswalk',

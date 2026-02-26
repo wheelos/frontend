@@ -88,6 +88,7 @@ export default [
       positionLocalization: 'Localization',
       positionGps: 'GPS',
       positionShadow: 'Shadow',
+      positionPoseHistory: 'Pose History',
     },
     supportInOfflineView: true,
   },
