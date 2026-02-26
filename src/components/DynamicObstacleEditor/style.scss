@@ -1,0 +1,162 @@
+.dynamic-obstacle-editor {
+  min-width: 280px;
+  max-width: 360px;
+
+  .editor-tip {
+    padding: 6px 10px;
+    font-size: 12px;
+    color: #aaa;
+    background-color: #1a1f24;
+    border-left: 3px solid #FF6600;
+    margin-bottom: 8px;
+  }
+
+  .obstacles-list {
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  .obstacle-card {
+    background-color: #1D2226;
+    border: 1px solid #333;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    padding: 8px;
+
+    &.editing {
+      border-color: #00FF88;
+    }
+
+    .obstacle-card-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+
+      .obstacle-id {
+        flex: 1;
+        font-size: 12px;
+        color: #ccc;
+      }
+
+      .obstacle-state {
+        font-size: 11px;
+        font-weight: bold;
+        margin-right: 8px;
+      }
+
+      .remove-btn {
+        background: none;
+        border: none;
+        color: #888;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 0 4px;
+
+        &:hover {
+          color: #fff;
+        }
+      }
+    }
+
+    .obstacle-card-body {
+      font-size: 12px;
+      color: #ccc;
+    }
+  }
+
+  .field-row,
+  .trigger-type-row,
+  .trigger-param-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+
+    .field-label {
+      min-width: 90px;
+      color: #aaa;
+      font-size: 12px;
+    }
+
+    select,
+    input[type='number'] {
+      background-color: #2a3238;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-size: 12px;
+      flex: 1;
+    }
+  }
+
+  .trigger-config {
+    margin: 4px 0 6px;
+    padding: 4px 0;
+    border-top: 1px solid #2a3238;
+  }
+
+  .path-section {
+    border-top: 1px solid #2a3238;
+    padding-top: 6px;
+    margin-top: 4px;
+
+    .path-header {
+      margin-bottom: 4px;
+    }
+
+    .path-actions {
+      display: flex;
+      gap: 6px;
+    }
+  }
+
+  .action-btn {
+    flex: 1;
+    padding: 4px 8px;
+    font-size: 11px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    color: #fff;
+
+    &.edit-path-btn {
+      background-color: #1C5080;
+
+      &:hover:not(:disabled) {
+        background-color: #1e6aab;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    &.confirm-path-btn {
+      background-color: #1C6344;
+
+      &:hover {
+        background-color: #1e8057;
+      }
+    }
+
+    &.remove-last-btn {
+      background-color: #5a3010;
+
+      &:hover {
+        background-color: #7a4018;
+      }
+    }
+  }
+
+  .editor-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+
+    .add-obstacle-btn,
+    .send-btn {
+      flex: 1;
+    }
+  }
+}

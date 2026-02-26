@@ -97,6 +97,12 @@ export default class RealtimeWebSocketEndpoint {
             this.requestRoutePath();
             this.routingTime = message.routingTime;
           }
+          if (message.dynamicObstacle && message.dynamicObstacle.length > 0) {
+            STORE.dynamicObstacleManager.updateFromWorld(message.dynamicObstacle);
+            RENDERER.updateDynamicObstacles(
+              STORE.dynamicObstacleManager.obstacles.slice()
+            );
+          }
           break;
         case 'MapElementIds':
           RENDERER.updateMapIndex(message.mapHash,
@@ -562,4 +568,16 @@ export default class RealtimeWebSocketEndpoint {
     }
     this.websocket.send(JSON.stringify(request));
   }
-}
+
+  sendDynamicObstacleConfig(obstacles) {
+    this.websocket.send(JSON.stringify({
+      type: 'SetDynamicObstacles',
+      obstacles,
+    }));
+  }
+
+  requestDynamicObstacleStates() {
+    this.websocket.send(JSON.stringify({
+      type: 'GetDynamicObstacleStates',
+    }));
+  }

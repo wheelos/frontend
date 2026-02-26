@@ -7,6 +7,7 @@ import Menu from 'components/SideBar/Menu';
 import DefaultRouting from 'components/DefaultRouting';
 import DataProfile from 'components/DataProfile';
 import Tasks from 'components/Tasks';
+import DynamicObstacleEditor from 'components/DynamicObstacleEditor';
 
 @inject('store') @observer
 export default class ToolView extends React.Component {
@@ -37,6 +38,7 @@ export default class ToolView extends React.Component {
                   newDisengagementReminder={newDisengagementReminder}
                 />
               )}
+              {options.showDynamicObstacleEditor && <DynamicObstacleEditor />}
             </div>
     );
   }
