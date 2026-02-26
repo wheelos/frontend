@@ -99,6 +99,8 @@ options:
     default: false
   showProfile:
     default: false
+  showDynamicObstacleEditor:
+    default: false
 
   # task panel options
   showPNCMonitor:

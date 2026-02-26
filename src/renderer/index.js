@@ -18,6 +18,7 @@ import Routing from 'renderer/routing.js';
 import RoutingEditor from 'renderer/routing_editor.js';
 import Gnss from 'renderer/gnss.js';
 import PointCloud from 'renderer/point_cloud.js';
+import DynamicObstacleRenderer from 'renderer/dynamic_obstacles.js';
 
 const _ = require('lodash');
 
@@ -90,6 +91,9 @@ class Renderer {
     this.pointCloud = new PointCloud();
 
     this.checkPoints = OFFLINE_PLAYBACK && new CheckPoints(this.coordinates, this.scene);
+
+    // Dynamic obstacle editor / renderer
+    this.dynamicObstacleRenderer = new DynamicObstacleRenderer();
 
     // The Performance Monitor
     this.stats = null;
@@ -610,6 +614,58 @@ class Renderer {
   checkCycleRoutingAvailable(points, threshold) {
     return this.routingEditor.checkCycleRoutingAvailable(points,
       this.adc.mesh.position, threshold);
+  }
+
+  // ---- Dynamic obstacle editor methods ------------------------------------
+
+  enableDynamicObstacleEditing(obstacleId) {
+    this.enableOrbitControls(false);
+    this.dynamicObstacleRenderer.enableEditing(
+      obstacleId, this.camera, this.coordinates, this.scene,
+    );
+    this._dynObsMouseDownHandler = (event) => {
+      this._onDynObsMouseDown(event);
+    };
+    document.getElementById(this.canvasId).addEventListener(
+      'mousedown', this._dynObsMouseDownHandler, false,
+    );
+  }
+
+  disableDynamicObstacleEditing(obstacleId) {
+    this.dynamicObstacleRenderer.disableEditing(this.scene);
+    const element = document.getElementById(this.canvasId);
+    if (element && this._dynObsMouseDownHandler) {
+      element.removeEventListener('mousedown', this._dynObsMouseDownHandler, false);
+      this._dynObsMouseDownHandler = null;
+    }
+  }
+
+  getDynamicObstacleTrajectoryPoints(obstacleId) {
+    return this.dynamicObstacleRenderer.getEditingPathPoints();
+  }
+
+  removeLastDynamicObstaclePoint(obstacleId) {
+    this.dynamicObstacleRenderer.removeLastPathPoint(this.scene);
+  }
+
+  updateDynamicObstacles(obstacles) {
+    this.dynamicObstacleRenderer.update(obstacles, this.coordinates, this.scene);
+  }
+
+  _onDynObsMouseDown(event) {
+    if (event.target && !_.isEqual('CANVAS', event.target.tagName)) {
+      return;
+    }
+    if (event.button !== THREE.MOUSE.LEFT) {
+      return;
+    }
+    if (!this.coordinates.isInitialized() || !this.ground.mesh) {
+      return;
+    }
+    const geo = this.getGeolocation(event);
+    if (geo) {
+      this.dynamicObstacleRenderer.addPathPoint(geo, this.scene);
+    }
   }
 }
 

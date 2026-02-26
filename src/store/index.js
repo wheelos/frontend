@@ -15,6 +15,7 @@ import RouteEditingManager from 'store/route_editing_manager';
 import StoryTellers from 'store/story_tellers';
 import Teleop from 'store/teleop';
 import TrafficSignal from 'store/traffic_signal';
+import DynamicObstacleManager from 'store/dynamic_obstacle_manager';
 
 class DreamviewStore {
     // Mutable States
@@ -43,6 +44,8 @@ class DreamviewStore {
     @observable options = new Options();
 
     @observable routeEditingManager = new RouteEditingManager();
+
+    @observable dynamicObstacleManager = new DynamicObstacleManager();
 
     @observable geolocation = {};
 
@@ -110,6 +113,9 @@ class DreamviewStore {
       }
       if (oldShowRouteEditingBar && !this.options.showRouteEditingBar) {
         this.routeEditingManager.disableRouteEditing();
+      }
+      if (!this.options.showDynamicObstacleEditor && this.dynamicObstacleManager.isEditing) {
+        this.dynamicObstacleManager.stopEditing();
       }
 
       // enable selected tool
