@@ -1783,6 +1783,39 @@ body {
       }
     }
   }
+
+  .saved-routes-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 5px 10px;
+    background: #252c33;
+    border-top: 1px solid #000000;
+
+    .no-routes-msg {
+      color: #999999;
+      font-size: 13px;
+      padding: 5px 10px;
+    }
+
+    .saved-route-item {
+      margin: 4px 6px;
+      padding: 5px 12px;
+      border: 1px solid #555555;
+      background: #1D2226;
+      color: #D8D8D8;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 3px;
+
+      &:hover {
+        background: #2A3238;
+        color: #FFFFFF;
+        border-color: #888888;
+      }
+    }
+  }
 }
 
 .data-recorder {

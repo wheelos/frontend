@@ -2,6 +2,7 @@ import React from 'react';
 import { inject, observer } from 'mobx-react';
 
 import EditingTip from 'components/RouteEditingBar/EditingTip';
+import SavedRoutesList from 'components/RouteEditingBar/SavedRoutesList';
 
 import removeAllIcon from 'assets/images/routing/remove_all.png';
 import removeLastIcon from 'assets/images/routing/remove_last.png';
@@ -9,6 +10,7 @@ import sendRouteIcon from 'assets/images/routing/send_request.png';
 import addPoiIcon from 'assets/images/routing/add_poi.png';
 import inDefaultRoutingModeIcon from 'assets/images/routing/in_default_routing_mode.png';
 import exitDefaultRoutingModeIcon from 'assets/images/routing/exit_default_routing_mode.png';
+import loadRouteIcon from 'assets/images/icons/download.png';
 
 class RouteEditingButton extends React.Component {
   render() {
@@ -63,6 +65,20 @@ export default class RouteEditingMenu extends React.Component {
                         }}
                     />
                     <RouteEditingButton
+                        label="Save Route"
+                        icon={inDefaultRoutingModeIcon}
+                        onClick={() => {
+                          options.showDefaultRoutingInput = true;
+                        }}
+                    />
+                    <RouteEditingButton
+                        label="Load Route"
+                        icon={loadRouteIcon}
+                        onClick={() => {
+                          options.showSavedRoutesList = !options.showSavedRoutesList;
+                        }}
+                    />
+                    <RouteEditingButton
                         label="Add Default Routing"
                         icon={routeEditingManager.inDefaultRoutingMode
                           ? exitDefaultRoutingModeIcon : inDefaultRoutingModeIcon}
@@ -78,6 +94,11 @@ export default class RouteEditingMenu extends React.Component {
                     />
                     <EditingTip />
                 </div>
+                {options.showSavedRoutesList
+                  && <SavedRoutesList
+                    routeEditingManager={routeEditingManager}
+                    options={options}
+                  />}
             </div>
     );
   }
