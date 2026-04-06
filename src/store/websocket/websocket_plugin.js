@@ -24,6 +24,14 @@ export default class PluginWebSocketEndpoint {
       }
       this.websocket = new WebSocket(this.serverAddr);
       this.websocket.binaryType = 'arraybuffer';
+
+      this.websocket.onopen = () => {
+        // Silent parallel load on open without waiting for cert status
+        this.checkCertificate();
+        this.getScenarioSetList();
+        this.getDynamicsModelList();
+        this.getRecordList();
+      };
     } catch (error) {
       console.error(`Failed to establish a connection: ${error}`);
       setTimeout(() => {
@@ -47,23 +55,27 @@ export default class PluginWebSocketEndpoint {
 
         switch (message.data.name) {
           case 'StudioConnectorCertStatus':
-            const status = JSON.parse(message.data.info ?? '{}').status;
-            if (status === 'OK') {
-              this.getScenarioSetList();
-              this.getDynamicsModelList();
-              this.getRecordList();
-            }
+            const { status } = JSON.parse(message.data.info ?? '{}');
             STORE.studioConnector.checkCertificate(status);
             break;
           // Get Scenario Set Info Success
           case 'GetScenarioSetListSuccess':
-            STORE.studioConnector.updateRemoteScenarioSetList(
-              JSON.parse(message.data.info ?? '{}'));
+            const remoteScenariosMap = JSON.parse(message.data.info ?? '{}');
+            STORE.studioConnector.updateRemoteScenarioSetList(remoteScenariosMap);
+            // Optionally, transform to marketScenarios if needed for new UI
+            if (!remoteScenariosMap.error_msg) {
+              const marketList = Object.keys(remoteScenariosMap).map((scenarioSetId) => {
+                const scenarioSet = remoteScenariosMap[scenarioSetId];
+                return { id: scenarioSetId, name: scenarioSet.name, status: scenarioSet.status };
+              });
+              STORE.scenarioStore.setMarketScenarios(marketList);
+            }
             break;
-          // Get Scenario Set Info Failed
+            // Get Scenario Set Info Failed
+
           case 'GetScenarioSetListFail':
             STORE.studioConnector.updateRemoteScenarioSetList(
-              JSON.parse(message.data.info ?? '{}')
+              JSON.parse(message.data.info ?? '{}'),
             );
             break;
           case 'DownloadScenarioSetSuccess':
@@ -81,11 +93,12 @@ export default class PluginWebSocketEndpoint {
             break;
           case 'GetDynamicModelListSuccess':
             STORE.studioConnector.updateRemoteDynamicsModelList(
-              JSON.parse(message.data.info ?? '{}'));
+              JSON.parse(message.data.info ?? '{}'),
+            );
             break;
           case 'GetDynamicModelListFail':
             STORE.studioConnector.updateRemoteDynamicsModelList(
-              JSON.parse(message.data.info ?? '{}')
+              JSON.parse(message.data.info ?? '{}'),
             );
             break;
           case 'DownloadDynamicModelSuccess':
@@ -103,11 +116,12 @@ export default class PluginWebSocketEndpoint {
             break;
           case 'GetRecordsListSuccess':
             STORE.studioConnector.updateRemoteRecordsList(
-              JSON.parse(message.data.info ?? '{}'));
+              JSON.parse(message.data.info ?? '{}'),
+            );
             break;
           case 'GetRecordListFail':
             STORE.studioConnector.updateRemoteRecordsList(
-              JSON.parse(message.data.info ?? '{}')
+              JSON.parse(message.data.info ?? '{}'),
             );
             break;
           // 下载record成功
@@ -150,29 +164,28 @@ export default class PluginWebSocketEndpoint {
     this.websocket.send(JSON.stringify({
       type: 'PluginRequest',
       data: {
-        'name': 'CheckCertStatus',
-        'source': 'dreamview',
-        'info': '',
-        'target': 'studio_connector',
-        'source_type': 'module',
-        'target_type': 'plugins',
-      }
+        name: 'CheckCertStatus',
+        source: 'dreamview',
+        info: '',
+        target: 'studio_connector',
+        source_type: 'module',
+        target_type: 'plugins',
+      },
     }));
     return this;
   }
-
 
   getScenarioSetList() {
     this.websocket.send(JSON.stringify({
       type: 'PluginRequest',
       data: {
-        'name': 'GetScenarioSetList',
-        'source': 'dreamview',
-        'info': '',
-        'target': 'studio_connector',
-        'source_type': 'module',
-        'target_type': 'plugins',
-      }
+        name: 'GetScenarioSetList',
+        source: 'dreamview',
+        info: '',
+        target: 'studio_connector',
+        source_type: 'module',
+        target_type: 'plugins',
+      },
     }));
     return this;
   }
@@ -181,13 +194,13 @@ export default class PluginWebSocketEndpoint {
     this.websocket.send(JSON.stringify({
       type: 'PluginRequest',
       data: {
-        'name': 'DownloadScenarioSet',
-        'source': 'dreamview',
-        'info': scenarioSetId,
-        'target': 'studio_connector',
-        'source_type': 'module',
-        'target_type': 'plugins',
-      }
+        name: 'DownloadScenarioSet',
+        source: 'dreamview',
+        info: scenarioSetId,
+        target: 'studio_connector',
+        source_type: 'module',
+        target_type: 'plugins',
+      },
     }));
     return this;
   }
@@ -197,13 +210,13 @@ export default class PluginWebSocketEndpoint {
     this.websocket.send(JSON.stringify({
       type: 'PluginRequest',
       data: {
-        'name': 'DownloadRecord',
-        'source': 'dreamview',
-        'info': id,
-        'target': 'studio_connector',
-        'source_type': 'module',
-        'target_type': 'plugins',
-      }
+        name: 'DownloadRecord',
+        source: 'dreamview',
+        info: id,
+        target: 'studio_connector',
+        source_type: 'module',
+        target_type: 'plugins',
+      },
     }));
     return this;
   }
@@ -213,13 +226,13 @@ export default class PluginWebSocketEndpoint {
     this.websocket.send(JSON.stringify({
       type: 'PluginRequest',
       data: {
-        'name': 'GetDynamicModelList',
-        'source': 'dreamview',
-        'info': '',
-        'target': 'studio_connector',
-        'source_type': 'module',
-        'target_type': 'plugins',
-      }
+        name: 'GetDynamicModelList',
+        source: 'dreamview',
+        info: '',
+        target: 'studio_connector',
+        source_type: 'module',
+        target_type: 'plugins',
+      },
     }));
     return this;
   }
@@ -229,13 +242,13 @@ export default class PluginWebSocketEndpoint {
     this.websocket.send(JSON.stringify({
       type: 'PluginRequest',
       data: {
-        'name': 'DownloadDynamicModel',
-        'source': 'dreamview',
-        'info': modelName,
-        'target': 'studio_connector',
-        'source_type': 'module',
-        'target_type': 'plugins',
-      }
+        name: 'DownloadDynamicModel',
+        source: 'dreamview',
+        info: modelName,
+        target: 'studio_connector',
+        source_type: 'module',
+        target_type: 'plugins',
+      },
     }));
     return this;
   }
@@ -245,13 +258,13 @@ export default class PluginWebSocketEndpoint {
     this.websocket.send(JSON.stringify({
       type: 'PluginRequest',
       data: {
-        'name': 'GetRecordsList',
-        'source': 'dreamview',
-        'info': '',
-        'target': 'studio_connector',
-        'source_type': 'module',
-        'target_type': 'plugins',
-      }
+        name: 'GetRecordsList',
+        source: 'dreamview',
+        info: '',
+        target: 'studio_connector',
+        source_type: 'module',
+        target_type: 'plugins',
+      },
     }));
     return this;
   }
@@ -260,13 +273,13 @@ export default class PluginWebSocketEndpoint {
     this.websocket.send(JSON.stringify({
       type: 'PluginRequest',
       data: {
-        'name': 'GetVehicleInfo',
-        'source': 'dreamview',
-        'info': '',
-        'target': 'studio_connector',
-        'source_type': 'module',
-        'target_type': 'plugins',
-      }
+        name: 'GetVehicleInfo',
+        source: 'dreamview',
+        info: '',
+        target: 'studio_connector',
+        source_type: 'module',
+        target_type: 'plugins',
+      },
     }));
     return this;
   }
@@ -278,13 +291,13 @@ export default class PluginWebSocketEndpoint {
     this.websocket.send(JSON.stringify({
       type: 'PluginRequest',
       data: {
-        'name': 'RefreshVehicleConfig',
-        'source': 'dreamview',
-        'info': vehicle_id,
-        'target': 'studio_connector',
-        'source_type': 'module',
-        'target_type': 'plugins',
-      }
+        name: 'RefreshVehicleConfig',
+        source: 'dreamview',
+        info: vehicle_id,
+        target: 'studio_connector',
+        source_type: 'module',
+        target_type: 'plugins',
+      },
     }));
     return new Promise((resolve, reject) => {
       this.worker.addEventListener('message', (event) => {
@@ -299,8 +312,7 @@ export default class PluginWebSocketEndpoint {
               break;
           }
         }
-      },
-      );
+      });
     });
   }
 
@@ -309,15 +321,15 @@ export default class PluginWebSocketEndpoint {
    */
   resetVehicleConfig(vehicle_id) {
     this.websocket.send(JSON.stringify({
-      'type': 'PluginRequest',
-      'data': {
-        'name': 'ResetVehicleConfig',
-        'source': 'dreamview',
-        'info': vehicle_id,
-        'target': 'studio_connector',
-        'source_type': 'module',
-        'target_type': 'plugins'
-      }
+      type: 'PluginRequest',
+      data: {
+        name: 'ResetVehicleConfig',
+        source: 'dreamview',
+        info: vehicle_id,
+        target: 'studio_connector',
+        source_type: 'module',
+        target_type: 'plugins',
+      },
     }));
     return new Promise((resolve, reject) => {
       this.worker.addEventListener('message', (event) => {
@@ -332,9 +344,7 @@ export default class PluginWebSocketEndpoint {
               break;
           }
         }
-      },
-
-      );
+      });
     });
   }
 
@@ -343,15 +353,15 @@ export default class PluginWebSocketEndpoint {
    */
   uploadVehicleConfig(vehicle_id) {
     this.websocket.send(JSON.stringify({
-      'type': 'PluginRequest',
-      'data': {
-        'name': 'UploadVehicleConfig',
-        'source': 'dreamview',
-        'info': vehicle_id,
-        'target': 'studio_connector',
-        'source_type': 'module',
-        'target_type': 'plugins'
-      }
+      type: 'PluginRequest',
+      data: {
+        name: 'UploadVehicleConfig',
+        source: 'dreamview',
+        info: vehicle_id,
+        target: 'studio_connector',
+        source_type: 'module',
+        target_type: 'plugins',
+      },
     }));
     return new Promise((resolve, reject) => {
       this.worker.addEventListener(
@@ -368,7 +378,8 @@ export default class PluginWebSocketEndpoint {
                 break;
             }
           }
-        },);
+        },
+      );
     });
   }
 
@@ -377,13 +388,13 @@ export default class PluginWebSocketEndpoint {
     this.websocket.send(JSON.stringify({
       type: 'PluginRequest',
       data: {
-        'name': 'GetV2xInfo',
-        'source': 'dreamview',
-        'info': '',
-        'target': 'studio_connector',
-        'source_type': 'module',
-        'target_type': 'plugins',
-      }
+        name: 'GetV2xInfo',
+        source: 'dreamview',
+        info: '',
+        target: 'studio_connector',
+        source_type: 'module',
+        target_type: 'plugins',
+      },
     }));
     return new Promise((resolve, reject) => {
       this.worker.addEventListener('message', (event) => {
@@ -398,8 +409,7 @@ export default class PluginWebSocketEndpoint {
               break;
           }
         }
-      },
-      );
+      });
     });
   }
 
@@ -408,13 +418,13 @@ export default class PluginWebSocketEndpoint {
     this.websocket.send(JSON.stringify({
       type: 'PluginRequest',
       data: {
-        'name': 'RefreshV2xConf',
-        'source': 'dreamview',
-        'info': v2xId,
-        'target': 'studio_connector',
-        'source_type': 'module',
-        'target_type': 'plugins',
-      }
+        name: 'RefreshV2xConf',
+        source: 'dreamview',
+        info: v2xId,
+        target: 'studio_connector',
+        source_type: 'module',
+        target_type: 'plugins',
+      },
     }));
     return new Promise((resolve, reject) => {
       this.worker.addEventListener('message', (event) => {
@@ -429,8 +439,7 @@ export default class PluginWebSocketEndpoint {
               break;
           }
         }
-      },
-      );
+      });
     });
   }
 
@@ -439,13 +448,13 @@ export default class PluginWebSocketEndpoint {
     this.websocket.send(JSON.stringify({
       type: 'PluginRequest',
       data: {
-        'name': 'ResetV2xConf',
-        'source': 'dreamview',
-        'info': v2xId,
-        'target': 'studio_connector',
-        'source_type': 'module',
-        'target_type': 'plugins',
-      }
+        name: 'ResetV2xConf',
+        source: 'dreamview',
+        info: v2xId,
+        target: 'studio_connector',
+        source_type: 'module',
+        target_type: 'plugins',
+      },
     }));
     return new Promise((resolve, reject) => {
       this.worker.addEventListener('message', (event) => {
@@ -460,8 +469,7 @@ export default class PluginWebSocketEndpoint {
               break;
           }
         }
-      },
-      );
+      });
     });
   }
 
@@ -470,13 +478,13 @@ export default class PluginWebSocketEndpoint {
     this.websocket.send(JSON.stringify({
       type: 'PluginRequest',
       data: {
-        'name': 'UploadV2xConf',
-        'source': 'dreamview',
-        'info': v2xId,
-        'target': 'studio_connector',
-        'source_type': 'module',
-        'target_type': 'plugins',
-      }
+        name: 'UploadV2xConf',
+        source: 'dreamview',
+        info: v2xId,
+        target: 'studio_connector',
+        source_type: 'module',
+        target_type: 'plugins',
+      },
     }));
     return new Promise((resolve, reject) => {
       this.worker.addEventListener('message', (event) => {
@@ -491,8 +499,7 @@ export default class PluginWebSocketEndpoint {
               break;
           }
         }
-      },
-      );
+      });
     });
   }
 }

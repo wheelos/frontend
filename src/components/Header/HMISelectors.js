@@ -9,7 +9,6 @@ import { toJS } from 'mobx';
 @inject('store') @observer
 export default class HMISelectors extends React.Component {
   render() {
-
     const {
       dockerImage,
       modes, currentMode,
@@ -19,46 +18,49 @@ export default class HMISelectors extends React.Component {
       isMute,
     } = this.props.store.hmi;
 
-    const enableSimControl = this.props.store.options.enableSimControl;
+    const { enableSimControl } = this.props.store.options;
 
     const {
       scenarioSet,
       currentScenarioSetId,
-      currentScenarioId
+      currentScenarioId,
     } = this.props.store.studioConnector;
 
     const currentScenarioSet = scenarioSet.find(
-      scenarioSetItem => scenarioSetItem.scenarioSetId === currentScenarioSetId
+      (scenarioSetItem) => scenarioSetItem.scenarioSetId === currentScenarioSetId,
     ) || {};
 
     return (
-            <React.Fragment>
-                <Selector
-                    name="setup mode"
-                    options={modes}
-                    currentOption={currentMode}
-                    onChange={(event) => {
-                      WS.changeSetupMode(event.target.value);
-                    }}
-                />
-                <Selector
-                    name="vehicle"
-                    options={vehicles}
-                    currentOption={currentVehicle}
-                    onChange={(event) => {
-                      WS.changeVehicle(event.target.value);
-                    }}
-                />
-                <Selector
-                    name="map"
-                    options={maps}
-                    currentOption={currentMap}
-                    onChange={(event) => {
-                      WS.changeMap(event.target.value);
-                    }}
-                />
-              {
-                (enableSimControl
+      <>
+        <Selector
+          name="setup mode"
+          options={modes}
+          currentOption={currentMode}
+          onChange={(event) => {
+            WS.changeSetupMode(event.target.value);
+          }}
+        />
+        <Selector
+          name="vehicle"
+          options={vehicles}
+          currentOption={currentVehicle}
+          onChange={(event) => {
+            WS.changeVehicle(event.target.value);
+          }}
+        />
+        <Selector
+          name="map"
+          options={maps}
+          currentOption={currentMap}
+          onChange={(event) => {
+            WS.changeMap(event.target.value);
+          }}
+        />
+      </>
+    );
+  }
+}
+ntrol
                   && currentScenarioSet.scenarios
                   && currentScenarioSet.scenarios.length > 0)
                 && (

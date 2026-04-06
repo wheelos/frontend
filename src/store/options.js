@@ -21,6 +21,7 @@ export default class Options {
     constructor() {
       this.cameraAngleNames = null;
       this.mainSideBarOptions = [
+        'showScenarioControl',
         'showTasks',
         'showModuleController',
         'showMenu',
@@ -60,6 +61,7 @@ export default class Options {
 
     @computed get showTools() {
       return this.showTasks
+               || this.showScenarioControl
                || this.showModuleController
                || this.showMenu
                || this.showPOI
@@ -148,7 +150,7 @@ export default class Options {
       if ([
         'showTasks',
         'showModuleController',
-        'showProfile'
+        'showProfile',
       ].includes(option)) {
         return false;
       } if (option === 'showRouteEditingBar') {

@@ -15,12 +15,15 @@ import RouteEditingManager from 'store/route_editing_manager';
 import StoryTellers from 'store/story_tellers';
 import Teleop from 'store/teleop';
 import TrafficSignal from 'store/traffic_signal';
+import ScenarioStore from 'store/scenario_store';
 
 class DreamviewStore {
     // Mutable States
     @observable timestamp = 0;
 
     @observable isInitialized = false;
+
+    @observable scenarioStore = new ScenarioStore();
 
     @observable studioConnector = new StudioConnector();
 

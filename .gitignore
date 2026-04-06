@@ -141,3 +141,5 @@ vite.config.ts.timestamp-*
 # Build outputs
 dist/
 dist_offline/
+
+dreamview

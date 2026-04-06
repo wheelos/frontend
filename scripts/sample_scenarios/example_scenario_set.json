@@ -1,0 +1,19 @@
+{
+  "example_scenario_set_1": {
+    "scenarioSetName": "Example Scenario Set",
+    "scenarios": [
+      {
+        "mapName": "Sunnyvale_loop",
+        "scenarioId": "ex_scenario_001",
+        "scenarioName": "Approach intersection",
+        "startPoint": { "x": 123.45, "y": 67.89 }
+      },
+      {
+        "mapName": "Sunnyvale_loop",
+        "scenarioId": "ex_scenario_002",
+        "scenarioName": "Lane change",
+        "startPoint": { "x": 130.0, "y": 70.0 }
+      }
+    ]
+  }
+}

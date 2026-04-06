@@ -7,6 +7,7 @@ import SideBarButton from 'components/SideBar/SideBarButton';
 import HOTKEYS_CONFIG from 'store/config/hotkeys.yml';
 
 import TasksIcon from 'assets/images/sidebar/tasks.png';
+import ScenarioIcon from 'assets/images/sidebar/route_editing.png'; // Using an existing one or tasks.png for now. Let's use tasks.png actually.
 import ModuleControllerIcon from 'assets/images/sidebar/module_controller.png';
 import LayerMenuIcon from 'assets/images/sidebar/layer_menu.png';
 import RouteEditingIcon from 'assets/images/sidebar/route_editing.png';
@@ -14,6 +15,7 @@ import DataRecorderIcon from 'assets/images/sidebar/data_recorder.png';
 import ProfileIcon from 'assets/images/sidebar/profile.png';
 
 const sidebarIconMapping = {
+  showScenarioControl: TasksIcon, // Just reusing TasksIcon for testing
   showTasks: TasksIcon,
   showModuleController: ModuleControllerIcon,
   showMenu: LayerMenuIcon,
@@ -23,6 +25,7 @@ const sidebarIconMapping = {
 };
 
 const sidebarLabelMapping = {
+  showScenarioControl: 'Scenarios',
   showTasks: 'Tasks',
   showModuleController: 'Module Controller',
   showMenu: 'Layer Menu',
@@ -58,24 +61,25 @@ export default class SideBar extends React.Component {
     });
 
     return (
-            <div className="side-bar">
-                <div className="main-panel">
-                    <SideBarButton type="main" {...settings.showTasks} />
-                    <SideBarButton type="main" {...settings.showModuleController} />
-                    <SideBarButton type="main" {...settings.showMenu} />
-                    <SideBarButton type="main" {...settings.showRouteEditingBar} />
-                    <SideBarButton type="main" {...settings.showDataRecorder} />
-                    <SideBarButton type="main" {...settings.showProfile} />
-                </div>
-                <div className="sub-button-panel">
-                    <SideBarButton
-                        type="sub"
-                        {...settings.showPOI}
-                        active={!options.showRouteEditingBar && options.showPOI}
-                    />
-                </div>
-                <ReactTooltip id="sidebar-button" place="right" delayShow={500} />
-            </div>
+      <div className="side-bar">
+        <div className="main-panel">
+          <SideBarButton type="main" {...settings.showScenarioControl} />
+          <SideBarButton type="main" {...settings.showTasks} />
+          <SideBarButton type="main" {...settings.showModuleController} />
+          <SideBarButton type="main" {...settings.showMenu} />
+          <SideBarButton type="main" {...settings.showRouteEditingBar} />
+          <SideBarButton type="main" {...settings.showDataRecorder} />
+          <SideBarButton type="main" {...settings.showProfile} />
+        </div>
+        <div className="sub-button-panel">
+          <SideBarButton
+            type="sub"
+            {...settings.showPOI}
+            active={!options.showRouteEditingBar && options.showPOI}
+          />
+        </div>
+        <ReactTooltip id="sidebar-button" place="right" delayShow={500} />
+      </div>
     );
   }
 }

@@ -7,6 +7,7 @@ import Menu from 'components/SideBar/Menu';
 import DefaultRouting from 'components/DefaultRouting';
 import DataProfile from 'components/DataProfile';
 import Tasks from 'components/Tasks';
+import ScenarioControlPanel from 'components/ScenarioControlPanel';
 
 @inject('store') @observer
 export default class ToolView extends React.Component {
@@ -16,28 +17,29 @@ export default class ToolView extends React.Component {
     } = this.props.store;
 
     return (
-            <div className="tools">
-                {options.showTasks && <Tasks options={options} />}
-                {options.showModuleController && <ModuleController />}
-                {options.showMenu && <Menu options={options} />}
-                {options.showPOI && (
-                    <DefaultRouting
-                        routeEditingManager={routeEditingManager}
-                        options={options}
-                        inNavigationMode={hmi.inNavigationMode}
-                    />
-                )}
-                {options.showDataRecorder && (
-                    <DataRecorder
-                        newDisengagementReminder={newDisengagementReminder}
-                    />
-                )}
-              {options.showProfile && (
-                <DataProfile
-                  newDisengagementReminder={newDisengagementReminder}
-                />
-              )}
-            </div>
+      <div className="tools">
+        {options.showScenarioControl && <ScenarioControlPanel />}
+        {options.showTasks && <Tasks options={options} />}
+        {options.showModuleController && <ModuleController />}
+        {options.showMenu && <Menu options={options} />}
+        {options.showPOI && (
+        <DefaultRouting
+          routeEditingManager={routeEditingManager}
+          options={options}
+          inNavigationMode={hmi.inNavigationMode}
+        />
+        )}
+        {options.showDataRecorder && (
+        <DataRecorder
+          newDisengagementReminder={newDisengagementReminder}
+        />
+        )}
+        {options.showProfile && (
+        <DataProfile
+          newDisengagementReminder={newDisengagementReminder}
+        />
+        )}
+      </div>
     );
   }
 }

@@ -45,6 +45,24 @@ export default class RealtimeWebSocketEndpoint {
         case 'HMIStatus':
           STORE.hmi.updateStatus(message.data);
           STORE.studioConnector.updateLocalScenarioInfo(message.data);
+
+          if (message.data && message.data.scenarioSet) {
+            // Flatten the scenario sets into a local scenarios list for the new store
+            const scenarios = [];
+            Object.keys(message.data.scenarioSet).forEach((setId) => {
+              const set = message.data.scenarioSet[setId];
+              if (set.scenarios) {
+                set.scenarios.forEach((s) => scenarios.push(s));
+              }
+            });
+            STORE.scenarioStore.setLocalScenarios(scenarios);
+
+            // Set current scenario id if given
+            if (message.data.currentScenarioId) {
+              STORE.scenarioStore.setCurrentScenario(message.data.currentScenarioId);
+            }
+          }
+
           RENDERER.updateGroundImage(STORE.hmi.currentMap);
           break;
         case 'VehicleParam':
@@ -99,8 +117,11 @@ export default class RealtimeWebSocketEndpoint {
           }
           break;
         case 'MapElementIds':
-          RENDERER.updateMapIndex(message.mapHash,
-            message.mapElementIds, message.mapRadius);
+          RENDERER.updateMapIndex(
+            message.mapHash,
+            message.mapElementIds,
+            message.mapRadius,
+          );
           break;
         case 'DefaultEndPoint':
           STORE.routeEditingManager.updateDefaultRoutingEndPoint(message);
@@ -409,7 +430,7 @@ export default class RealtimeWebSocketEndpoint {
   loadLocalRecords() {
     this.websocket.send(JSON.stringify({
       type: 'HMIAction',
-      action:'LOAD_RECORDS',
+      action: 'LOAD_RECORDS',
     }));
   }
 
@@ -417,7 +438,7 @@ export default class RealtimeWebSocketEndpoint {
   changeRecord(recordId) {
     this.websocket.send(JSON.stringify({
       type: 'HMIAction',
-      action:'CHANGE_RECORD',
+      action: 'CHANGE_RECORD',
       value: recordId,
     }));
   }
@@ -426,7 +447,7 @@ export default class RealtimeWebSocketEndpoint {
   deleteRecord(recordId) {
     this.websocket.send(JSON.stringify({
       type: 'HMIAction',
-      action:'DELETE_RECORD',
+      action: 'DELETE_RECORD',
       value: recordId,
     }));
   }
@@ -435,9 +456,10 @@ export default class RealtimeWebSocketEndpoint {
   stopRecord() {
     this.websocket.send(JSON.stringify({
       type: 'HMIAction',
-      action:'STOP_RECORD',
+      action: 'STOP_RECORD',
     }));
   }
+
   executeModeCommand(action) {
     if (!['SETUP_MODE', 'RESET_MODE', 'ENTER_AUTO_MODE'].includes(action)) {
       console.error('Unknown mode command found:', action);
@@ -548,8 +570,7 @@ export default class RealtimeWebSocketEndpoint {
     this.websocket.send(JSON.stringify(request));
   }
 
-  sendParkingRequest(
-    start, start_heading, waypoint, end, parkingInfo) {
+  sendParkingRequest(start, start_heading, waypoint, end, parkingInfo) {
     const request = {
       type: 'SendParkingRoutingRequest',
       start,

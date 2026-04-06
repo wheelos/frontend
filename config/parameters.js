@@ -102,6 +102,9 @@ module.exports = {
     },
   },
   options: {
+    showScenarioControl: {
+      default: false,
+    },
     showTasks: {
       default: true,
     },
