@@ -15,6 +15,7 @@ import RouteEditingManager from 'store/route_editing_manager';
 import StoryTellers from 'store/story_tellers';
 import Teleop from 'store/teleop';
 import TrafficSignal from 'store/traffic_signal';
+import PointCloudMetrics from 'store/point_cloud_metrics';
 
 class DreamviewStore {
     // Mutable States
@@ -55,6 +56,8 @@ class DreamviewStore {
     @observable teleop = new Teleop();
 
     @observable dimension = new Dimension(this.hmi, this.options);
+
+    @observable pointCloudMetrics = new PointCloudMetrics();
 
     @observable newDisengagementReminder = false;
 

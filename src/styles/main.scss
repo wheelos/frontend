@@ -356,6 +356,35 @@ body {
     color: white;
   }
 
+  .point-cloud-metrics {
+    z-index: 10;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 4px;
+    color: #ffffff;
+    font-size: 12px;
+    line-height: 1.6;
+    pointer-events: none;
+
+    .point-cloud-metrics-row {
+      display: flex;
+      justify-content: space-between;
+      column-gap: 16px;
+    }
+
+    .point-cloud-metrics-label {
+      color: #aaaaaa;
+    }
+
+    .point-cloud-metrics-value {
+      font-weight: bold;
+    }
+  }
+
   .default-routing-input {
     z-index: 10;
     position: absolute;

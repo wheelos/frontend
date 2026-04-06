@@ -9,6 +9,10 @@ export default class PointCloudWebSocketEndpoint {
     this.websocket = null;
     this.worker = new Worker();
     this.enabled = false;
+    // Bandwidth tracking: accumulate bytes and flush to the metrics store
+    // once per second so the HUD shows a stable KB/s reading.
+    this._bytesReceived = 0;
+    this._bandwidthLastTimestamp = null;
   }
 
   initialize() {
@@ -23,6 +27,25 @@ export default class PointCloudWebSocketEndpoint {
       return;
     }
     this.websocket.onmessage = (event) => {
+      // Accumulate bytes for bandwidth measurement.
+      const now = performance.now();
+      if (this._bandwidthLastTimestamp === null) {
+        this._bandwidthLastTimestamp = now;
+      }
+
+      const bytes = event.data instanceof ArrayBuffer
+        ? event.data.byteLength
+        : event.data.length;
+      this._bytesReceived += bytes;
+      const elapsed = now - this._bandwidthLastTimestamp;
+      if (elapsed >= 1000) {
+        STORE.pointCloudMetrics.updateBandwidth(
+          (this._bytesReceived * 1000) / (1024 * elapsed),
+        );
+        this._bytesReceived = 0;
+        this._bandwidthLastTimestamp = now;
+      }
+
       this.worker.postMessage({
         source: 'point_cloud',
         data: event.data,
@@ -90,9 +113,9 @@ export default class PointCloudWebSocketEndpoint {
             reject(message?.data.info);
           }
         });
-      }
+      },
     );
-  };
+  }
 
   changePointCloudChannel(channel) {
     this.websocket.send(JSON.stringify({
