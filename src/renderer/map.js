@@ -495,6 +495,7 @@ export default class Map {
         this.hash = hash;
         this.elementKindsDrawn = newElementKindsDrawn;
         const diff = this.diffMapElements(elementIds, this.data);
+
         if (!_.isEmpty(diff) || !this.initialized) {
           MAP_WS.requestMapData(diff);
           this.initialized = true;

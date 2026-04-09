@@ -13,8 +13,17 @@ export default class RoutingEditor {
     this.parkingInfo = null;
     this.inEditingMode = false;
     this.pointId = 0;
-    this.parkingSpaceInfo = [];
+    this.map = null;  // Reference to map instance
+    this.coordinates = null;  // Reference to coordinates instance
     this.arrows = [];
+  }
+
+  setMap(map) {
+    this.map = map;
+  }
+
+  setCoordinates(coordinates) {
+    this.coordinates = coordinates;
   }
 
   isInEditingMode() {
@@ -47,9 +56,7 @@ export default class RoutingEditor {
   addRoutingPoint(point, coordinates, scene, defaultRouting = false) {
     const offsetPoint = coordinates.applyOffset({ x: point.x, y: point.y });
     const selectedParkingSpaceIndex = this.isPointInParkingSpace(offsetPoint);
-    if (selectedParkingSpaceIndex !== -1) {
-      this.parkingSpaceInfo[selectedParkingSpaceIndex].selectedCounts++;
-    }
+
     const pointMesh = drawImage(routingPointPin, 3.5, 3.5, offsetPoint.x, offsetPoint.y, 0.3);
     pointMesh.pointId = this.pointId;
     point.id = this.pointId;
@@ -96,18 +103,6 @@ export default class RoutingEditor {
     this.parkingInfo = info;
   }
 
-  setParkingSpaceInfo(parkingSpaceInfo, coordinates) {
-    this.parkingSpaceInfo = parkingSpaceInfo;
-    this.parkingSpaceInfo.forEach((item) => {
-      const offsetPoints = item.polygon.point.map(point =>
-        coordinates.applyOffset({ x: point.x, y: point.y })
-      );
-      item.polygon.point = offsetPoints;
-      // keep this property to decide change parking space color
-      item.selectedCounts = 0;
-    });
-  }
-
   removeInvalidRoutingPoint(pointId, msg, scene) {
     let index = -1;
     alert(msg);
@@ -148,11 +143,6 @@ export default class RoutingEditor {
 
   removeRoutingPoint(scene, object) {
     let index = this.isPointInParkingSpace(_.get(object, 'position'));
-    if (index !== -1) {
-      if (--this.parkingSpaceInfo[index].selectedCounts > 0) {
-        index = -1;
-      }
-    }
     if (object.arrowMesh) {
       scene.remove(object.arrowMesh);
       disposeMesh(object.arrowMesh);
@@ -191,6 +181,7 @@ export default class RoutingEditor {
 
     const index = _.isEmpty(this.routePoints) ?
       -1 : this.isPointInParkingSpace(this.routePoints[this.routePoints.length - 1].position);
+
     const points = _.isEmpty(routingPoints) ?
       this.routePoints.map((object) => {
         object.position.z = 0;
@@ -200,6 +191,7 @@ export default class RoutingEditor {
         return _.pick(point, ['x', 'y', 'z', 'heading']);
       });
     const parkingRoutingRequest = (index !== -1);
+
     const start = (points.length > 1) ? points[0]
       : coordinates.applyOffset(carOffsetPosition, true);
     // If the starting point comes from routePoints
@@ -209,9 +201,10 @@ export default class RoutingEditor {
     const end = points[points.length - 1];
     const waypoint = (points.length > 1) ? points.slice(1, -1) : [];
     if (parkingRoutingRequest) {
-      const { id } = this.parkingSpaceInfo[index];
+      const parkingSpace = this.map.data.parkingSpace[index];
+      const parkingId = parkingSpace.id?.id || parkingSpace.id;
       const parkingInfo = {
-        parkingSpaceId: _.get(id, 'id'),
+        parkingSpaceId: parkingId,
       };
 
       WS.sendParkingRequest(
@@ -267,11 +260,25 @@ export default class RoutingEditor {
   }
 
   isPointInParkingSpace(offsetPoint) {
-    let index = -1;
-    if (!_.isEmpty(this.parkingSpaceInfo) && !_.isEmpty(offsetPoint)) {
-      index = _.findIndex(this.parkingSpaceInfo, item =>
-        IsPointInRectangle(item.polygon.point, offsetPoint));
+    if (!this.map || !this.map.data || !this.map.data.parkingSpace) {
+      return -1;
     }
+
+    if (!this.coordinates) {
+      return -1;
+    }
+
+    // Convert relative coordinates to UTM coordinates to match polygon.point
+    const utmPoint = this.coordinates.applyOffset(offsetPoint, true);
+
+    const parkingSpaceData = this.map.data.parkingSpace;
+    let index = -1;
+    if (!_.isEmpty(parkingSpaceData) && !_.isEmpty(utmPoint)) {
+      index = _.findIndex(parkingSpaceData, (item) => {
+        return IsPointInRectangle(item.polygon.point, utmPoint);
+      });
+    }
+
     return index;
   }
 }

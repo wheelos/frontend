@@ -91,8 +91,13 @@ function GetCross(p1, p2, p) {
 }
 
 export function IsPointInRectangle(points, p) {
-  const isPointIn = GetCross(points[0], points[1], p) * GetCross(points[2], points[3], p) >= 0
-    && GetCross(points[1], points[2], p) * GetCross(points[3], points[0], p) >= 0;
+  const cross1 = GetCross(points[0], points[1], p);
+  const cross2 = GetCross(points[2], points[3], p);
+  const cross3 = GetCross(points[1], points[2], p);
+  const cross4 = GetCross(points[3], points[0], p);
+
+  const isPointIn = cross1 * cross2 >= 0 && cross3 * cross4 >= 0;
+
   return isPointIn;
 }
 

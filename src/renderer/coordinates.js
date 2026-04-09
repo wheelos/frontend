@@ -22,7 +22,6 @@ export default class Coordinates {
       x,
       y,
     };
-    console.log(`Offset is set to x:${x}, y:${y}`);
   }
 
   setSystem(newSystem) {
@@ -39,16 +38,18 @@ export default class Coordinates {
     } if (isNaN(point.x) || isNaN(point.y)) {
       console.warn('Point contains NaN!');
       return null;
-    } if (!isNaN(point.z)) {
-      return new THREE.Vector3(
-        reverse ? point.x + this.offset.x : point.x - this.offset.x,
-        reverse ? point.y + this.offset.y : point.y - this.offset.y,
-        point.z,
-      );
     }
 
-    return new THREE.Vector2(reverse ? point.x + this.offset.x : point.x - this.offset.x,
-      reverse ? point.y + this.offset.y : point.y - this.offset.y);
+    const result = !isNaN(point.z) ? new THREE.Vector3(
+      reverse ? point.x + this.offset.x : point.x - this.offset.x,
+      reverse ? point.y + this.offset.y : point.y - this.offset.y,
+      point.z,
+    ) : new THREE.Vector2(
+      reverse ? point.x + this.offset.x : point.x - this.offset.x,
+      reverse ? point.y + this.offset.y : point.y - this.offset.y,
+    );
+
+    return result;
   }
 
   applyOffsetToArray(points) {

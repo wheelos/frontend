@@ -80,6 +80,8 @@ class Renderer {
 
     // The route editor
     this.routingEditor = new RoutingEditor();
+    this.routingEditor.setMap(this.map);
+    this.routingEditor.setCoordinates(this.coordinates);
     this.routingPoint = null;
 
     // Distinguish between drawing point and drawing arrow
@@ -552,11 +554,6 @@ class Renderer {
       this.map.removeAllElements(this.scene);
     }
     this.map.appendMapData(newData, this.coordinates, this.scene);
-    if (newData.parkingSpace) {
-      this.routingEditor.setParkingSpaceInfo(
-        newData.parkingSpace, this.coordinates
-      );
-    }
   }
 
   updatePointCloud(pointCloud) {
