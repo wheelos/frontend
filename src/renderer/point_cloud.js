@@ -23,12 +23,21 @@ const VERTEX_SHADER = `
   uniform float uPointScale;
   uniform float uThresholds[6];
   uniform vec3 uColors[7];
+  uniform float uHeightMin;
+  uniform float uHeightMax;
 
   varying vec3 vColor;
 
   void main() {
-    // 高度在 position.z (RFU坐标系中Z=Up)
+    // Height range filter
     float h = position.z;
+    if (h < uHeightMin || h > uHeightMax) {
+      gl_PointSize = 0.0;
+      gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+      return;
+    }
+
+    // Color assignment based on height
     if (h < uThresholds[0]) { vColor = uColors[0]; }
     else if (h < uThresholds[1]) { vColor = uColors[1]; }
     else if (h < uThresholds[2]) { vColor = uColors[2]; }
@@ -64,6 +73,8 @@ export default class PointCloud {
     this._pointCount = 0;
     this.scene = null;
     this._pointScale = 20.0; // 默认点云大小
+    this._heightMin = 0.0; // 默认高度范围最小值
+    this._heightMax = 10.0; // 默认高度范围最大值
   }
 
   setPointScale(scale) {
@@ -75,6 +86,22 @@ export default class PointCloud {
 
   getPointScale() {
     return this._pointScale;
+  }
+
+  setHeightRange(min, max) {
+    this._heightMin = min;
+    this._heightMax = max;
+    if (this.points && this.points.material.uniforms.uHeightMin) {
+      this.points.material.uniforms.uHeightMin.value = min;
+      this.points.material.uniforms.uHeightMax.value = max;
+    }
+  }
+
+  getHeightRange() {
+    return {
+      min: this._heightMin,
+      max: this._heightMax,
+    };
   }
 
   initialize() {
@@ -99,6 +126,8 @@ export default class PointCloud {
         uPointScale: { value: 15.0 },
         uThresholds: { value: HEIGHT_THRESHOLDS },
         uColors: { value: HEIGHT_COLORS_RGB },
+        uHeightMin: { value: this._heightMin },
+        uHeightMax: { value: this._heightMax },
       },
       vertexShader: VERTEX_SHADER,
       fragmentShader: FRAGMENT_SHADER,
@@ -163,6 +192,14 @@ export default class PointCloud {
     // Update point size
     if (this.points.material.uniforms.uPointScale) {
       this.points.material.uniforms.uPointScale.value = this._pointScale;
+    }
+
+    // Update height range
+    if (this.points.material.uniforms.uHeightMin) {
+      this.points.material.uniforms.uHeightMin.value = this._heightMin;
+    }
+    if (this.points.material.uniforms.uHeightMax) {
+      this.points.material.uniforms.uHeightMax.value = this._heightMax;
     }
   }
 }
