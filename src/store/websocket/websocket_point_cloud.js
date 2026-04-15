@@ -69,8 +69,10 @@ export default class PointCloudWebSocketEndpoint {
   }
 
   requestPointCloud() {
-    if (this.websocket.readyState === this.websocket.OPEN
-            && STORE.options.showPointCloud === true) {
+    const wsReady = this.websocket.readyState === this.websocket.OPEN;
+    const showPointCloud = STORE.options.showPointCloud === true;
+
+    if (wsReady && showPointCloud) {
       this.websocket.send(JSON.stringify({
         type: 'RequestPointCloud',
       }));

@@ -18,10 +18,8 @@ const HEIGHT_COLORS_RGB = [
   new THREE.Vector3(0.58, 0.0, 0.827), // 0x9400D3  z >= 3.0
 ];
 
-// Vertex shader: Handles GPU-side coloring based on local Z and applies
-// transformation matrices natively. Point-size is screen-space attenuated.
+// Vertex shader: 使用 position.z 来判断高度（直接使用RFU数据）
 const VERTEX_SHADER = `
-  uniform mat4 uTransform;
   uniform float uPointScale;
   uniform float uThresholds[6];
   uniform vec3 uColors[7];
@@ -29,18 +27,17 @@ const VERTEX_SHADER = `
   varying vec3 vColor;
 
   void main() {
-    // Dynamic color assignment entirely on the GPU based on RAW local Z
-    float z = position.z;
-    if (z < uThresholds[0]) { vColor = uColors[0]; }
-    else if (z < uThresholds[1]) { vColor = uColors[1]; }
-    else if (z < uThresholds[2]) { vColor = uColors[2]; }
-    else if (z < uThresholds[3]) { vColor = uColors[3]; }
-    else if (z < uThresholds[4]) { vColor = uColors[4]; }
-    else if (z < uThresholds[5]) { vColor = uColors[5]; }
+    // 高度在 position.z (RFU坐标系中Z=Up)
+    float h = position.z;
+    if (h < uThresholds[0]) { vColor = uColors[0]; }
+    else if (h < uThresholds[1]) { vColor = uColors[1]; }
+    else if (h < uThresholds[2]) { vColor = uColors[2]; }
+    else if (h < uThresholds[3]) { vColor = uColors[3]; }
+    else if (h < uThresholds[4]) { vColor = uColors[4]; }
+    else if (h < uThresholds[5]) { vColor = uColors[5]; }
     else { vColor = uColors[6]; }
 
-    vec4 worldPos = uTransform * vec4(position, 1.0);
-    vec4 mvPos = modelViewMatrix * worldPos;
+    vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
 
     gl_PointSize = uPointScale * projectionMatrix[1][1] / (-mvPos.z);
     gl_Position = projectionMatrix * mvPos;
@@ -65,11 +62,7 @@ export default class PointCloud {
     this.points = null;
     this.initialized = false;
     this._pointCount = 0;
-
-    // Reusable matrices to avoid per-frame allocation
-    this._transformMatrix = new THREE.Matrix4();
-    this._rotationMatrix = new THREE.Matrix4();
-    this._offsetMatrix = new THREE.Matrix4().makeTranslation(0, 0, 0.8);
+    this.scene = null;
   }
 
   initialize() {
@@ -90,10 +83,8 @@ export default class PointCloud {
 
     const material = new THREE.ShaderMaterial({
       uniforms: {
-        uTransform: { value: new THREE.Matrix4() },
         uOpacity: { value: 0.7 },
-        uPointScale: { value: 2.0 },
-        // Pass arrays to the shader for GPU-side color mapping (modern style)
+        uPointScale: { value: 15.0 },
         uThresholds: { value: HEIGHT_THRESHOLDS },
         uColors: { value: HEIGHT_COLORS_RGB },
       },
@@ -111,7 +102,7 @@ export default class PointCloud {
     return this._pointCount;
   }
 
-  update(pointCloud, adcMesh) {
+  update(pointCloud, adcMesh, scene) {
     if (this.points === null || !pointCloud || !pointCloud.num) {
       return;
     }
@@ -126,15 +117,11 @@ export default class PointCloud {
     const dataLength = total * 3;
     const posAttr = this.points.geometry.attributes.position;
 
-    // Fast-path memory copy:
-    // If pointCloud.num is a TypedArray (like Float32Array from WS), use ultra-fast .set()
-    if (pointCloud.num.subarray) {
-      posAttr.array.set(pointCloud.num.subarray(0, dataLength));
-    } else {
-      // Fallback for standard arrays
-      for (let i = 0; i < dataLength; i++) {
-        posAttr.array[i] = pointCloud.num[i];
-      }
+    // 直接复制RFU数据，通过对象旋转来修正方向
+    for (let i = 0; i < dataLength; i += 3) {
+      posAttr.array[i] = pointCloud.num[i];
+      posAttr.array[i + 1] = pointCloud.num[i + 1];
+      posAttr.array[i + 2] = pointCloud.num[i + 2];
     }
 
     this._pointCount = total;
@@ -145,15 +132,21 @@ export default class PointCloud {
     posAttr.needsUpdate = true;
     this.points.geometry.setDrawRange(0, total);
 
-    // Build the transformation matrix using Three.js built-in API.
-    // Order of operations (right-to-left): Local Z Offset -> Yaw Rotation -> Translation
-    this._rotationMatrix.makeRotationZ(adcMesh.rotation.y);
+    // Attach to ADC mesh as child
+    if (this.points.parent !== adcMesh) {
+      if (this.points.parent) {
+        this.points.parent.remove(this.points);
+      }
+      adcMesh.add(this.points);
+    }
 
-    this._transformMatrix.identity();
-    this._transformMatrix.setPosition(adcMesh.position.x, adcMesh.position.y, adcMesh.position.z);
-    this._transformMatrix.multiply(this._rotationMatrix);
-    this._transformMatrix.multiply(this._offsetMatrix); // Replaces the per-point `z + 0.8` CPU addition
+    // 应用旋转：X轴-90°使Z向上，Z轴-90°修正XY方向
+    this.points.position.set(0, 0, 0);
+    this.points.rotation.set(-Math.PI / 2, 0, -Math.PI / 2);
 
-    this.points.material.uniforms.uTransform.value.copy(this._transformMatrix);
+    // Update point size
+    if (this.points.material.uniforms.uPointScale) {
+      this.points.material.uniforms.uPointScale.value = 20.0;
+    }
   }
 }

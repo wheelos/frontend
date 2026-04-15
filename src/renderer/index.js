@@ -464,7 +464,6 @@ class Renderer {
 
     if (this.pointCloud.initialized === false) {
       this.pointCloud.initialize();
-      this.scene.add(this.pointCloud.points);
     }
 
     this.adjustCamera(this.adc.mesh, this.options.cameraAngle);
@@ -564,7 +563,7 @@ class Renderer {
     if (!this.coordinates.isInitialized() || !this.adc.mesh) {
       return;
     }
-    this.pointCloud.update(pointCloud, this.adc.mesh);
+    this.pointCloud.update(pointCloud, this.adc.mesh, this.scene);
     STORE.pointCloudMetrics.updatePointCount(this.pointCloud.getPointCount());
   }
 
