@@ -26,6 +26,10 @@ export default class PointCloudWebSocketEndpoint {
       }, 1000);
       return;
     }
+    this.websocket.onopen = (event) => {
+      // On reconnect, if backend reports enabled=true, request point cloud data
+      // Otherwise, frontend will stay at default (false)
+    };
     this.websocket.onmessage = (event) => {
       // Accumulate bytes for bandwidth measurement.
       const now = performance.now();
@@ -57,9 +61,15 @@ export default class PointCloudWebSocketEndpoint {
     };
     this.worker.onmessage = (event) => {
       if (event.data.type === 'PointCloudStatus') {
+        this.enabled = event.data.enabled;
         STORE.setOptionStatus('showPointCloud', event.data.enabled);
         if (STORE.options.showPointCloud === false) {
           RENDERER.updatePointCloud({ num: [] });
+        } else if (event.data.enabled === true) {
+          // Point cloud is enabled on backend, request data immediately
+          setTimeout(() => {
+            this.requestPointCloud();
+          }, 50);
         }
       } else if (STORE.options.showPointCloud === true && event.data.num !== undefined) {
         RENDERER.updatePointCloud(event.data);
