@@ -18,7 +18,7 @@ const HEIGHT_COLORS_RGB = [
   new THREE.Vector3(0.58, 0.0, 0.827), // 0x9400D3  z >= 3.0
 ];
 
-// Vertex shader: 使用 position.z 来判断高度（直接使用RFU数据）
+// Vertex shader: use position.z for height (directly using RFU data)
 const VERTEX_SHADER = `
   uniform float uPointScale;
   uniform float uThresholds[6];
@@ -106,6 +106,9 @@ export default class PointCloud {
 
   initialize() {
     this.points = this.createPointCloud();
+    // Create independent group to hold point cloud, avoiding inheriting ADC mesh scale
+    this.pointCloudGroup = new THREE.Group();
+    this.pointCloudGroup.add(this.points);
     this.initialized = true;
   }
 
@@ -158,7 +161,7 @@ export default class PointCloud {
     const dataLength = total * 3;
     const posAttr = this.points.geometry.attributes.position;
 
-    // 直接复制RFU数据，通过对象旋转来修正方向
+    // Copy RFU data directly, correct orientation via rotation
     for (let i = 0; i < dataLength; i += 3) {
       posAttr.array[i] = pointCloud.num[i];
       posAttr.array[i + 1] = pointCloud.num[i + 1];
@@ -173,21 +176,23 @@ export default class PointCloud {
     posAttr.needsUpdate = true;
     this.points.geometry.setDrawRange(0, total);
 
-    // Attach to ADC mesh as child
-    if (this.points.parent !== adcMesh) {
-      if (this.points.parent) {
-        this.points.parent.remove(this.points);
+    // Attach group to scene (if not already attached)
+    if (this.pointCloudGroup.parent !== scene) {
+      if (this.pointCloudGroup.parent) {
+        this.pointCloudGroup.parent.remove(this.pointCloudGroup);
       }
-      adcMesh.add(this.points);
+      scene.add(this.pointCloudGroup);
     }
 
-    // 应用旋转：X轴-90°使Z向上，Z轴-90°修正XY方向
+    // Sync group position and rotation with ADC mesh, but NOT scale
+    this.pointCloudGroup.position.copy(adcMesh.position);
+    this.pointCloudGroup.rotation.copy(adcMesh.rotation);
+    // Don't set scale on group to avoid inheriting ADC mesh scale
+
+    // Point cloud rotation: X-90 to make Z up, Z-90 to correct XY orientation
     this.points.position.set(0, 0, 0);
     this.points.rotation.set(-Math.PI / 2, 0, -Math.PI / 2);
-
-    // 抵消父对象（ADC mesh）的缩放，避免点云被放大或缩小
-    const parentScale = adcMesh.scale;
-    this.points.scale.set(1 / parentScale.x, 1 / parentScale.y, 1 / parentScale.z);
+    this.points.scale.set(1, 1, 1);
 
     // Update point size
     if (this.points.material.uniforms.uPointScale) {
