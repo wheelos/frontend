@@ -15,6 +15,7 @@ import routingIcon from 'assets/images/menu/routing.png';
 import menuData from 'store/config/MenuData';
 
 import { POINT_CLOUD_WS } from 'store/websocket';
+import RENDERER from 'renderer';
 
 import './style.scss';
 
@@ -94,23 +95,49 @@ class MenuItemCheckbox extends React.Component {
             <label className="toggle-switch-label" htmlFor={id} />
           </div>
           <span>{title}</span>
-          {id === 'perceptionPointCloud' && <span className='point_cloud_channel_select'>
-            <span className="arrow" />
-            <select
-              onClick={(e) => e.stopPropagation()}
-              value={hmi.currentPointCloudChannel}
-              onChange={this.onStatusSelectChange}
-            >
-              <option key={'select-channel'} value={''}>- select channel -</option>
-              {
-                this.state.channels.map((channel) => {
-                  return (
+          {id === 'perceptionPointCloud' && options[optionName] && (
+            <div className='point_cloud_options'>
+              <span className='point_cloud_channel_select'>
+                <span className="arrow" />
+                <select
+                  onClick={(e) => e.stopPropagation()}
+                  value={hmi.currentPointCloudChannel}
+                  onChange={this.onStatusSelectChange}
+                >
+                  <option key={'select-channel'} value={''}>- select channel -</option>
+                  {this.state.channels.map((channel) => (
                     <option key={channel} value={channel}>{channel}</option>
-                  );
-                })
-              }
-            </select>
-          </span>}
+                  ))}
+                </select>
+              </span>
+              <span className='point_cloud_size_control'>
+                <span className="arrow" />
+                <input
+                  type="range"
+                  min="1"
+                  max="100"
+                  step="1"
+                  defaultValue={RENDERER.pointCloud.getPointScale()}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    const scale = parseFloat(e.target.value);
+                    e.target.nextElementSibling.value = scale;
+                    RENDERER.pointCloud.setPointScale(scale);
+                  }}
+                />
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  step="1"
+                  defaultValue={RENDERER.pointCloud.getPointScale()}
+                  readOnly
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </span>
+            </div>
+          )}
         </li>
       </ul>
     );

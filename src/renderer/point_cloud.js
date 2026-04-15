@@ -63,6 +63,18 @@ export default class PointCloud {
     this.initialized = false;
     this._pointCount = 0;
     this.scene = null;
+    this._pointScale = 20.0; // 默认点云大小
+  }
+
+  setPointScale(scale) {
+    this._pointScale = scale;
+    if (this.points && this.points.material.uniforms.uPointScale) {
+      this.points.material.uniforms.uPointScale.value = scale;
+    }
+  }
+
+  getPointScale() {
+    return this._pointScale;
   }
 
   initialize() {
@@ -146,7 +158,7 @@ export default class PointCloud {
 
     // Update point size
     if (this.points.material.uniforms.uPointScale) {
-      this.points.material.uniforms.uPointScale.value = 20.0;
+      this.points.material.uniforms.uPointScale.value = this._pointScale;
     }
   }
 }

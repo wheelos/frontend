@@ -26,3 +26,36 @@
     border-color: #ffffff transparent transparent transparent;
   }
 }
+
+.point_cloud_options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.point_cloud_size_control {
+  position: relative;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  input[type="range"] {
+    width: 100px;
+  }
+
+  input[type="number"] {
+    width: 50px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    text-align: right;
+    padding: 2px 4px;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
