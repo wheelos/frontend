@@ -156,6 +156,10 @@ export default class PointCloud {
     this.points.position.set(0, 0, 0);
     this.points.rotation.set(-Math.PI / 2, 0, -Math.PI / 2);
 
+    // 抵消父对象（ADC mesh）的缩放，避免点云被放大或缩小
+    const parentScale = adcMesh.scale;
+    this.points.scale.set(1 / parentScale.x, 1 / parentScale.y, 1 / parentScale.z);
+
     // Update point size
     if (this.points.material.uniforms.uPointScale) {
       this.points.material.uniforms.uPointScale.value = this._pointScale;
