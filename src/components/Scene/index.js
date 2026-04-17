@@ -3,6 +3,7 @@ import { observer, inject } from 'mobx-react';
 import classNames from 'classnames';
 
 import Geolocation from 'components/Scene/Geolocation';
+import PointCloudMetrics from 'components/Scene/PointCloudMetrics';
 import RENDERER from 'renderer';
 import STORE from 'store';
 import DefaultRoutingInput from '../RouteEditingBar/DefaultRoutingInput';
@@ -54,6 +55,7 @@ export default class Scene extends React.Component {
                             options={options}
                         />}
                     {options.showGeo && <Geolocation />}
+                    <PointCloudMetrics />
                 </div>
             </React.Fragment>
     );

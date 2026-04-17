@@ -18,6 +18,7 @@ import Routing from 'renderer/routing.js';
 import RoutingEditor from 'renderer/routing_editor.js';
 import Gnss from 'renderer/gnss.js';
 import PointCloud from 'renderer/point_cloud.js';
+import STORE from 'store';
 
 const _ = require('lodash');
 
@@ -104,6 +105,10 @@ class Renderer {
 
     // Geolocation of the mouse
     this.geolocation = { x: 0, y: 0 };
+
+    // FPS tracking for the point cloud metrics panel.
+    this._fpsFrameCount = 0;
+    this._fpsLastTimestamp = performance.now();
   }
 
   initialize(canvasId, width, height, options, cameraData) {
@@ -471,6 +476,18 @@ class Renderer {
       this.animate();
     });
 
+    // Track FPS and push to the metrics store once per second.
+    this._fpsFrameCount += 1;
+    const now = performance.now();
+    const elapsed = now - this._fpsLastTimestamp;
+    if (elapsed >= 1000) {
+      STORE.pointCloudMetrics.updateFps(
+        Math.round(this._fpsFrameCount * 1000 / elapsed),
+      );
+      this._fpsFrameCount = 0;
+      this._fpsLastTimestamp = now;
+    }
+
     if (this.stats) {
       this.stats.update();
     }
@@ -548,6 +565,7 @@ class Renderer {
       return;
     }
     this.pointCloud.update(pointCloud, this.adc.mesh);
+    STORE.pointCloudMetrics.updatePointCount(this.pointCloud.getPointCount());
   }
 
   updateMapIndex(hash, elementIds, radius) {
