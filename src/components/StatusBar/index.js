@@ -7,6 +7,7 @@ import Gears from 'components/StatusBar/Gears';
 import Notification from 'components/StatusBar/Notification';
 import TrafficLightIndicator from 'components/StatusBar/TrafficLightIndicator';
 import DrivingMode from 'components/StatusBar/DrivingMode';
+import MotionMode from 'components/StatusBar/MotionMode';
 import Wheel from 'components/StatusBar/Wheel';
 import Rss from 'components/StatusBar/Rss';
 
@@ -51,6 +52,9 @@ export default class StatusBar extends React.Component {
                 <Gears
                     electricityPercentage={meters.batteryPercentage}
                     currentGear={meters.gearLocation}
+                />
+                <MotionMode
+                    motionMode={meters.motionMode}
                 />
             </div>
     );

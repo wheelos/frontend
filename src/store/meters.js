@@ -25,6 +25,27 @@ function toDrivingMode(disengageType) {
   }
 }
 
+function toMotionModeLabel(motionMode) {
+  switch (motionMode) {
+    case 'MOTION_INVALID':
+      return 'INVALID';
+    case 'MOTION_ACKERMANN':
+      return 'ACKERMANN';
+    case 'MOTION_SPOT_TURN':
+      return 'SPOT TURN';
+    case 'MOTION_CRAB':
+      return 'CRAB';
+    case 'MOTION_SIDEWAY':
+      return 'SIDEWAY';
+    case 'MOTION_MINIMAL_TURNING_RADIUS':
+      return 'MIN TURN';
+    case 'MOTION_PULL_IN':
+      return 'PULL IN';
+    default:
+      return 'INVALID';
+  }
+}
+
 function isAutoMode(disengageType) {
   return disengageType === 'DISENGAGE_NONE'
            || disengageType === 'DISENGAGE_AUTO_STEER_ONLY'
@@ -55,6 +76,8 @@ export default class Meters {
     @observable isAutoMode = false;
 
     @observable turnSignal = '';
+
+    @observable motionMode = '';
 
     @action update(world) {
       if (world.autoDrivingCar) {
@@ -100,6 +123,8 @@ export default class Meters {
         if (world.autoDrivingCar.currentSignal !== undefined) {
           this.turnSignal = world.autoDrivingCar.currentSignal;
         }
+
+        this.motionMode = toMotionModeLabel(world.autoDrivingCar.motionMode);
       }
     }
 }
