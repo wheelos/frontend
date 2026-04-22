@@ -15,6 +15,7 @@ import routingIcon from 'assets/images/menu/routing.png';
 import menuData from 'store/config/MenuData';
 
 import { POINT_CLOUD_WS } from 'store/websocket';
+import RENDERER from 'renderer';
 
 import './style.scss';
 
@@ -33,8 +34,14 @@ const MenuIconMapping = {
 class MenuItemCheckbox extends React.Component {
   constructor(props) {
     super(props);
+    const heightRange = RENDERER.pointCloud.getHeightRange();
+    const pointScale = RENDERER.pointCloud.getPointScale();
     this.state = {
       channels: [],
+      pointScale: pointScale,
+      heightMin: heightRange.min,
+      heightMax: heightRange.max,
+      activeSlider: null,
     };
   }
 
@@ -94,23 +101,132 @@ class MenuItemCheckbox extends React.Component {
             <label className="toggle-switch-label" htmlFor={id} />
           </div>
           <span>{title}</span>
-          {id === 'perceptionPointCloud' && <span className='point_cloud_channel_select'>
-            <span className="arrow" />
-            <select
-              onClick={(e) => e.stopPropagation()}
-              value={hmi.currentPointCloudChannel}
-              onChange={this.onStatusSelectChange}
-            >
-              <option key={'select-channel'} value={''}>- select channel -</option>
-              {
-                this.state.channels.map((channel) => {
-                  return (
+          {id === 'perceptionPointCloud' && options[optionName] && (
+            <div className='point_cloud_options' onClick={(e) => e.stopPropagation()}>
+              <span className='point_cloud_control'>
+                <span className="control-label">channel</span>
+                <select
+                  onClick={(e) => e.stopPropagation()}
+                  value={hmi.currentPointCloudChannel}
+                  onChange={this.onStatusSelectChange}
+                >
+                  <option key={'select-channel'} value={''}>- select channel -</option>
+                  {this.state.channels.map((channel) => (
                     <option key={channel} value={channel}>{channel}</option>
-                  );
-                })
-              }
-            </select>
-          </span>}
+                  ))}
+                </select>
+              </span>
+              <span className='point_cloud_control'>
+                <span className="control-label">size</span>
+                <input
+                  type="range"
+                  min="1"
+                  max="100"
+                  step="1"
+                  className="size-range"
+                  value={this.state.pointScale !== undefined ? this.state.pointScale : RENDERER.pointCloud.getPointScale()}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    const scale = parseFloat(e.target.value);
+                    this.setState({ pointScale: scale });
+                    RENDERER.pointCloud.setPointScale(scale);
+                  }}
+                />
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  step="1"
+                  value={this.state.pointScale !== undefined ? this.state.pointScale : RENDERER.pointCloud.getPointScale()}
+                  readOnly
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </span>
+              <span className='point_cloud_control'>
+                <span className="control-label">height</span>
+                <input
+                  type="number"
+                  min="-5.0"
+                  max="20.0"
+                  step="0.1"
+                  value={this.state.heightMin}
+                  readOnly
+                  onClick={(e) => e.stopPropagation()}
+                  className="height-input"
+                />
+                <div className='dual-range-slider'>
+                  <div className='range-track-background'></div>
+                  <input
+                    type="range"
+                    min="-5.0"
+                    max="20.0"
+                    step="0.1"
+                    value={this.state.heightMin}
+                    className="height-slider-min"
+                    style={{ zIndex: this.state.activeSlider === 'min' ? 3 : 2 }}
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                      this.setState({ activeSlider: 'min' });
+                    }}
+                    onMouseUp={(e) => {
+                      e.stopPropagation();
+                      this.setState({ activeSlider: null });
+                    }}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      const minHeight = Math.round(parseFloat(e.target.value) * 10) / 10;
+                      const maxHeight = this.state.heightMax;
+                      if (minHeight >= maxHeight - 0.1) {
+                        return;
+                      }
+                      this.setState({ heightMin: minHeight });
+                      RENDERER.pointCloud.setHeightRange(minHeight, maxHeight);
+                    }}
+                  />
+                  <input
+                    type="range"
+                    min="-5.0"
+                    max="20.0"
+                    step="0.1"
+                    value={this.state.heightMax}
+                    className="height-slider-max"
+                    style={{ zIndex: this.state.activeSlider === 'max' ? 3 : 2 }}
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                      this.setState({ activeSlider: 'max' });
+                    }}
+                    onMouseUp={(e) => {
+                      e.stopPropagation();
+                      this.setState({ activeSlider: null });
+                    }}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      const maxHeight = Math.round(parseFloat(e.target.value) * 10) / 10;
+                      const minHeight = this.state.heightMin;
+                      if (maxHeight <= minHeight + 0.1) {
+                        return;
+                      }
+                      this.setState({ heightMax: maxHeight });
+                      RENDERER.pointCloud.setHeightRange(minHeight, maxHeight);
+                    }}
+                  />
+                </div>
+                <input
+                  type="number"
+                  min="-5.0"
+                  max="20.0"
+                  step="0.1"
+                  value={this.state.heightMax}
+                  readOnly
+                  onClick={(e) => e.stopPropagation()}
+                  className="height-input"
+                />
+              </span>
+            </div>
+          )}
         </li>
       </ul>
     );
