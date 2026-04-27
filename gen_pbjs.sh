@@ -18,27 +18,34 @@
 
 mkdir -p proto_bundle
 
+# if inside container `/apollo` is the apollo worksapce
+APOLLO_ROOT=${APOLLO_ROOT:=/apollo}
+if [[ ! -d ${APOLLO_ROOT} ]]; then
+    # if repo located in data/frontend, `../../` is the workspace
+    APOLLO="../../"
+fi
+if [[ ! -d ${APOLLO_ROOT} ]]; then
+    echo "APOLLO_ROOT detect failed, you should specific via environ APOLLO_ROOT" 1>&2
+fi
 # proto dependencies
-SIMULATION_PROTO='../proto/simulation_world.proto ../proto/chart.proto ../proto/camera_update.proto'
-COMMON_PROTOS='../../common/proto/*.proto ../../common/configs/proto/vehicle_config.proto'
-LOCALIZATION_PROTOS='../../localization/proto/localization.proto ../../localization/proto/pose.proto ../../localization/proto/localization_status.proto'
-CHASSIS_PROTOS='../../canbus/proto/chassis.proto'
-PLANNING_PROTOS='../../planning/proto/*.proto ../../planning/proto/math/*.proto'
-AUDIO_PROTO='../../audio/proto/audio_common.proto ../../audio/proto//audio_event.proto'
+DREAMVIEW_PROTOS="${APOLLO_ROOT}/modules/dreamview/proto/*.proto"
+COMMON_MSGS_PROTOS="${APOLLO_ROOT}/modules/common_msgs/*/*.proto"
 
-PREDICTION_PROTOS='../../prediction/proto/feature.proto ../../prediction/proto/lane_graph.proto ../../prediction/proto/prediction_point.proto ../../prediction/proto/prediction_obstacle.proto ../../prediction/proto/scenario.proto'
-PERCEPTION_PROTOS='../../perception/proto/traffic_light_detection.proto ../../perception/proto/perception_obstacle.proto'
-REALTIVE_MAP_PROTOS='../../map/relative_map/proto/*.proto'
-MAP_PROTOS='../../map/proto/*.proto'
-MONITOR_PROTOS='../../common/monitor_log/proto/monitor_log.proto'
-ROUTING_PROTOS='../../routing/proto/routing.proto'
-COMMON_MSGS_PROTOS='../../common_msgs/*/*.proto'
+DV_POINT_CLOUD_PROTOS="${APOLLO_ROOT}/modules/dreamview/proto/point_cloud.proto"
 
-node_modules/protobufjs/bin/pbjs -t json $SIMULATION_PROTO \
-    $COMMON_PROTOS $LOCALIZATION_PROTOS $CHASSIS_PROTOS $PLANNING_PROTOS \
-    $PERCEPTION_PROTOS $MONITOR_PROTOS $ROUTING_PROTOS $MAP_PROTOS \
-    $PREDICTION_PROTOS $REALTIVE_MAP_PROTOS $AUDIO_PROTO $COMMON_MSGS_PROTOS \
+echo "generating proto bundle with proto files in ${APOLLO_ROOT}"
+
+echo "generating sim_world_proto_bundle"
+node_modules/protobufjs/bin/pbjs \
+    -t json \
+    $DREAMVIEW_PROTOS \
+    $COMMON_MSGS_PROTOS \
     -o proto_bundle/sim_world_proto_bundle.json
+echo "generating sim_world_proto_bundle done"
 
-node_modules/protobufjs/bin/pbjs -t json ../proto/point_cloud.proto \
+echo "generating point_cloud_proto_bundle"
+node_modules/protobufjs/bin/pbjs \
+    -t json \
+    $DV_POINT_CLOUD_PROTOS \
     -o proto_bundle/point_cloud_proto_bundle.json
+echo "generating point_cloud_proto_bundle done"
