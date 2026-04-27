@@ -61,7 +61,7 @@ export default class DriveEventEditor extends React.Component {
     WS.submitDriveEvent(
       this.state.eventTime.getTime(),
       this.state.eventMessage,
-      this.state.eventTypes,
+      Array.from(this.state.eventTypes),
       this.state.isReportable,
     );
     STORE.handleOptionToggle('showDataRecorder');
