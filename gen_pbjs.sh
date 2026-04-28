@@ -18,16 +18,27 @@
 
 mkdir -p proto_bundle
 
+# if inside container `/apollo` is the apollo worksapce
+APOLLO_ROOT=${APOLLO_ROOT:=/apollo}
+if [[ ! -d ${APOLLO_ROOT} ]]; then
+    # if repo located in data/frontend, `../../` is the workspace
+    APOLLO="../../"
+fi
+if [[ ! -d ${APOLLO_ROOT} ]]; then
+    echo "APOLLO_ROOT detect failed, you should specific via environ APOLLO_ROOT" 1>&2
+fi
 # proto dependencies
-DREAMVIEW_PROTO='../../modules/dreamview/proto/*.proto'
-COMMON_MSGS_PROTOS='../../modules/common_msgs/*/*.proto'
+DREAMVIEW_PROTOS="${APOLLO_ROOT}/modules/dreamview/proto/*.proto"
+COMMON_MSGS_PROTOS="${APOLLO_ROOT}/modules/common_msgs/*/*.proto"
 
-DV_POINT_CLOUD_PROTOS='../../modules/dreamview/proto/point_cloud.proto'
+DV_POINT_CLOUD_PROTOS="${APOLLO_ROOT}/modules/dreamview/proto/point_cloud.proto"
+
+echo "generating proto bundle with proto files in ${APOLLO_ROOT}"
 
 echo "generating sim_world_proto_bundle"
 node_modules/protobufjs/bin/pbjs \
     -t json \
-    $DREAMVIEW_PROTO \
+    $DREAMVIEW_PROTOS \
     $COMMON_MSGS_PROTOS \
     -o proto_bundle/sim_world_proto_bundle.json
 echo "generating sim_world_proto_bundle done"
