@@ -33,6 +33,7 @@ export default class AutoDrivingCar {
   constructor(name, scene) {
     this.mesh = null;
     this.name = name;
+    this.desiredScale = null;
     this.rssUnsafeMarker = RSS_UNSAFE_MESH;
     this.rssUnsafeMarker.visible = false;
     scene.add(this.rssUnsafeMarker);
@@ -50,6 +51,10 @@ export default class AutoDrivingCar {
       this.mesh.rotation.x = Math.PI / 2;
       this.mesh.visible = false;
       scene.add(this.mesh);
+      // Apply stored scale that may have been set before mesh loaded.
+      if (this.desiredScale) {
+        this.mesh.scale.set(this.desiredScale.x, this.desiredScale.y, this.desiredScale.z);
+      }
     });
   }
 
@@ -81,6 +86,7 @@ export default class AutoDrivingCar {
   }
 
   resizeCarScale(x, y, z) {
+    this.desiredScale = { x, y, z };
     if (!this.mesh) {
       return;
     }
