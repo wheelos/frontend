@@ -6,8 +6,8 @@ ul.item {
     padding-left: 0px;
     padding-right: 5px;
 
-    background-color: #1D2226;
-    color: #999999;
+    background-color: var(--bg-panel);
+    color: var(--text-secondary);
     list-style: none;
     cursor: pointer;
 
@@ -21,8 +21,8 @@ ul.item {
     }
 
     li:hover {
-        color: #FFFFFF;
-        background-color: #2A3238;
+        color: var(--text-primary);
+        background-color: var(--bg-hover);
     }
 }
 
@@ -46,36 +46,36 @@ ul.item {
         padding: 0;
         line-height: 20px;
         border: 0px;
-        background-color: #3F4548;
-        transition: background-color 0.2s ease-in;
-    }
+    background-color: var(--radio-border);
+    transition: background-color 0.2s ease-in;
+}
 
-    .toggle-switch-label:before {
-        content: "";
-        display: block;
-        width: 16px;
-        margin: 2px;
-        background: #A0A0A0;
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        right: 20px;
-        transition: all 0.2s ease-in;
-    }
+.toggle-switch-label:before {
+    content: "";
+    display: block;
+    width: 16px;
+    margin: 2px;
+    background: var(--radio-bg);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 20px;
+    transition: all 0.2s ease-in;
+}
 
-    .toggle-switch:checked+.toggle-switch-label {
-        background-color: #0E3D62;
-    }
+.toggle-switch:checked+.toggle-switch-label {
+    background-color: var(--toggle-checked-bg);
+}
 
-    .toggle-switch:checked+.toggle-switch-label,
-    .toggle-switch:checked+.toggle-switch-label:before {
-        border-color: #0E3D62;
-    }
+.toggle-switch:checked+.toggle-switch-label,
+.toggle-switch:checked+.toggle-switch-label:before {
+    border-color: var(--toggle-checked-bg);
+}
 
-    .toggle-switch:checked+.toggle-switch-label:before {
-        right: 0px;
-        background-color: #30A5FF;
-    }
+.toggle-switch:checked+.toggle-switch-label:before {
+    right: 0px;
+    background-color: var(--radio-checked-bg);
+}
 
     .toggle-switch:disabled+.toggle-switch-label,
     .toggle-switch:disabled+.toggle-switch-label:before {
@@ -93,27 +93,27 @@ ul.item {
     min-height: 40px;
     max-height: 60px;
 
-    color: #999999;
+    color: var(--text-secondary);
 
-    border-bottom: 2px solid #1C9063;
-    background: linear-gradient(#000000, #111F1D);
+    border-bottom: 2px solid var(--accent-green);
+    background: linear-gradient(var(--command-bg-start), var(--command-bg-end));
 
     outline: none;
     cursor: pointer;
 
     &:hover {
-        color: #FFFFFF;
-        background: #151E1B;
+        color: var(--text-primary);
+        background: var(--command-bg-hover);
     }
 
     &:active {
-        background: rgba(35, 51, 45, 0.6);
+        background: var(--command-bg-active);
     }
 
     &:disabled {
-        color: #999999;
-        border-color: #555555;
-        background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(9, 17, 16, 0.8));
+        color: var(--text-secondary);
+        border-color: var(--border-primary);
+        background: linear-gradient(var(--command-bg-disabled-start), var(--command-bg-disabled-end));
         cursor: not-allowed
     }
 }

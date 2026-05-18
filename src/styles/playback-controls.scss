@@ -11,7 +11,7 @@ $playback-control-height: 40;
     height: $playback-control-height * 1px;
     bottom: 0px;
 
-    background: #1D2226;
+    background: var(--bg-panel);
     font-size: 16px;
     min-width: 550px;
 
@@ -29,37 +29,37 @@ $playback-control-height: 40;
         .play {
             stroke-linejoin: round;
             stroke-width: 1.5px;
-            stroke: #006AFF;
-            fill: #1D2226;
+            stroke: var(--accent-blue-dark);
+            fill: var(--bg-panel);
         }
 
         .pause {
             stroke-linejoin: round;
             stroke-width: 1.5px;
-            stroke: #006AFF;
-            fill: #006AFF;
+            stroke: var(--accent-blue-dark);
+            fill: var(--accent-blue-dark);
         }
 
         .replay {
             top: 2px;
             stroke-linejoin: round;
             stroke-width: 1.5px;
-            stroke: #006AFF;
-            fill: #006AFF;
+            stroke: var(--accent-blue-dark);
+            fill: var(--accent-blue-dark);
         }
 
         .fullscreen {
             stroke-linejoin: round;
             stroke-width: 10px;
-            stroke: #006AFF;
-            fill: #1D2226;
+            stroke: var(--accent-blue-dark);
+            fill: var(--bg-panel);
         }
 
         .exit-fullscreen {
             stroke-linejoin: round;
             stroke-width: 10px;
-            stroke: #006AFF;
-            fill: #1D2226;
+            stroke: var(--accent-blue-dark);
+            fill: var(--bg-panel);
         }
     }
 
@@ -82,8 +82,8 @@ $playback-control-height: 40;
             border: none;
             padding: 11px 23px 0px 5px;
 
-            color: #FFFFFF;
-            background: #1D2226;
+            color: var(--text-primary);
+    background: var(--bg-panel);
             outline: none;
             cursor: pointer;
             font-size: 16px;
@@ -107,7 +107,7 @@ $playback-control-height: 40;
             top: 16px;
             right: 1px;
             margin-top: -5px;
-            border-top: 8px solid #666666;
+            border-top: 8px solid var(--arrow-color);
             border-left: 8px solid transparent;
             border-right: 8px solid transparent;
 
@@ -140,8 +140,8 @@ $playback-control-height: 40;
                 height: 100%;
 
                 border-radius: 10px;
-                background-color: #006AFF;
-                background: #006AFF;
+                background-color: var(--accent-blue-dark);
+                background: var(--accent-blue-dark);
             }
 
             .rangeslider__handle {
@@ -152,9 +152,9 @@ $playback-control-height: 40;
                 top: 50%;
                 transform: translate3d(-50%, -50%, 0);
 
-                border: 1px solid #006AFF;
+                border: 1px solid var(--accent-blue-dark);
                 border-radius: 100%;
-                background: #006AFF;
+                background: var(--accent-blue-dark);
                 cursor: pointer;
                 box-shadow: none;
             }
