@@ -84,6 +84,9 @@ planning:
       zOffset: 1.3
 
 options:
+  # theme mode: dark or light
+  themeMode:
+    default: dark
   # side bar options
   showTasks:
     default: true

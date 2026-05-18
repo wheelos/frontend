@@ -18,6 +18,8 @@ export default class Options {
     // Toggles added by planning paths when pnc monitor is on
     @observable customizedToggles = observable.map();
 
+    @observable themeMode = localStorage.getItem('dreamview-theme') || 'dark';
+
     constructor() {
       this.cameraAngleNames = null;
       this.mainSideBarOptions = [
@@ -178,5 +180,10 @@ export default class Options {
 
     @action selectCamera(angleName) {
       this.cameraAngle = angleName;
+    }
+
+    @action toggleTheme() {
+      this.themeMode = this.themeMode === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('dreamview-theme', this.themeMode);
     }
 }

@@ -1,0 +1,240 @@
+// ============================================
+// Theme Variables for Dreamview
+// ============================================
+// Usage: Replace hardcoded colors with var(--xxx)
+// Theme switching is controlled by .theme-dark / .theme-light class on root element
+
+// ============================================
+// Theme: Dark (default)
+// ============================================
+.theme-dark {
+  // Background layers (from darkest to lightest)
+  --bg-scene:           #000C17;
+  --bg-body:            #14171A;
+  --bg-header:          #000000;
+  --bg-panel:           #1D2226;
+  --bg-card:            #1D2226;
+  --bg-sidebar:         #1D2226;
+  --bg-button:          #181818;
+  --bg-hover:           #2A3238;
+  --bg-sub-button:      #3E4041;
+  --bg-input:           #101315;
+  --bg-toggle-track:    #3F4548;
+  --bg-progress:        #333639;
+  --bg-scrollbar-track: #555555;
+  --bg-modal:           rgba(0, 0, 0, 0.8);
+  --bg-modal-mask:      rgba(0, 0, 0, 0.5);
+  --bg-overlay:         rgba(0, 0, 0, 0.8);
+  --bg-overlay-light:   rgba(0, 0, 0, 0.55);
+  --bg-overlay-medium:  rgba(0, 0, 0, 0.5);
+  --bg-loader:          #000C17;
+  --bg-guide-modal:     #010c17;
+  --bg-delete-modal:    #272A2E;
+  --bg-scenario-btn:    #303438;
+  --bg-scenario-hover:  #616467;
+  --bg-event-row:       #101315;
+  --bg-tool-menu:       #000000;
+
+  // Text layers
+  --text-primary:       #FFFFFF;
+  --text-secondary:     #999999;
+  --text-tertiary:      #A0A0A0;
+  --text-muted:         #888888;
+  --text-label:         #D8D8D8;
+  --text-inverse:       #000000;
+  --text-disabled:      #414141;
+
+  // Borders
+  --border-primary:     #383838;
+  --border-dark:        #000000;
+  --border-light:       #333333;
+  --border-divider:     #999999;
+  --border-hover-row:   #393E43;
+  --border-section:     #080A0C;
+
+  // Accent colors
+  --accent-blue:        #30A5FF;
+  --accent-blue-dark:   #006AFF;
+  --accent-green:       #1C9063;
+  --accent-blue-hover:  #49a9ee;
+
+  // Status colors
+  --status-error:       #B43131;
+  --status-alert:       #D7466F;
+  --status-warn:        #A3842D;
+  --status-success:     #00B48F;
+  --status-fail:        #F63E40;
+
+  // Toggle / Radio
+  --radio-border:       #3F4548;
+  --radio-bg:           #A0A0A0;
+  --radio-checked-bg:   #30A5FF;
+  --radio-checked-border: #0E3D62;
+  --toggle-checked-bg:  #0E3D62;
+
+  // Command button
+  --command-bg-start:   #000000;
+  --command-bg-end:     #111F1D;
+  --command-bg-hover:   #151E1B;
+  --command-bg-active:  rgba(35, 51, 45, 0.6);
+  --command-bg-disabled-start: rgba(0, 0, 0, 0.8);
+  --command-bg-disabled-end:   rgba(9, 17, 16, 0.8);
+
+  // Driving mode
+  --auto-mode-gradient-start: rgba(17, 30, 48, 0.8);
+  --auto-mode-gradient-end:   rgba(7, 42, 94, 0.8);
+  --auto-mode-border:   #006AFF;
+  --auto-mode-text:     #006AFF;
+  --manual-mode-gradient-start: rgba(30, 17, 17, 0.8);
+  --manual-mode-gradient-end:   rgba(71, 36, 36, 0.8);
+  --manual-mode-text:   #B43131;
+  --manual-mode-border: #B43131;
+
+  // Meter
+  --meter-brake-bg:     #382626;
+  --meter-brake-fill:   #B43131;
+  --meter-accel-bg:     #2D3B50;
+  --meter-accel-fill:   #006AFF;
+
+  // Notification
+  --notify-warn-border:       #A3842D;
+  --notify-warn-bg:           rgba(52, 39, 5, 0.3);
+  --notify-alert-border:      #D7466F;
+  --notify-alert-bg:          rgba(74, 5, 24, 0.3);
+  --notify-alert-center-border: #B96E76;
+  --notify-alert-center-bg:   rgba(74, 5, 24, 0.5);
+  --notify-certificate-bg:    rgba(255, 241, 229, 0.1);
+
+  // Scrollbar
+  --scrollbar-thumb:    #30A5FF;
+  --scrollbar-track-shadow: rgba(0, 0, 0, 0.3);
+
+  // Misc
+  --arrow-color:        #666666;
+  --resizer-hover-border: rgba(0, 0, 0, 0.5);
+  --resizer-border:     rgba(255, 255, 255, 0);
+  --modal-btn-cancel-border: rgba(101, 106, 113, 1);
+  --point-cloud-label:  #aaaaaa;
+  --blink-from:         #006AFF;
+  --blink-to:           #30435E;
+
+  --icon-filter:        none;
+}
+
+// ============================================
+// Theme: Light
+// ============================================
+.theme-light {
+  // Background layers — soft warm grays with distinct tiers
+  --bg-scene:           #DDE3EA;
+  --bg-body:            #E8ECF1;
+  --bg-header:          #F5F6F8;
+  --bg-panel:           #EEF0F4;
+  --bg-card:            #EEF0F4;
+  --bg-sidebar:         #F0F2F5;
+  --bg-button:          #E0E3E8;
+  --bg-hover:           #D5D9DF;
+  --bg-sub-button:      #D0D4DA;
+  --bg-input:           #F5F6F8;
+  --bg-toggle-track:    #C5C9CF;
+  --bg-progress:        #D5D9DF;
+  --bg-scrollbar-track: #E0E3E8;
+  --bg-modal:           rgba(245, 246, 248, 0.97);
+  --bg-modal-mask:      rgba(0, 0, 0, 0.25);
+  --bg-overlay:         rgba(245, 246, 248, 0.93);
+  --bg-overlay-light:   rgba(245, 246, 248, 0.88);
+  --bg-overlay-medium:  rgba(245, 246, 248, 0.90);
+  --bg-loader:          #E8ECF1;
+  --bg-guide-modal:     #F0F2F5;
+  --bg-delete-modal:    #F0F2F5;
+  --bg-scenario-btn:    #E0E3E8;
+  --bg-scenario-hover:  #D5D9DF;
+  --bg-event-row:       #F0F2F5;
+  --bg-tool-menu:       #F5F6F8;
+
+  // Text layers
+  --text-primary:       #2C2C2C;
+  --text-secondary:     #5A5A5A;
+  --text-tertiary:      #8C8C8C;
+  --text-muted:         #7A7A7A;
+  --text-label:         #4A4A4A;
+  --text-inverse:       #FFFFFF;
+  --text-disabled:      #B8B8B8;
+
+  // Borders — clearly distinct from light backgrounds
+  --border-primary:     #B0B7C0;
+  --border-dark:        #7A808A;
+  --border-light:       #C0C6CF;
+  --border-divider:     #A0A7B0;
+  --border-hover-row:   #D0D5DD;
+  --border-section:     #A8AEB8;
+
+  // Accent colors (kept the same)
+  --accent-blue:        #30A5FF;
+  --accent-blue-dark:   #006AFF;
+  --accent-green:       #1C9063;
+  --accent-blue-hover:  #49a9ee;
+
+  // Status colors (kept the same)
+  --status-error:       #B43131;
+  --status-alert:       #D7466F;
+  --status-warn:        #A3842D;
+  --status-success:     #00B48F;
+  --status-fail:        #F63E40;
+
+  // Toggle / Radio
+  --radio-border:       #C5C9CF;
+  --radio-bg:           #8C8C8C;
+  --radio-checked-bg:   #30A5FF;
+  --radio-checked-border: #006AFF;
+  --toggle-checked-bg:  #006AFF;
+
+  // Command button
+  --command-bg-start:   #E8ECF1;
+  --command-bg-end:     #E0EAE6;
+  --command-bg-hover:   #D5E0DC;
+  --command-bg-active:  rgba(180, 200, 190, 0.5);
+  --command-bg-disabled-start: #E0E3E8;
+  --command-bg-disabled-end:   #D8DBE0;
+
+  // Driving mode
+  --auto-mode-gradient-start: rgba(220, 235, 255, 0.92);
+  --auto-mode-gradient-end:   rgba(195, 220, 255, 0.92);
+  --auto-mode-border:   #006AFF;
+  --auto-mode-text:     #006AFF;
+  --manual-mode-gradient-start: rgba(255, 225, 225, 0.92);
+  --manual-mode-gradient-end:   rgba(255, 205, 205, 0.92);
+  --manual-mode-text:   #B43131;
+  --manual-mode-border: #B43131;
+
+  // Meter
+  --meter-brake-bg:     #F8E0E0;
+  --meter-brake-fill:   #D63030;
+  --meter-accel-bg:     #DAE8FF;
+  --meter-accel-fill:   #006AFF;
+
+  // Notification
+  --notify-warn-border:       #D48806;
+  --notify-warn-bg:           rgba(255, 243, 230, 0.88);
+  --notify-alert-border:      #CF1322;
+  --notify-alert-bg:          rgba(255, 232, 234, 0.88);
+  --notify-alert-center-border: #CF1322;
+  --notify-alert-center-bg:   rgba(255, 232, 234, 0.92);
+  --notify-certificate-bg:    rgba(255, 243, 230, 0.15);
+
+  // Scrollbar
+  --scrollbar-thumb:    #30A5FF;
+  --scrollbar-track-shadow: rgba(0, 0, 0, 0.08);
+
+  // Misc
+  --arrow-color:        #8C8C8C;
+  --resizer-hover-border: rgba(0, 0, 0, 0.15);
+  --resizer-border:     rgba(0, 0, 0, 0);
+  --modal-btn-cancel-border: rgba(160, 165, 172, 1);
+  --point-cloud-label:  #5A5A5A;
+  --blink-from:         #006AFF;
+  --blink-to:           #A8C4DE;
+
+  // Icon filter: invert + reduce brightness so icons are dark gray, not pure black
+  --icon-filter:        invert(1) brightness(0.6);
+}
