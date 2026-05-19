@@ -4,7 +4,7 @@
     left: 0;
     bottom: 0;
     right: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--bg-modal-mask);
     z-index: 1000;
 }
 
@@ -17,8 +17,8 @@
     transform: translate(-50%, -50%);
 
     text-align: center;
-    background-color: rgba(0, 0, 0, 0.8);
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+    background-color: var(--bg-modal);
+    box-shadow: 0px 0px 10px 0px var(--bg-modal-mask);
     z-index: 1001;
 
     header {
@@ -47,29 +47,29 @@
 
         padding: 7px 25px;
         border: none;
-        background: #006AFF;
-        color: #ffffff;
+        background: var(--accent-blue-dark);
+        color: var(--text-primary);
         cursor: pointer;
     }
 
     .ok-button:hover {
-        background: #49a9ee;
+        background: var(--accent-blue-hover);
     }
 }
 
 
 .local-scenario-set-delete-confirm-modal {
 
-  color: #fff;
+  color: var(--text-primary);
 
   .ant-modal {
     .ant-modal-content {
       width: 430px;
       height: 200px;
-      background: #272A2E;
+      background: var(--bg-delete-modal);
       border-radius: 6px;
       .ant-modal-body {
-        background: #272A2E;
+        background: var(--bg-delete-modal);
         border-radius: 6px;
       }
     }
@@ -90,7 +90,7 @@
     .local-scenario-set-delete-confirm-modal_title {
       font-family: PingFangSC-Medium, serif;
       font-size: 16px;
-      color: #FFFFFF;
+      color: var(--text-primary);
       line-height: 24px;
       font-weight: 500;
     }
@@ -98,7 +98,7 @@
     .local-scenario-set-delete-confirm-modal_content {
       font-family: PingFangSC-Regular, serif;
       font-size: 12px;
-      color: #858B92;
+      color: var(--text-secondary);
       line-height: 16px;
       font-weight: 400;
       text-align: justify;
@@ -110,13 +110,13 @@
     justify-content: center;
     &_item {
       cursor: pointer;
-      color: #fff;
+      color: var(--text-primary);
       width: 72px;
       height: 40px;
       line-height: 40px;
       text-align: center;
       background: rgba(255,255,255,0.00);
-      border: 1px solid rgba(101,106,113,1);
+      border: 1px solid var(--modal-btn-cancel-border);
       border-radius: 6px;
 
       &:first-child {

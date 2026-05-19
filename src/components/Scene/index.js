@@ -23,6 +23,10 @@ export default class Scene extends React.Component {
       // the dimension of this component.
       RENDERER.updateDimension(nextProps.width, nextProps.height);
     }
+
+    if (nextProps.options.themeMode !== this.props.options.themeMode) {
+      RENDERER.updateSceneTheme(nextProps.options.themeMode);
+    }
   }
 
   render() {

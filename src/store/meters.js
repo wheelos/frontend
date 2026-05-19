@@ -2,8 +2,8 @@ import {
   observable, computed, action, runInAction,
 } from 'mobx';
 
-function roundToTens(percent) {
-  return Math.round(percent / 10.0) * 10;
+function roundToOneDecimal(percent) {
+  return Math.round(percent * 10) / 10;
 }
 
 function toDrivingMode(disengageType) {
@@ -59,10 +59,10 @@ export default class Meters {
     @action update(world) {
       if (world.autoDrivingCar) {
         if (world.autoDrivingCar.throttlePercentage !== undefined) {
-          this.throttlePercent = roundToTens(world.autoDrivingCar.throttlePercentage);
+          this.throttlePercent = roundToOneDecimal(world.autoDrivingCar.throttlePercentage);
         }
         if (world.autoDrivingCar.brakePercentage !== undefined) {
-          this.brakePercent = roundToTens(world.autoDrivingCar.brakePercentage);
+          this.brakePercent = roundToOneDecimal(world.autoDrivingCar.brakePercentage);
         }
 
         if (world.autoDrivingCar.speed !== undefined) {

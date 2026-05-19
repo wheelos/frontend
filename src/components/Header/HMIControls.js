@@ -38,6 +38,15 @@ export default class HMIControls extends React.Component {
                 >
                     Mute
                 </button>
+                <button
+                    className={classNames({
+                      'header-item': true,
+                      'header-button': true,
+                    })}
+                    onClick={() => this.props.store.options.toggleTheme()}
+                >
+                    {this.props.store.options.themeMode === 'dark' ? '☀ Light' : '☾ Dark'}
+                </button>
                 <HMISelectors />
             </React.Fragment>
     );
