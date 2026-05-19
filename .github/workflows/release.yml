@@ -69,7 +69,7 @@ jobs:
       - name: Upload tar and sha to Cloudflare R2
         if: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags/') || github.event.inputs.tag }}
         env:
-          AWS_S3_BUCKET: "wheelos-assets"
+          R2_BUCKET: "wheelos-assets"
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_REGION: "auto"
@@ -78,6 +78,10 @@ jobs:
           ART_SHA: ${{ env.ART_SHA }}
         run: |
           set -euo pipefail
+          : "${R2_BUCKET:?R2_BUCKET is required for Cloudflare R2 uploads}"
+          : "${AWS_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID secret is required}"
+          : "${AWS_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY secret is required}"
+          : "${AWS_S3_ENDPOINT:?CF_ACCOUNT_ID secret is required}"
           python3 -m pip install --upgrade pip awscli
           echo "Checking artifacts..."
           ls -lh "${ART_TAR}" "${ART_SHA}" || (echo "Artifacts missing" >&2; exit 1)
