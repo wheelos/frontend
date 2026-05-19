@@ -2,7 +2,7 @@
   flex: 0 0 auto;
   position: relative;
   margin: 5px;
-  border: 1px solid #383838;
+  border: 1px solid var(--border-primary);
 
   select {
     position: relative;
@@ -13,7 +13,7 @@
     display: block;
     border: none;
     background: transparent;
-    color: #ffffff;
+    color: var(--text-primary);
     outline: none;
     cursor: pointer;
     padding-right: 10px;
@@ -25,9 +25,9 @@
     right: 0px;
     width: 30px;
     height: 100%;
-    border-left: 1px solid #383838;
+    border-left: 1px solid var(--border-primary);
 
-    background: #181818;
+    background: var(--bg-button);
     pointer-events: none;
   }
 
@@ -36,7 +36,7 @@
     top: 55%;
     right: 7px;
     margin-top: -5px;
-    border-top: 8px solid #666666;
+    border-top: 8px solid var(--arrow-color);
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
 

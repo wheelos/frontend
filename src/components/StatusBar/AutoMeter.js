@@ -1,5 +1,5 @@
 import React from 'react';
-import { observer } from 'mobx-react';
+import { inject, observer } from 'mobx-react';
 
 import Speedometer from 'components/StatusBar/Speedometer';
 
@@ -10,6 +10,9 @@ class Meter extends React.Component {
     } = this.props;
 
     const percentageString = `${percentage}%`;
+    const meterWidth = 120;
+    const meterMarginLeft = 8;
+    const headLeft = meterMarginLeft + (percentage / 100) * meterWidth;
 
     return (
             <div className="meter-container">
@@ -19,7 +22,7 @@ class Meter extends React.Component {
                 </div>
                 <span
                     className="meter-head"
-                    style={{ borderColor: meterColor }}
+                    style={{ left: headLeft, borderColor: meterColor }}
                 />
                 <div
                     className="meter-background"
@@ -36,11 +39,24 @@ class Meter extends React.Component {
   }
 }
 
-@observer
+@inject('store') @observer
 export default class AutoMeter extends React.Component {
-  constructor(props) {
-    super(props);
-    this.setting = {
+  render() {
+    const { throttlePercent, brakePercent, speed } = this.props;
+    const { themeMode } = this.props.store.options;
+
+    const meterSettings = themeMode === 'light' ? {
+      brake: {
+        label: 'Brake',
+        meterColor: '#D63030',
+        background: '#D4B8B8',
+      },
+      accelerator: {
+        label: 'Accelerator',
+        meterColor: '#0058CC',
+        background: '#B8C8D8',
+      },
+    } : {
       brake: {
         label: 'Brake',
         meterColor: '#B43131',
@@ -52,28 +68,24 @@ export default class AutoMeter extends React.Component {
         background: '#2D3B50',
       },
     };
-  }
-
-  render() {
-    const { throttlePercent, brakePercent, speed } = this.props;
 
     return (
             <div className="auto-meter">
                 <Speedometer meterPerSecond={speed} />
                 <div className="brake-panel">
                     <Meter
-                        label={this.setting.brake.label}
+                        label={meterSettings.brake.label}
                         percentage={brakePercent}
-                        meterColor={this.setting.brake.meterColor}
-                        background={this.setting.brake.background}
+                        meterColor={meterSettings.brake.meterColor}
+                        background={meterSettings.brake.background}
                     />
                 </div>
                 <div className="throttle-panel">
                     <Meter
-                        label={this.setting.accelerator.label}
+                        label={meterSettings.accelerator.label}
                         percentage={throttlePercent}
-                        meterColor={this.setting.accelerator.meterColor}
-                        background={this.setting.accelerator.background}
+                        meterColor={meterSettings.accelerator.meterColor}
+                        background={meterSettings.accelerator.background}
                     />
                 </div>
             </div>

@@ -57,18 +57,18 @@ export default class Offlineview extends React.Component {
   }
 
   render() {
-    const { isInitialized, offlineViewErrorMsg } = this.props.store;
+    const { isInitialized, offlineViewErrorMsg, options } = this.props.store;
 
     if (!isInitialized) {
       return (
-                <div className="offlineview">
+                <div className={`offlineview theme-${options.themeMode}`}>
                     <Loader extraClasses="offline-loader" offlineViewErr={offlineViewErrorMsg} />
                 </div>
       );
     }
 
     return (
-            <div className="offlineview">
+            <div className={`offlineview theme-${options.themeMode}`}>
                 <MainView />
                 <ToolView />
             </div>

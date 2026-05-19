@@ -22,6 +22,11 @@ import STORE from 'store';
 
 const _ = require('lodash');
 
+const THEME_SCENE_COLORS = {
+  dark: 0x000C17,
+  light: 0xE8EDF2,
+};
+
 class Renderer {
   constructor() {
     // Disable antialias for mobile devices.
@@ -35,7 +40,9 @@ class Renderer {
     });
     this.scene = new THREE.Scene();
     if (OFFLINE_PLAYBACK) {
-      this.scene.background = new THREE.Color(0x000C17);
+      this.scene.background = new THREE.Color(
+        THEME_SCENE_COLORS[STORE.options.themeMode] || THEME_SCENE_COLORS.dark,
+      );
     }
 
     // The dimension of the scene
@@ -170,6 +177,14 @@ class Renderer {
   maybeInitializeOffest(x, y, forced_update = false) {
     if (!this.coordinates.isInitialized() || forced_update) {
       this.coordinates.initialize(x, y);
+    }
+  }
+
+  updateSceneTheme(themeMode) {
+    if (OFFLINE_PLAYBACK) {
+      this.scene.background = new THREE.Color(
+        THEME_SCENE_COLORS[themeMode] || THEME_SCENE_COLORS.dark,
+      );
     }
   }
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { inject, observer } from 'mobx-react';
+import { ConfigProvider } from 'antd';
 
 import SplitPane from 'react-split-pane';
 import Header from 'components/Header';
@@ -78,7 +79,13 @@ export default class Dreamview extends React.Component {
     const { currentVehicleType } = hmi;
 
     return (
-            <div>
+            <ConfigProvider getPopupContainer={(node) => {
+              if (node) {
+                return node.parentNode;
+              }
+              return document.body;
+            }}>
+            <div className={`theme-${options.themeMode}`}>
                 <Header />
                 <div className="pane-container">
                     <SplitPane
@@ -102,10 +109,10 @@ export default class Dreamview extends React.Component {
                     </SplitPane>
                 </div>
               {
-                // When the current vehicle is dkit series, the safety pop-up is displayed
                 (currentVehicleType > 0 && currentVehicleType <= 7) &&
                 <ApplicationGuideModal />}
             </div>
+            </ConfigProvider>
     );
   }
 }

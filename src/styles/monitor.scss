@@ -5,10 +5,10 @@ $monitor-header-height: 32px;
     height: 100%;
     width: 100%;
 
-    border-left: 1px solid #000000;
+    border-left: 1px solid var(--border-dark);
     box-sizing: border-box;
 
-    background-color: #1D2226;
+    background-color: var(--bg-panel);
     overflow: auto;
 
     .monitor-header {
@@ -16,11 +16,11 @@ $monitor-header-height: 32px;
         height: $monitor-header-height;
         box-sizing: border-box;
         min-width: $min-monitor-width;
-        border-bottom: 1px solid #000000;
+        border-bottom: 1px solid var(--border-dark);
         padding: 6px 12px;
 
-        background: #2A3238;
-        color: #FFFFFF;
+        background: var(--bg-hover);
+        color: var(--text-primary);
 
         .title {
             flex-grow: 1;
@@ -37,12 +37,12 @@ $monitor-header-height: 32px;
         .section {
             flex: 1 1 auto;
             padding: 5px 10px 5px 10px;
-            border-bottom: 1px solid #000000;
+            border-bottom: 1px solid var(--border-dark);
 
             .section-title {
                 display: flex;
                 width: fit-content;
-                border-bottom: 1px solid #999999;
+                border-bottom: 1px solid var(--border-divider);
                 padding: 5px;
 
                 span {
@@ -54,14 +54,14 @@ $monitor-header-height: 32px;
             .section-subtitle {
                 display: inline-block;
                 margin: 10px 0px 10px 10px;
-                border-bottom: 1px solid #999999;
+                border-bottom: 1px solid var(--border-divider);
                 padding-bottom: 2px;
 
             }
 
             .section-content {
                 padding: 10px 10px;
-                color: #999999;
+                color: var(--text-secondary);
 
                 .section-content-row {
                     display: flex;
@@ -103,7 +103,7 @@ $monitor-header-height: 32px;
                     width: 30%;
                     padding: 2px 4px;
 
-                    color: #999999;
+                    color: var(--text-secondary);
                     font-size: 12px;
                 }
 
@@ -112,7 +112,7 @@ $monitor-header-height: 32px;
                 }
 
                 .active {
-                    color: #FFFFFF;
+                    color: var(--text-primary);
                 }
             }
         }
@@ -124,11 +124,11 @@ $monitor-header-height: 32px;
         margin: 0px;
 
         &:not(:first-child) {
-            border-top: 1px solid #000000;
+            border-top: 1px solid var(--border-dark);
         }
 
         &:only-child {
-            border-bottom: 1px solid #000000;
+            border-bottom: 1px solid var(--border-dark);
         }
     }
 }
@@ -148,7 +148,7 @@ $monitor-header-height: 32px;
     }
 
     .section-divider-on-top {
-        border-top: 2px solid #080A0C;
+        border-top: 2px solid var(--border-section);
     }
 
     .category-container {
@@ -182,29 +182,29 @@ $monitor-header-height: 32px;
             margin: 15px 0px 0px 10px;
             font-size: 12px;
 
-            color: #888888;
+            color: var(--text-muted);
         }
 
         .category-updated {
-            color: #FFFFFF;
+            color: var(--text-primary);
         }
 
         .category-progress-background {
             position: relative;
             height: 6px;
             margin: 5px 10px;
-            background-color: #333639;
+            background-color: var(--bg-progress);
 
             .category-in-progress {
                 position: absolute;
                 height: 100%;
-                background: #006AFF;
+                background: var(--accent-blue-dark);
             }
 
             .category-completed {
                 position: absolute;
                 height: 100%;
-                background: #113B73;
+                background: var(--radio-checked-border);
             }
         }
     }
@@ -320,10 +320,10 @@ $monitor-header-height: 32px;
 .teleop {
     .mute-button {
         width: 20px;
-        border: 1px solid #383838;
+        border: 1px solid var(--border-primary);
 
-        background: #181818;
-        color: #999999;
+        background: var(--bg-button);
+        color: var(--text-secondary);
         text-align: center;
 
         outline: none;
