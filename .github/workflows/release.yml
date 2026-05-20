@@ -87,11 +87,11 @@ jobs:
           ls -lh "${ART_TAR}" "${ART_SHA}" || (echo "Artifacts missing" >&2; exit 1)
           echo "Optional: verifying sha256"
           sha256sum -c "${ART_SHA}" || echo "WARNING: sha256 verification failed" >&2
-          echo "Uploading ${ART_TAR} to R2 bucket ${R2_BUCKET}..."
-          aws --endpoint-url "${AWS_S3_ENDPOINT}" s3 cp "${ART_TAR}" "s3://${R2_BUCKET}/" --acl private
-          aws --endpoint-url "${AWS_S3_ENDPOINT}" s3 cp "${ART_SHA}" "s3://${R2_BUCKET}/" --acl private
+          echo "Uploading ${ART_TAR} to R2 bucket ${R2_BUCKET}/release/dreamview/..."
+          aws --endpoint-url "${AWS_S3_ENDPOINT}" s3 cp "${ART_TAR}" "s3://${R2_BUCKET}/release/dreamview/" --acl private
+          aws --endpoint-url "${AWS_S3_ENDPOINT}" s3 cp "${ART_SHA}" "s3://${R2_BUCKET}/release/dreamview/" --acl private
           echo "Listing uploaded objects:"
-          aws --endpoint-url "${AWS_S3_ENDPOINT}" s3 ls "s3://${R2_BUCKET}/" | grep "$(basename ${ART_TAR})" || true
+          aws --endpoint-url "${AWS_S3_ENDPOINT}" s3 ls "s3://${R2_BUCKET}/release/dreamview/" | grep "$(basename ${ART_TAR})" || true
 
       - name: Release
         uses: softprops/action-gh-release@v1
