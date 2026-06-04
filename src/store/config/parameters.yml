@@ -163,6 +163,9 @@ options:
   showPointCloud:
     default: false
     menuId: perceptionPointCloud
+  showOccDebug:
+    default: false
+    menuId: perceptionOccDebug
   showPerceptionLaneMarker:
     default: false
     menuId: perceptionLaneMarker

@@ -18,6 +18,7 @@ export default [
     type: 'checkbox',
     data: {
       perceptionPointCloud: 'Point Cloud',
+      perceptionOccDebug: 'Occ Debug',
       perceptionVehicle: 'Vehicle',
       perceptionPedestrian: 'Pedestrian',
       perceptionBicycle: 'Bicycle',
