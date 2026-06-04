@@ -17,6 +17,7 @@ import Prediction from 'renderer/prediction.js';
 import Routing from 'renderer/routing.js';
 import RoutingEditor from 'renderer/routing_editor.js';
 import Gnss from 'renderer/gnss.js';
+import OccDebugOverlay from 'renderer/occ_debug.js';
 import PointCloud from 'renderer/point_cloud.js';
 import STORE from 'store';
 
@@ -96,6 +97,8 @@ class Renderer {
 
     // The GNSS/GPS
     this.gnss = new Gnss();
+
+    this.occDebug = new OccDebugOverlay();
 
     this.pointCloud = new PointCloud();
 
@@ -530,6 +533,7 @@ class Renderer {
     this.updateRouting(world.routingTime, world.routePath);
     this.gnss.update(world, this.coordinates, this.scene);
     this.map.update(world);
+    this.occDebug.update(world, this.coordinates, this.scene);
 
     const planningAdcPose = _.get(world, 'planningData.initPoint.pathPoint');
     if (this.planningAdc && planningAdcPose) {

@@ -1492,6 +1492,10 @@
                   "options": {
                     "default": false
                   }
+                },
+                "bevOccDebug": {
+                  "type": "apollo.perception.BEVOccDebug",
+                  "id": 31
                 }
               }
             },
@@ -11742,6 +11746,66 @@
                 "cipvInfo": {
                   "type": "CIPVInfo",
                   "id": 5
+                }
+              }
+            },
+            "BEVOccDebug": {
+              "fields": {
+                "header": {
+                  "type": "apollo.common.Header",
+                  "id": 1
+                },
+                "frameId": {
+                  "type": "string",
+                  "id": 2
+                },
+                "measurementTime": {
+                  "type": "double",
+                  "id": 3
+                },
+                "width": {
+                  "type": "uint32",
+                  "id": 4
+                },
+                "height": {
+                  "type": "uint32",
+                  "id": 5
+                },
+                "resolution": {
+                  "type": "float",
+                  "id": 6
+                },
+                "xMin": {
+                  "type": "float",
+                  "id": 7
+                },
+                "xMax": {
+                  "type": "float",
+                  "id": 8
+                },
+                "yMin": {
+                  "type": "float",
+                  "id": 9
+                },
+                "yMax": {
+                  "type": "float",
+                  "id": 10
+                },
+                "zMin": {
+                  "type": "float",
+                  "id": 11
+                },
+                "zMax": {
+                  "type": "float",
+                  "id": 12
+                },
+                "encodedTopdownCell": {
+                  "rule": "repeated",
+                  "type": "uint32",
+                  "id": 13,
+                  "options": {
+                    "packed": true
+                  }
                 }
               }
             },
