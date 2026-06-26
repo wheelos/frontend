@@ -10,6 +10,15 @@ const Line = ThreeLine2D(THREE);
 const BasicShader = ThreeLine2DBasicShader(THREE);
 const textureLoader = new THREE.TextureLoader();
 
+function createLineGeometry(points) {
+  const geometry = new THREE.Geometry();
+  points.forEach((point) => {
+    geometry.vertices.push(new THREE.Vector3(point.x, point.y, point.z || 0));
+  });
+  geometry.computeBoundingSphere();
+  return geometry;
+}
+
 export function addOffsetZ(mesh, value) {
   if (value) {
     const zOffset = value * DELTA_Z_OFFSET;
@@ -37,8 +46,7 @@ export function drawDashedLineFromPoints(
   points, color = 0xff0000, linewidth = 1, dashSize = 4, gapSize = 2,
   zOffset = 0, opacity = 1, matrixAutoUpdate = true,
 ) {
-  const path = new THREE.Path();
-  const geometry = path.createGeometry(points);
+  const geometry = createLineGeometry(points);
   geometry.computeLineDistances();
   const material = new THREE.LineDashedMaterial({
     color,
@@ -50,6 +58,7 @@ export function drawDashedLineFromPoints(
   });
   const mesh = new THREE.Line(geometry, material);
   addOffsetZ(mesh, zOffset);
+  mesh.frustumCulled = false;
   mesh.matrixAutoUpdate = matrixAutoUpdate;
   if (!matrixAutoUpdate) {
     mesh.updateMatrix();
@@ -91,8 +100,7 @@ export function drawSegmentsFromPoints(
   points, color = 0xff0000, linewidth = 1, zOffset = 0,
   matrixAutoUpdate = true, transparent = false, opacity = 1,
 ) {
-  const path = new THREE.Path();
-  const geometry = path.createGeometry(points);
+  const geometry = createLineGeometry(points);
   const material = new THREE.LineBasicMaterial({
     color,
     linewidth,
@@ -101,6 +109,7 @@ export function drawSegmentsFromPoints(
   });
   const pathLine = new THREE.Line(geometry, material);
   addOffsetZ(pathLine, zOffset);
+  pathLine.frustumCulled = false;
   pathLine.matrixAutoUpdate = matrixAutoUpdate;
   if (matrixAutoUpdate === false) {
     pathLine.updateMatrix();
