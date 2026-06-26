@@ -75,7 +75,17 @@ class Renderer {
     this.planningStatus = new PlanningStatus();
 
     // The perception obstacles.
-    this.perceptionObstacles = new PerceptionObstacles();
+    this.perceptionObstacles = new PerceptionObstacles({
+      lineThickness: 3,
+    });
+    this.groundTruthObstacles = new PerceptionObstacles({
+      objectsField: 'gtObject',
+      colorOverride: 0x1E8BFF,
+      lineThickness: 1,
+      zOffset: 0.08,
+      skipSensorMeasurements: true,
+      skipLaneMarkers: true,
+    });
 
     // The decision.
     this.decision = new Decision();
@@ -528,6 +538,7 @@ class Renderer {
 
     const isBirdView = ['Overhead', 'Map'].includes(_.get(this, 'options.cameraAngle'));
     this.perceptionObstacles.update(world, this.coordinates, this.scene, isBirdView);
+    this.groundTruthObstacles.update(world, this.coordinates, this.scene, isBirdView);
     this.decision.update(world, this.coordinates, this.scene);
     this.prediction.update(world, this.coordinates, this.scene);
     this.updateRouting(world.routingTime, world.routePath);

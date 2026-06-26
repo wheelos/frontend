@@ -8,16 +8,12 @@ import HMISelectors from 'components/Header/HMISelectors';
 export default class HMIControls extends React.Component {
   render() {
     const {
-      dockerImage,
       isCoDriver,
       isMute,
     } = this.props.store.hmi;
 
     return (
             <React.Fragment>
-                <button className="header-item header-button" onClick={() => alert(dockerImage)}>
-                    Docker Version
-                </button>
                 <button
                     className={classNames({
                       'header-item': true,

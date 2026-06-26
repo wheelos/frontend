@@ -135,6 +135,9 @@ export default class RealtimeWebSocketEndpoint {
             STORE.routeEditingManager.updateParkingRoutingDistance(message.threshold);
           }
           break;
+        case 'WheelFlowStatus':
+          STORE.wheelflow.updateStatus(message);
+          break;
       }
     };
     this.websocket.onclose = (event) => {
@@ -561,5 +564,48 @@ export default class RealtimeWebSocketEndpoint {
       request.start.heading = start_heading;
     }
     this.websocket.send(JSON.stringify(request));
+  }
+
+  startWheelFlow(payload) {
+    this.websocket.send(JSON.stringify({
+      type: 'WheelFlowStart',
+      ...payload,
+    }));
+  }
+
+  stopWheelFlow() {
+    this.websocket.send(JSON.stringify({
+      type: 'WheelFlowStop',
+    }));
+  }
+
+  resetWheelFlow() {
+    this.websocket.send(JSON.stringify({
+      type: 'WheelFlowReset',
+    }));
+  }
+
+  requestWheelFlowStatus() {
+    this.websocket.send(JSON.stringify({
+      type: 'WheelFlowStatus',
+    }));
+  }
+
+  sendWheelFlowRouting() {
+    this.websocket.send(JSON.stringify({
+      type: 'WheelFlowSendRouting',
+    }));
+  }
+
+  engageWheelFlow() {
+    this.websocket.send(JSON.stringify({
+      type: 'WheelFlowEngage',
+    }));
+  }
+
+  disengageWheelFlow() {
+    this.websocket.send(JSON.stringify({
+      type: 'WheelFlowDisengage',
+    }));
   }
 }

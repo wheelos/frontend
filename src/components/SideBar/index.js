@@ -19,7 +19,7 @@ const sidebarIconMapping = {
   showMenu: LayerMenuIcon,
   showRouteEditingBar: RouteEditingIcon,
   showDataRecorder: DataRecorderIcon,
-  showProfile: ProfileIcon,
+  showWheelFlow: ProfileIcon,
 };
 
 const sidebarLabelMapping = {
@@ -29,7 +29,7 @@ const sidebarLabelMapping = {
   showRouteEditingBar: 'Route Editing',
   showDataRecorder: 'Data Recorder',
   showPOI: 'Default Routing',
-  showProfile: 'Profile',
+  showWheelFlow: 'WheelFlow',
 };
 
 @inject('store') @observer
@@ -65,7 +65,7 @@ export default class SideBar extends React.Component {
                     <SideBarButton type="main" {...settings.showMenu} />
                     <SideBarButton type="main" {...settings.showRouteEditingBar} />
                     <SideBarButton type="main" {...settings.showDataRecorder} />
-                    <SideBarButton type="main" {...settings.showProfile} />
+                    <SideBarButton type="main" {...settings.showWheelFlow} />
                 </div>
                 <div className="sub-button-panel">
                     <SideBarButton

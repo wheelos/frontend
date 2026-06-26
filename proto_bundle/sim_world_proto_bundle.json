@@ -1160,6 +1160,10 @@
                 "distanceToAdc": {
                   "type": "double",
                   "id": 41
+                },
+                "positionZ": {
+                  "type": "double",
+                  "id": 49
                 }
               },
               "nested": {
@@ -1496,6 +1500,11 @@
                 "bevOccDebug": {
                   "type": "apollo.perception.BEVOccDebug",
                   "id": 31
+                },
+                "gtObject": {
+                  "rule": "repeated",
+                  "type": "Object",
+                  "id": 32
                 }
               }
             },

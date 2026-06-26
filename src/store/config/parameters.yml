@@ -100,7 +100,7 @@ options:
     default: false
   showDataRecorder:
     default: false
-  showProfile:
+  showWheelFlow:
     default: false
 
   # task panel options

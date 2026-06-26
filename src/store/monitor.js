@@ -1,5 +1,16 @@
 import { observable, action } from 'mobx';
 
+const SUPPRESSED_MESSAGES = [
+  'triggers safe mode',
+  'you have not select vehicle yet',
+  "you haven't selected a vehicle yet",
+];
+
+function isSuppressedMessage(item) {
+  const msg = (item && item.msg ? item.msg : '').toLowerCase();
+  return SUPPRESSED_MESSAGES.some((text) => msg.includes(text));
+}
+
 export default class Monitor {
     @observable hasActiveNotification = false;
 
@@ -55,11 +66,12 @@ export default class Monitor {
           .map((notification) => Object.assign(notification.item, {
             timestampMs: notification.timestampSec * 1000,
           }))
+          .filter((item) => !isSuppressedMessage(item))
           .sort((notification1, notification2) =>
             notification2.timestampMs - notification1.timestampMs);
       } else if (world.monitor) {
         // deprecated: no timestamp for each item
-        newItems = world.monitor.item;
+        newItems = world.monitor.item.filter((item) => !isSuppressedMessage(item));
       }
 
       if (this.hasNewNotification(this.items, newItems)) {

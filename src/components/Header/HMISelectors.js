@@ -11,13 +11,14 @@ export default class HMISelectors extends React.Component {
   render() {
 
     const {
-      dockerImage,
       modes, currentMode,
       maps, currentMap,
-      vehicles, currentVehicle,
-      isCoDriver,
-      isMute,
     } = this.props.store.hmi;
+    const { status: wheelFlowStatus } = this.props.store.wheelflow;
+    const wheelFlowLocked = Boolean(
+      wheelFlowStatus.bridgeRunning
+      || !['IDLE', 'ERROR', 'STOPPED'].includes(wheelFlowStatus.stage),
+    );
 
     const enableSimControl = this.props.store.options.enableSimControl;
 
@@ -37,22 +38,16 @@ export default class HMISelectors extends React.Component {
                     name="setup mode"
                     options={modes}
                     currentOption={currentMode}
+                    disabled={wheelFlowLocked}
                     onChange={(event) => {
                       WS.changeSetupMode(event.target.value);
-                    }}
-                />
-                <Selector
-                    name="vehicle"
-                    options={vehicles}
-                    currentOption={currentVehicle}
-                    onChange={(event) => {
-                      WS.changeVehicle(event.target.value);
                     }}
                 />
                 <Selector
                     name="map"
                     options={maps}
                     currentOption={currentMap}
+                    disabled={wheelFlowLocked}
                     onChange={(event) => {
                       WS.changeMap(event.target.value);
                     }}

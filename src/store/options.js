@@ -28,7 +28,7 @@ export default class Options {
         'showMenu',
         'showRouteEditingBar',
         'showDataRecorder',
-        'showProfile',
+        'showWheelFlow',
       ];
       this.secondarySideBarOptions = ['showPOI'];
 
@@ -66,7 +66,7 @@ export default class Options {
                || this.showMenu
                || this.showPOI
                || this.showDataRecorder
-               || this.showProfile;
+               || this.showWheelFlow;
     }
 
     @computed get showGeo() {
@@ -150,7 +150,7 @@ export default class Options {
       if ([
         'showTasks',
         'showModuleController',
-        'showProfile'
+        'showWheelFlow',
       ].includes(option)) {
         return false;
       } if (option === 'showRouteEditingBar') {

@@ -70,7 +70,7 @@ export default class AutoDrivingCar {
       return;
     }
 
-    this.mesh.position.set(position.x, position.y, 0);
+    this.mesh.position.set(position.x, position.y, pose.positionZ || 0);
     this.mesh.rotation.y = pose.heading;
   }
 
