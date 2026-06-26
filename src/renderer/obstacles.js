@@ -33,7 +33,13 @@ const CUBE_TYPE = Object.freeze({
 });
 
 export default class PerceptionObstacles {
-  constructor() {
+  constructor(options = {}) {
+    this.objectsField = options.objectsField || 'object';
+    this.colorOverride = options.colorOverride;
+    this.lineThickness = options.lineThickness || LINE_THICKNESS;
+    this.zOffset = options.zOffset || 0;
+    this.skipSensorMeasurements = Boolean(options.skipSensorMeasurements);
+    this.skipLaneMarkers = Boolean(options.skipLaneMarkers);
     this.textRender = new Text3D();
     this.arrows = []; // for indication of direction of moving obstacles
     this.ids = []; // for obstacle id labels
@@ -57,16 +63,20 @@ export default class PerceptionObstacles {
   }
 
   update(world, coordinates, scene, isBirdView) {
-    this.resetObjects(scene, _.isEmpty(world.object));
+    this.resetObjects(scene, _.isEmpty(world[this.objectsField]));
     this.updateObjects(world, coordinates, scene, isBirdView);
-    this.updateSensorMeasurements(world, coordinates, scene);
+    if (!this.skipSensorMeasurements) {
+      this.updateSensorMeasurements(world, coordinates, scene);
+    }
     this.hideUnusedObjects();
 
-    this.updateLaneMarkers(world, coordinates, scene);
+    if (!this.skipLaneMarkers) {
+      this.updateLaneMarkers(world, coordinates, scene);
+    }
   }
 
   updateObjects(world, coordinates, scene, isBirdView) {
-    const objects = world.object;
+    const objects = world[this.objectsField];
     if (_.isEmpty(objects)) {
       return;
     }
@@ -91,9 +101,12 @@ export default class PerceptionObstacles {
       const position = coordinates.applyOffset(
         new THREE.Vector3(obstacle.positionX,
           obstacle.positionY,
-          (obstacle.height || DEFAULT_HEIGHT) / 2),
+          (obstacle.positionZ || 0) + (obstacle.height || DEFAULT_HEIGHT) / 2
+            + this.zOffset),
       );
-      const color = ObstacleColorMapping[obstacle.type] || DEFAULT_COLOR;
+      const color = this.colorOverride
+        || ObstacleColorMapping[obstacle.type]
+        || DEFAULT_COLOR;
       const isV2X = (obstacle.source === 'V2X');
 
       if (STORE.options.showObstaclesVelocity && obstacle.type
@@ -179,7 +192,7 @@ export default class PerceptionObstacles {
         const position = coordinates.applyOffset(
           new THREE.Vector3(measurement.positionX,
             measurement.positionY,
-            (measurement.height || DEFAULT_HEIGHT) / 2),
+            (measurement.positionZ || 0) + (measurement.height || DEFAULT_HEIGHT) / 2),
         );
         const color = ObstacleColorMapping[measurement.type] || DEFAULT_COLOR;
 
@@ -345,10 +358,11 @@ export default class PerceptionObstacles {
         console.warn('Cannot display obstacle with an edge length 0!');
         continue;
       }
+      const baseZ = (v.z + vNext.z) / 2.0 + this.zOffset;
 
       if (isForV2X) {
         const v2xFaceMesh = this.getFace(this.v2xSolidFaceIdx + i, scene, FACE_TYPE.SOLID_FACE);
-        v2xFaceMesh.position.set(facePosition.x, facePosition.y, height);
+        v2xFaceMesh.position.set(facePosition.x, facePosition.y, baseZ + height);
         v2xFaceMesh.scale.set(edgeDistance, 1, height);
         v2xFaceMesh.material.color.setHex(color);
         v2xFaceMesh.rotation.set(0, 0, Math.atan2(vNext.y - v.y, vNext.x - v.x));
@@ -359,8 +373,8 @@ export default class PerceptionObstacles {
         const solidFaceMesh = this.getFace(this.extrusionFaceIdx + i, scene, FACE_TYPE.SOLID_LINE);
         const dashedFaceMesh = this.getFace(this.extrusionFaceIdx + i, scene,
           FACE_TYPE.DASHED_LINE);
-        solidFaceMesh.position.set(facePosition.x, facePosition.y, 0);
-        dashedFaceMesh.position.set(facePosition.x, facePosition.y, height * confidence);
+        solidFaceMesh.position.set(facePosition.x, facePosition.y, baseZ);
+        dashedFaceMesh.position.set(facePosition.x, facePosition.y, baseZ + height * confidence);
         solidFaceMesh.scale.set(edgeDistance, 1, height * confidence);
         dashedFaceMesh.scale.set(edgeDistance, 1, height * (1 - confidence));
         solidFaceMesh.material.color.setHex(color);
@@ -426,7 +440,7 @@ export default class PerceptionObstacles {
     if (index < this.arrows.length) {
       return this.arrows[index];
     }
-    const arrowMesh = drawArrow(1.5, LINE_THICKNESS, 0.5, 0.5, DEFAULT_COLOR);
+    const arrowMesh = drawArrow(1.5, this.lineThickness, 0.5, 0.5, DEFAULT_COLOR);
     arrowMesh.rotation.set(0, 0, -Math.PI / 2);
     arrowMesh.visible = false;
     this.arrows.push(arrowMesh);
@@ -452,10 +466,10 @@ export default class PerceptionObstacles {
         extrusionFace = drawSolidPolygonFace();
         break;
       case FACE_TYPE.SOLID_LINE:
-        extrusionFace = drawSegmentsFromPoints(points, DEFAULT_COLOR, LINE_THICKNESS);
+        extrusionFace = drawSegmentsFromPoints(points, DEFAULT_COLOR, this.lineThickness);
         break;
       default:
-        extrusionFace = drawDashedLineFromPoints(points, DEFAULT_COLOR, LINE_THICKNESS, 0.1, 0.1);
+        extrusionFace = drawDashedLineFromPoints(points, DEFAULT_COLOR, this.lineThickness, 0.1, 0.1);
         break;
     }
     extrusionFace.visible = false;
@@ -473,13 +487,13 @@ export default class PerceptionObstacles {
     let cubeMesh = null;
     switch (type) {
       case CUBE_TYPE.SOLID_FACE:
-        cubeMesh = drawSolidBox(cubeSize, DEFAULT_COLOR, LINE_THICKNESS);
+        cubeMesh = drawSolidBox(cubeSize, DEFAULT_COLOR, this.lineThickness);
         break;
       case CUBE_TYPE.SOLID_LINE:
-        cubeMesh = drawBox(cubeSize, DEFAULT_COLOR, LINE_THICKNESS);
+        cubeMesh = drawBox(cubeSize, DEFAULT_COLOR, this.lineThickness);
         break;
       default:
-        cubeMesh = drawDashedBox(cubeSize, DEFAULT_COLOR, LINE_THICKNESS, 0.1, 0.1);
+        cubeMesh = drawDashedBox(cubeSize, DEFAULT_COLOR, this.lineThickness, 0.1, 0.1);
         break;
     }
     cubeMesh.visible = false;

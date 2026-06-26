@@ -25,7 +25,7 @@ export default class Selector extends React.Component {
 
   render() {
     const {
-      name, options, currentOption, onChange,
+      name, options, disabled,
     } = this.props;
 
     this.entries = options.map((key) => (
@@ -40,7 +40,11 @@ export default class Selector extends React.Component {
     return (
             <div className="header-item selector">
                 <span className="arrow" />
-                <select onChange={this.onChangeHandler} value={this.state.value}>
+                <select
+                    onChange={this.onChangeHandler}
+                    value={this.state.value}
+                    disabled={disabled}
+                >
                     {this.entries}
                 </select>
             </div>

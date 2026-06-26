@@ -16,6 +16,7 @@ import StoryTellers from 'store/story_tellers';
 import Teleop from 'store/teleop';
 import TrafficSignal from 'store/traffic_signal';
 import PointCloudMetrics from 'store/point_cloud_metrics';
+import WheelFlow from 'store/wheelflow';
 
 class DreamviewStore {
     // Mutable States
@@ -58,6 +59,8 @@ class DreamviewStore {
     @observable dimension = new Dimension(this.hmi, this.options);
 
     @observable pointCloudMetrics = new PointCloudMetrics();
+
+    @observable wheelflow = new WheelFlow();
 
     @observable newDisengagementReminder = false;
 
