@@ -101,8 +101,7 @@ export default class PerceptionObstacles {
       const position = coordinates.applyOffset(
         new THREE.Vector3(obstacle.positionX,
           obstacle.positionY,
-          (obstacle.positionZ || 0) + (obstacle.height || DEFAULT_HEIGHT) / 2
-            + this.zOffset),
+          (obstacle.height || DEFAULT_HEIGHT) / 2 + this.zOffset),
       );
       const color = this.colorOverride
         || ObstacleColorMapping[obstacle.type]
@@ -192,7 +191,7 @@ export default class PerceptionObstacles {
         const position = coordinates.applyOffset(
           new THREE.Vector3(measurement.positionX,
             measurement.positionY,
-            (measurement.positionZ || 0) + (measurement.height || DEFAULT_HEIGHT) / 2),
+            (measurement.height || DEFAULT_HEIGHT) / 2),
         );
         const color = ObstacleColorMapping[measurement.type] || DEFAULT_COLOR;
 
@@ -358,7 +357,7 @@ export default class PerceptionObstacles {
         console.warn('Cannot display obstacle with an edge length 0!');
         continue;
       }
-      const baseZ = (v.z + vNext.z) / 2.0 + this.zOffset;
+      const baseZ = this.zOffset;
 
       if (isForV2X) {
         const v2xFaceMesh = this.getFace(this.v2xSolidFaceIdx + i, scene, FACE_TYPE.SOLID_FACE);
