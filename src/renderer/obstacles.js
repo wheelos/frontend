@@ -3,7 +3,6 @@ import _ from 'lodash';
 
 import STORE from 'store';
 import Text3D from 'renderer/text3d';
-import WhiteObstacleModelManager from 'renderer/obstacle_white_model_manager';
 import { copyProperty, hideArrayObjects, calculateLaneMarkerPoints } from 'utils/misc';
 import {
   drawSegmentsFromPoints, drawDashedLineFromPoints,
@@ -13,13 +12,8 @@ import {
 import iconObjectYield from 'assets/images/decision/object-yield.png';
 
 const DEFAULT_HEIGHT = 1.5;
-const UNKNOWN_OBSTACLE_COLOR = 0x8A2BE2;
-const UNKNOWN_POLYGON_FILL_OPACITY = 0.34;
-export const DEFAULT_COLOR = UNKNOWN_OBSTACLE_COLOR;
+export const DEFAULT_COLOR = 0xFF00FC;
 export const ObstacleColorMapping = {
-  UNKNOWN: UNKNOWN_OBSTACLE_COLOR,
-  UNKNOWN_MOVABLE: UNKNOWN_OBSTACLE_COLOR,
-  UNKNOWN_UNMOVABLE: UNKNOWN_OBSTACLE_COLOR,
   PEDESTRIAN: 0xFFEA00,
   BICYCLE: 0x00DCEB,
   VEHICLE: 0x00FF3C,
@@ -47,18 +41,15 @@ export default class PerceptionObstacles {
     this.dashedCubes = []; // for obstacles with only length/width/height
     this.extrusionSolidFaces = []; // for obstacles with polygon points
     this.extrusionDashedFaces = []; // for obstacles with polygon points
-    this.polygonFills = []; // filled prism for unsupported/unknown polygon obstacles
     this.laneMarkers = []; // for lane markers
     this.icons = [];
     this.trafficCones = []; // for traffic cone meshes
     this.v2xCubes = [];
     this.v2xSolidFaces = [];
-    this.whiteObstacleModels = new WhiteObstacleModelManager();
 
     this.arrowIdx = 0;
     this.cubeIdx = 0;
     this.extrusionFaceIdx = 0;
-    this.polygonFillIdx = 0;
     this.iconIdx = 0;
     this.trafficConeIdx = 0;
     this.v2xCubeIdx = 0;
@@ -67,14 +58,6 @@ export default class PerceptionObstacles {
 
   update(world, coordinates, scene, isBirdView) {
     this.resetObjects(scene, _.isEmpty(world.object));
-
-    if (!this.whiteObstacleModels.isReady()) {
-      this.whiteObstacleModels.preloadAll();
-      this.hideUnusedObjects();
-      this.updateLaneMarkers(world, coordinates, scene);
-      return;
-    }
-
     this.updateObjects(world, coordinates, scene, isBirdView);
     this.updateSensorMeasurements(world, coordinates, scene);
     this.hideUnusedObjects();
@@ -113,7 +96,21 @@ export default class PerceptionObstacles {
       const color = ObstacleColorMapping[obstacle.type] || DEFAULT_COLOR;
       const isV2X = (obstacle.source === 'V2X');
 
-      // Obstacle velocity/heading arrows are intentionally not rendered.
+      if (STORE.options.showObstaclesVelocity && obstacle.type
+        && obstacle.type !== 'UNKNOWN_UNMOVABLE' && obstacle.speed > 0.5) {
+        const arrowMesh = this.updateArrow(position,
+          obstacle.speedHeading, color, scene);
+        this.arrowIdx++;
+        const scale = 1 + Math.log2(obstacle.speed);
+        arrowMesh.scale.set(scale, scale, scale);
+        arrowMesh.visible = true;
+      }
+
+      if (STORE.options.showObstaclesHeading) {
+        this.drawObstacleHeading(position, obstacle.heading, scene);
+        this.arrowIdx++;
+      }
+
       this.updateTexts(adc, obstacle, position, scene, isBirdView, isV2X);
 
       // get the confidence and validate its range
@@ -125,9 +122,6 @@ export default class PerceptionObstacles {
       if (obstacle.subType === 'ST_TRAFFICCONE') {
         this.updateTrafficCone(position, scene);
         this.trafficConeIdx++;
-      } else if (!isV2X && this.whiteObstacleModels.isSupported(obstacle)
-        && this.whiteObstacleModels.update(obstacle, position, obstacle.heading, scene)) {
-        // Real white model resources replace the legacy wireframe obstacle box.
       } else if (polygon !== undefined && polygon.length > 0) {
         if (isV2X) {
           this.updatePolygon(polygon, obstacle.height, color, coordinates, confidence,
@@ -189,6 +183,11 @@ export default class PerceptionObstacles {
         );
         const color = ObstacleColorMapping[measurement.type] || DEFAULT_COLOR;
 
+        if (STORE.options.showObstaclesHeading) {
+          this.drawObstacleHeading(position, measurement.heading, scene);
+          this.arrowIdx++;
+        }
+
         if (measurement.subType === 'ST_TRAFFICCONE') {
           this.updateTrafficCone(position, scene);
           this.trafficConeIdx++;
@@ -218,12 +217,10 @@ export default class PerceptionObstacles {
     this.arrowIdx = 0;
     this.cubeIdx = 0;
     this.extrusionFaceIdx = 0;
-    this.polygonFillIdx = 0;
     this.iconIdx = 0;
     this.trafficConeIdx = 0;
     this.v2xCubeIdx = 0;
     this.v2xSolidFaceIdx = 0;
-    this.whiteObstacleModels.reset();
     if (empty) {
       this.hideUnusedObjects();
     }
@@ -235,12 +232,10 @@ export default class PerceptionObstacles {
     hideArrayObjects(this.dashedCubes, this.cubeIdx);
     hideArrayObjects(this.extrusionSolidFaces, this.extrusionFaceIdx);
     hideArrayObjects(this.extrusionDashedFaces, this.extrusionFaceIdx);
-    hideArrayObjects(this.polygonFills, this.polygonFillIdx);
     hideArrayObjects(this.icons, this.iconIdx);
     hideArrayObjects(this.trafficCones, this.trafficConeIdx);
     hideArrayObjects(this.v2xCubes, this.v2xCubeIdx);
     hideArrayObjects(this.v2xSolidFaces, this.v2xSolidFaceIdx);
-    this.whiteObstacleModels.hideUnused();
   }
 
   deduceSensorType(key) {
@@ -330,10 +325,6 @@ export default class PerceptionObstacles {
   }
 
   updatePolygon(points, height, color, coordinates, confidence, scene, isForV2X = false) {
-    if (!isForV2X) {
-      this.updatePolygonFill(points, height, color, coordinates, scene);
-    }
-
     for (let i = 0; i < points.length; i++) {
       // Get the adjacent point.
       const next = (i === points.length - 1) ? 0 : i + 1;
@@ -381,93 +372,6 @@ export default class PerceptionObstacles {
       }
 
     }
-  }
-
-  updatePolygonFill(points, height, color, coordinates, scene) {
-    if (!points || points.length < 3) {
-      return;
-    }
-
-    const polygonPoints = [];
-    for (let i = 0; i < points.length; i++) {
-      const point = coordinates.applyOffset(
-        new THREE.Vector2(points[i].x, points[i].y),
-      );
-      if (point === null) {
-        return;
-      }
-      polygonPoints.push(new THREE.Vector2(point.x, point.y));
-    }
-
-    if (polygonPoints.length < 3) {
-      return;
-    }
-
-    const fillMesh = this.getPolygonFill(this.polygonFillIdx, scene);
-    this.polygonFillIdx++;
-
-    const geometry = this.createPolygonPrismGeometry(
-      polygonPoints,
-      Math.max(height || DEFAULT_HEIGHT, 0.05),
-    );
-    fillMesh.geometry.dispose();
-    fillMesh.geometry = geometry;
-    fillMesh.material.color.setHex(color || UNKNOWN_OBSTACLE_COLOR);
-    fillMesh.visible = true;
-  }
-
-  createPolygonPrismGeometry(points, height) {
-    const geometry = new THREE.Geometry();
-    const count = points.length;
-
-    for (let i = 0; i < count; i++) {
-      geometry.vertices.push(new THREE.Vector3(points[i].x, points[i].y, 0));
-    }
-    for (let i = 0; i < count; i++) {
-      geometry.vertices.push(new THREE.Vector3(points[i].x, points[i].y, height));
-    }
-
-    for (let i = 0; i < count; i++) {
-      const next = (i + 1) % count;
-      geometry.faces.push(new THREE.Face3(i, next, count + next));
-      geometry.faces.push(new THREE.Face3(i, count + next, count + i));
-    }
-
-    const triangles = THREE.ShapeUtils.triangulateShape(points, []);
-    for (let i = 0; i < triangles.length; i++) {
-      const triangle = triangles[i];
-      geometry.faces.push(new THREE.Face3(
-        count + triangle[0], count + triangle[1], count + triangle[2],
-      ));
-      geometry.faces.push(new THREE.Face3(
-        triangle[2], triangle[1], triangle[0],
-      ));
-    }
-
-    geometry.computeFaceNormals();
-    geometry.computeBoundingSphere();
-    return geometry;
-  }
-
-  getPolygonFill(index, scene) {
-    if (index < this.polygonFills.length) {
-      return this.polygonFills[index];
-    }
-
-    const geometry = new THREE.Geometry();
-    const material = new THREE.MeshBasicMaterial({
-      color: UNKNOWN_OBSTACLE_COLOR,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: UNKNOWN_POLYGON_FILL_OPACITY,
-      depthWrite: false,
-    });
-    const fillMesh = new THREE.Mesh(geometry, material);
-    fillMesh.visible = false;
-    fillMesh.renderOrder = 1;
-    this.polygonFills.push(fillMesh);
-    scene.add(fillMesh);
-    return fillMesh;
   }
 
   updateV2xCube(length, width, height, position, heading, color, scene) {
