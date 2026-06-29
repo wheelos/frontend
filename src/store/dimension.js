@@ -14,6 +14,10 @@ const MONITOR_WIDTH_IN_PX = {
     small: 400,
     large: 450,
   },
+  [MONITOR_MENU.WHEELFLOW_CUSTOM_OBSTACLES]: {
+    small: 420,
+    large: 480,
+  },
   [MONITOR_MENU.DATA_COLLECTION_MONITOR]: {
     small: 500,
     large: 640,

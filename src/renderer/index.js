@@ -16,6 +16,7 @@ import Decision from 'renderer/decision.js';
 import Prediction from 'renderer/prediction.js';
 import Routing from 'renderer/routing.js';
 import RoutingEditor from 'renderer/routing_editor.js';
+import CustomObstacleEditor from 'renderer/custom_obstacle_editor.js';
 import Gnss from 'renderer/gnss.js';
 import OccDebugOverlay from 'renderer/occ_debug.js';
 import PointCloud from 'renderer/point_cloud.js';
@@ -101,6 +102,7 @@ class Renderer {
     this.routingEditor.setMap(this.map);
     this.routingEditor.setCoordinates(this.coordinates);
     this.routingPoint = null;
+    this.customObstacleEditor = new CustomObstacleEditor();
 
     // Distinguish between drawing point and drawing arrow
     this.startMove = false;
@@ -177,6 +179,11 @@ class Renderer {
     this.onMouseDownHandler = this.editRoute.bind(this);
     this.onMouseMoveHandler = this.onMouseMoveHandler.bind(this);
     this.onMouseUpHandler = this.onMouseUpHandler.bind(this);
+    this.onCustomObstacleMouseDownHandler = this.onCustomObstacleMouseDown.bind(this);
+    this.onCustomObstacleMouseMoveHandler = this.onCustomObstacleMouseMove.bind(this);
+    this.onCustomObstacleMouseUpHandler = this.onCustomObstacleMouseUp.bind(this);
+    this.onCustomObstacleContextMenuHandler = this.onCustomObstacleContextMenu.bind(this);
+    this.onCustomObstacleKeyDownHandler = this.onCustomObstacleKeyDown.bind(this);
 
     this.scene.add(ambient);
     this.scene.add(directionalLight);
@@ -378,6 +385,48 @@ class Renderer {
     }
   }
 
+  enableCustomObstacleEditing() {
+    this.options.selectCamera('Map');
+    this.enableOrbitControls(false);
+    this.customObstacleEditor.enable(this.scene);
+    this.updateCustomObstacles(
+      STORE.wheelflow.customObstacles,
+      STORE.wheelflow.selectedCustomObstacleId,
+      STORE.wheelflow.customObstacleMode,
+      STORE.wheelflow.customObstacleDraft,
+    );
+
+    const element = document.getElementById(this.canvasId);
+    if (!element) {
+      return;
+    }
+    element.addEventListener('mousedown', this.onCustomObstacleMouseDownHandler, false);
+    element.addEventListener('mouseup', this.onCustomObstacleMouseUpHandler, false);
+    element.addEventListener('mousemove', this.onCustomObstacleMouseMoveHandler, false);
+    element.addEventListener('contextmenu', this.onCustomObstacleContextMenuHandler, false);
+    window.addEventListener('keydown', this.onCustomObstacleKeyDownHandler, false);
+  }
+
+  disableCustomObstacleEditing() {
+    this.customObstacleEditor.disable(this.scene);
+    const element = document.getElementById(this.canvasId);
+    if (element) {
+      element.removeEventListener('mousedown', this.onCustomObstacleMouseDownHandler, false);
+      element.removeEventListener('mouseup', this.onCustomObstacleMouseUpHandler, false);
+      element.removeEventListener('mousemove', this.onCustomObstacleMouseMoveHandler, false);
+      element.removeEventListener('contextmenu', this.onCustomObstacleContextMenuHandler, false);
+    }
+    window.removeEventListener('keydown', this.onCustomObstacleKeyDownHandler, false);
+  }
+
+  updateCustomObstacles(obstacles, selectedId, mode, draft) {
+    this.customObstacleEditor.update(obstacles, selectedId, mode, draft, this.coordinates);
+  }
+
+  focusCustomObstacle(id) {
+    this.customObstacleEditor.focus(id, this.coordinates, this.camera, this.controls);
+  }
+
   addDefaultEndPoint(points) {
     for (let i = 0; i < points.length; i++) {
       this.routingEditor.addRoutingPoint(points[i], this.coordinates, this.scene, true);
@@ -471,6 +520,46 @@ class Renderer {
     this.startMove = false;
   }
 
+  onCustomObstacleMouseDown(event) {
+    if (event.target && !_.isEqual('CANVAS', event.target.tagName)) {
+      return;
+    }
+    const point = this.getGeolocation(event);
+    if (this.customObstacleEditor.handleMouseDown(point, event)) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }
+
+  onCustomObstacleMouseMove(event) {
+    if (event.target && !_.isEqual('CANVAS', event.target.tagName)) {
+      return;
+    }
+    this.customObstacleEditor.handleMouseMove(this.getGeolocation(event), this.coordinates);
+  }
+
+  onCustomObstacleMouseUp(event) {
+    if (this.customObstacleEditor.handleMouseUp()) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }
+
+  onCustomObstacleContextMenu(event) {
+    const point = this.getGeolocation(event);
+    if (this.customObstacleEditor.handleContextMenu(point)) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }
+
+  onCustomObstacleKeyDown(event) {
+    if (this.customObstacleEditor.handleKeyDown(event)) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }
+
   // Render one frame. This supports the main draw/render loop.
   render() {
     // TODO should also return when no need to update.
@@ -545,6 +634,7 @@ class Renderer {
     this.gnss.update(world, this.coordinates, this.scene);
     this.map.update(world);
     this.occDebug.update(world, this.coordinates, this.scene);
+    this.customObstacleEditor.redraw(this.coordinates);
 
     const planningAdcPose = _.get(world, 'planningData.initPoint.pathPoint');
     if (this.planningAdc && planningAdcPose) {

@@ -138,6 +138,9 @@ export default class RealtimeWebSocketEndpoint {
         case 'WheelFlowStatus':
           STORE.wheelflow.updateStatus(message);
           break;
+        case 'WheelFlowCustomObstacleList':
+          STORE.wheelflow.updateCustomObstacles(message.obstacles || []);
+          break;
       }
     };
     this.websocket.onclose = (event) => {
@@ -595,6 +598,39 @@ export default class RealtimeWebSocketEndpoint {
     this.websocket.send(JSON.stringify({
       type: 'WheelFlowSetSensors',
       enabled,
+    }));
+  }
+
+  requestWheelFlowCustomObstacles() {
+    this.websocket.send(JSON.stringify({
+      type: 'WheelFlowCustomObstacleGetList',
+    }));
+  }
+
+  addWheelFlowCustomObstacle(obstacle) {
+    this.websocket.send(JSON.stringify({
+      type: 'WheelFlowCustomObstacleAdd',
+      obstacle,
+    }));
+  }
+
+  updateWheelFlowCustomObstacle(obstacle) {
+    this.websocket.send(JSON.stringify({
+      type: 'WheelFlowCustomObstacleUpdate',
+      obstacle,
+    }));
+  }
+
+  deleteWheelFlowCustomObstacle(id) {
+    this.websocket.send(JSON.stringify({
+      type: 'WheelFlowCustomObstacleDelete',
+      id,
+    }));
+  }
+
+  clearWheelFlowCustomObstacles() {
+    this.websocket.send(JSON.stringify({
+      type: 'WheelFlowCustomObstacleClear',
     }));
   }
 

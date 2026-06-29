@@ -92,6 +92,11 @@ export default class WheelFlow extends React.Component {
     WS.startWheelFlow(this.requestPayload());
   }
 
+  handleCustomObstacles() {
+    const { store } = this.props;
+    store.handleOptionToggle('showWheelFlowCustomObstacles');
+  }
+
   render() {
     const {
       mapName,
@@ -104,6 +109,7 @@ export default class WheelFlow extends React.Component {
     const running = status.bridgeRunning || status.stage === 'RUNNING' || status.stage === 'READY';
     const controlsDisabled = busy || running;
     const sensorsEnabled = !!status.sensorDataEnabled;
+    const customObstaclesOpen = store.options.showWheelFlowCustomObstacles;
 
     return (
       <div className="wheelflow-panel">
@@ -177,6 +183,17 @@ export default class WheelFlow extends React.Component {
                 onClick={() => WS.disengageWheelFlow()}
               >
                 Disengage
+              </button>
+              <button
+                type="button"
+                className={`wheelflow-monitor-toggle ${customObstaclesOpen ? 'active' : ''}`}
+                disabled={!running && !customObstaclesOpen}
+                onClick={() => this.handleCustomObstacles()}
+              >
+                <span>Custom Obstacles</span>
+                <span className="wheelflow-toggle-track" aria-hidden="true">
+                  <span className="wheelflow-toggle-thumb" />
+                </span>
               </button>
             </div>
           </section>

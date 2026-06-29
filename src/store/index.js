@@ -107,6 +107,7 @@ class DreamviewStore {
       const oldShowMonitor = this.options.showMonitor;
       const oldShowTools = this.options.showTools;
       const oldShowRouteEditingBar = this.options.showRouteEditingBar;
+      const oldShowWheelFlowCustomObstacles = this.options.showWheelFlowCustomObstacles;
 
       this.options.toggle(option);
 
@@ -127,6 +128,20 @@ class DreamviewStore {
       if (option === 'showRouteEditingBar') {
         this.options.showPOI = false;
         this.routeEditingManager.enableRouteEditing();
+      }
+      if (!oldShowWheelFlowCustomObstacles && this.options.showWheelFlowCustomObstacles) {
+        if (this.options.showRouteEditingBar) {
+          this.options.showRouteEditingBar = false;
+          this.routeEditingManager.disableRouteEditing();
+        }
+        this.options.selectCamera('Map');
+        this.dimension.enableMonitor();
+        this.wheelflow.openCustomObstaclePanel();
+      } else if (
+        oldShowWheelFlowCustomObstacles
+        && !this.options.showWheelFlowCustomObstacles
+      ) {
+        this.wheelflow.closeCustomObstaclePanel();
       }
     }
 
