@@ -7,6 +7,7 @@ import MENU_DATA from 'store/config/MenuData';
 
 export const MONITOR_MENU = Object.freeze({
   PNC_MONITOR: 'showPNCMonitor',
+  WHEELFLOW_CUSTOM_OBSTACLES: 'showWheelFlowCustomObstacles',
   DATA_COLLECTION_MONITOR: 'showDataCollectionMonitor',
   CONSOLE_TELEOP_MONITOR: 'showConsoleTeleopMonitor',
   CAR_TELEOP_MONITOR: 'showCarTeleopMonitor',
@@ -96,6 +97,8 @@ export default class Options {
         return MONITOR_MENU.DATA_COLLECTION_MONITOR;
       } if (this.showPNCMonitor) {
         return MONITOR_MENU.PNC_MONITOR;
+      } if (this.showWheelFlowCustomObstacles) {
+        return MONITOR_MENU.WHEELFLOW_CUSTOM_OBSTACLES;
       } if (this.showFuelClient) {
         return MONITOR_MENU.FUEL_CLIENT;
       }

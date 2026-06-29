@@ -106,6 +106,8 @@ options:
   # task panel options
   showPNCMonitor:
     default: false
+  showWheelFlowCustomObstacles:
+    default: false
   showDataCollectionMonitor:
     default: false
   showFuelClient:
