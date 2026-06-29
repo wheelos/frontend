@@ -8,7 +8,7 @@ import WS from 'store/websocket';
 import './style.scss';
 
 const MAPS = ['Town03', 'Town05', 'Town10HD'];
-const SCENARIOS = ['EmptyRoad', 'UrbanLoop', 'FollowVehicle', 'IntersectionCruise'];
+const SCENARIOS = ['EmptyRoad', 'UrbanLoop'];
 const SENSOR_PRESETS = ['FrontCameraLidar', 'BEV6CameraLidar'];
 
 function SelectRow({
@@ -103,6 +103,7 @@ export default class WheelFlow extends React.Component {
     const busy = !['IDLE', 'READY', 'RUNNING', 'ERROR', 'STOPPED'].includes(status.stage);
     const running = status.bridgeRunning || status.stage === 'RUNNING' || status.stage === 'READY';
     const controlsDisabled = busy || running;
+    const sensorsEnabled = !!status.sensorDataEnabled;
 
     return (
       <div className="wheelflow-panel">
@@ -158,6 +159,13 @@ export default class WheelFlow extends React.Component {
               </button>
               <button
                 type="button"
+                disabled={!running || busy}
+                onClick={() => WS.setWheelFlowSensors(!sensorsEnabled)}
+              >
+                {sensorsEnabled ? 'Disable Sensors' : 'Enable Sensors'}
+              </button>
+              <button
+                type="button"
                 disabled={!running}
                 onClick={() => WS.engageWheelFlow()}
               >
@@ -180,6 +188,7 @@ export default class WheelFlow extends React.Component {
               <StatusItem label="RPC" value={status.wheelflowRpcConnected ? 'Connected' : 'Disconnected'} />
               <StatusItem label="World" value={status.worldLoaded ? 'Loaded' : 'Not Loaded'} />
               <StatusItem label="Ego" value={status.egoSpawned ? 'Spawned' : 'Not Spawned'} />
+              <StatusItem label="Sensor Data" value={sensorsEnabled ? 'Enabled' : 'Disabled'} />
               <StatusItem label="Sensors" value={status.sensorsReady ? 'Ready' : 'Not Ready'} />
               <StatusItem label="NPC" value={status.npcReady ? 'Ready' : 'Not Ready'} />
               <StatusItem label="Bridge" value={status.bridgeRunning} />

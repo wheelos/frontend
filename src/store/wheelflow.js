@@ -12,6 +12,8 @@ export default class WheelFlow {
     worldLoaded: false,
     egoSpawned: false,
     sensorsReady: false,
+    sensorDataEnabled: false,
+    sensorBridgeRunning: false,
     npcReady: false,
     bridgeRunning: false,
     apolloModulesReady: false,

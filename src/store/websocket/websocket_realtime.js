@@ -591,6 +591,13 @@ export default class RealtimeWebSocketEndpoint {
     }));
   }
 
+  setWheelFlowSensors(enabled) {
+    this.websocket.send(JSON.stringify({
+      type: 'WheelFlowSetSensors',
+      enabled,
+    }));
+  }
+
   sendWheelFlowRouting() {
     this.websocket.send(JSON.stringify({
       type: 'WheelFlowSendRouting',
