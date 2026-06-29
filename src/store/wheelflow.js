@@ -5,7 +5,7 @@ export default class WheelFlow {
     stage: 'IDLE',
     mapName: 'Town03',
     scenarioName: 'EmptyRoad',
-    sensorPreset: 'Lidar64',
+    sensorPreset: 'FrontCameraLidar',
     simulationMode: 'PnCGroundTruth',
     wheelflowServerRunning: false,
     wheelflowRpcConnected: false,

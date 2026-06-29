@@ -9,7 +9,7 @@ import './style.scss';
 
 const MAPS = ['Town03', 'Town05', 'Town10HD'];
 const SCENARIOS = ['EmptyRoad', 'UrbanLoop', 'FollowVehicle', 'IntersectionCruise'];
-const SENSOR_PRESETS = ['Lidar64', 'Lidar64FrontCamera', 'Lidar64SixCameraBEV'];
+const SENSOR_PRESETS = ['FrontCameraLidar', 'BEV6CameraLidar'];
 
 function SelectRow({
   label,
@@ -54,7 +54,7 @@ export default class WheelFlow extends React.Component {
     this.state = {
       mapName: 'Town03',
       scenarioName: 'EmptyRoad',
-      sensorPreset: 'Lidar64',
+      sensorPreset: 'FrontCameraLidar',
     };
   }
 
