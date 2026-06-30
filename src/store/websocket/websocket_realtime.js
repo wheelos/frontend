@@ -20,6 +20,9 @@ export default class RealtimeWebSocketEndpoint {
     this.pointcloudWS = null;
     this.requestHmiStatus = this.requestHmiStatus.bind(this);
     this.updateParkingRoutingDistance = true;
+    this.wheelFlowMapChangeTarget = null;
+    this.wheelFlowPendingMap = null;
+    this.wheelFlowLastMapChangeMs = 0;
   }
 
   initialize() {
@@ -137,6 +140,33 @@ export default class RealtimeWebSocketEndpoint {
           break;
         case 'WheelFlowStatus':
           STORE.wheelflow.updateStatus(message);
+          {
+            const targetMap = message.mapName
+              || this.wheelFlowPendingMap
+              || STORE.wheelflow.status.mapName;
+            const mapReady = message.stage === 'READY'
+              || message.stage === 'RUNNING'
+              || message.bridgeRunning;
+            if (targetMap && mapReady && STORE.hmi.currentMap !== targetMap) {
+              const now = Date.now();
+              if (
+                this.wheelFlowMapChangeTarget !== targetMap
+                || now - this.wheelFlowLastMapChangeMs > 2000
+              ) {
+                this.wheelFlowMapChangeTarget = targetMap;
+                this.wheelFlowLastMapChangeMs = now;
+                this.changeMap(targetMap);
+              }
+            }
+            if (targetMap && STORE.hmi.currentMap === targetMap) {
+              this.wheelFlowPendingMap = null;
+            }
+          }
+          if (message.stage === 'IDLE' || message.stage === 'STOPPED' || message.stage === 'ERROR') {
+            this.wheelFlowMapChangeTarget = null;
+            this.wheelFlowPendingMap = null;
+            this.wheelFlowLastMapChangeMs = 0;
+          }
           break;
         case 'WheelFlowCustomObstacleList':
           STORE.wheelflow.updateCustomObstacles(message.obstacles || []);
@@ -570,6 +600,9 @@ export default class RealtimeWebSocketEndpoint {
   }
 
   startWheelFlow(payload) {
+    this.wheelFlowPendingMap = payload && payload.mapName;
+    this.wheelFlowMapChangeTarget = null;
+    this.wheelFlowLastMapChangeMs = 0;
     this.websocket.send(JSON.stringify({
       type: 'WheelFlowStart',
       ...payload,

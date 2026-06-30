@@ -7,7 +7,7 @@ import WS from 'store/websocket';
 
 import './style.scss';
 
-const MAPS = ['Town03', 'Town05', 'Town10HD'];
+const MAPS = ['Town03', 'Town05'];
 const SCENARIOS = ['EmptyRoad', 'UrbanLoop'];
 const SENSOR_PRESETS = ['FrontCameraLidar', 'BEV6CameraLidar'];
 
@@ -88,7 +88,6 @@ export default class WheelFlow extends React.Component {
       (mode) => mode.toLowerCase().replace(/\s/g, '') === 'wheelflow',
     ) || 'Wheelflow';
     WS.changeSetupMode(wheelFlowMode);
-    WS.changeMap(mapName);
     WS.startWheelFlow(this.requestPayload());
   }
 
