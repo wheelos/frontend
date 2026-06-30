@@ -330,6 +330,9 @@ module.exports = {
     showCycleNumberInput: {
       default: false,
     },
+    showSavedRoutesList: {
+      default: false,
+    },
   },
   routingEditor: {
     radiusOfMapRequest: 2000,
