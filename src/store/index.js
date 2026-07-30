@@ -116,6 +116,7 @@ class DreamviewStore {
         this.dimension.disableMonitor();
       }
       if (oldShowRouteEditingBar && !this.options.showRouteEditingBar) {
+        this.options.showDefaultRoutingInput = false;
         this.routeEditingManager.disableRouteEditing();
       }
 
@@ -125,8 +126,8 @@ class DreamviewStore {
       } else if (oldShowTools !== this.options.showTools) {
         this.dimension.update();
       }
-      if (option === 'showRouteEditingBar') {
-        this.options.showPOI = false;
+      if (option === 'showRouteEditingBar' && this.options.showRouteEditingBar) {
+        this.options.showCycleNumberInput = false;
         this.routeEditingManager.enableRouteEditing();
       }
       if (!oldShowWheelFlowCustomObstacles && this.options.showWheelFlowCustomObstacles) {

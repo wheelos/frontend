@@ -13,7 +13,10 @@ ul.item {
 
     li {
         line-height: 40px;
+        margin: 2px 0;
+        border-radius: 8px;
         white-space: nowrap;
+        transition: background-color 160ms ease, color 160ms ease;
 
         span {
             margin-left: 15px;
@@ -46,36 +49,39 @@ ul.item {
         padding: 0;
         line-height: 20px;
         border: 0px;
-    background-color: var(--radio-border);
-    transition: background-color 0.2s ease-in;
-}
+        border-radius: 999px;
+        background-color: var(--radio-border);
+        transition: background-color 160ms ease;
+    }
 
-.toggle-switch-label:before {
-    content: "";
-    display: block;
-    width: 16px;
-    margin: 2px;
-    background: var(--radio-bg);
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: 20px;
-    transition: all 0.2s ease-in;
-}
+    .toggle-switch-label:before {
+        content: "";
+        display: block;
+        width: 16px;
+        height: 16px;
+        margin: 2px;
+        border-radius: 50%;
+        background: var(--radio-bg);
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        transition: transform 160ms ease, background-color 160ms ease;
+    }
 
-.toggle-switch:checked+.toggle-switch-label {
-    background-color: var(--toggle-checked-bg);
-}
+    .toggle-switch:checked+.toggle-switch-label {
+        background-color: var(--toggle-checked-bg);
+    }
 
-.toggle-switch:checked+.toggle-switch-label,
-.toggle-switch:checked+.toggle-switch-label:before {
-    border-color: var(--toggle-checked-bg);
-}
+    .toggle-switch:checked+.toggle-switch-label,
+    .toggle-switch:checked+.toggle-switch-label:before {
+        border-color: var(--toggle-checked-bg);
+    }
 
-.toggle-switch:checked+.toggle-switch-label:before {
-    right: 0px;
-    background-color: var(--radio-checked-bg);
-}
+    .toggle-switch:checked+.toggle-switch-label:before {
+        transform: translateX(20px);
+        background-color: var(--radio-checked-bg);
+    }
 
     .toggle-switch:disabled+.toggle-switch-label,
     .toggle-switch:disabled+.toggle-switch-label:before {
@@ -87,7 +93,8 @@ ul.item {
     flex: 1 1 0;
 
     margin: 3px;
-    border: 0px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
 
     min-width: 75px;
     min-height: 40px;
@@ -100,6 +107,11 @@ ul.item {
 
     outline: none;
     cursor: pointer;
+    transition:
+        transform 140ms ease,
+        border-color 160ms ease,
+        background-color 160ms ease,
+        color 160ms ease;
 
     &:hover {
         color: var(--text-primary);
@@ -108,6 +120,7 @@ ul.item {
 
     &:active {
         background: var(--command-bg-active);
+        transform: scale(0.98);
     }
 
     &:disabled {

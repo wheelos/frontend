@@ -1,6 +1,7 @@
 import React from 'react';
 import { inject, observer } from 'mobx-react';
 import Loadable from 'react-loadable';
+import classNames from 'classnames';
 
 import EmergencyNotification from 'components/common/EmergencyNotification';
 import Loader from 'components/common/Loader';
@@ -30,6 +31,7 @@ class SceneView extends React.Component {
                     width={dimension.scene.width}
                     height={dimension.scene.height}
                     options={options}
+                    themeMode={options.themeMode}
                     shouldDisplayOnRight={dimension.shouldDivideSceneAndMapSpace}
                 />
                 {monitor.isSirenOn &&
@@ -42,6 +44,7 @@ class SceneView extends React.Component {
                             trafficSignal={trafficSignal}
                             showNotification={!options.showTasks}
                             showPlanningRSSInfo={options.showPlanningRSSInfo}
+                            cameraAngle={options.cameraAngle}
                             monitor={monitor}
                         />
                   )}
@@ -62,11 +65,17 @@ class SceneView extends React.Component {
 @inject('store') @observer
 export default class MainView extends React.Component {
   render() {
-    const { isInitialized, dimension } = this.props.store;
+    const { isInitialized, dimension, options } = this.props.store;
 
     const height = dimension.main.height;
     return (
-            <div className="main-view" style={{ height }}>
+            <div
+                className={classNames({
+                  'main-view': true,
+                  'tools-visible': options.showTools,
+                })}
+                style={{ height }}
+            >
                 {(!isInitialized && !OFFLINE_PLAYBACK) ? <Loader /> : <SceneView />}
             </div>
     );

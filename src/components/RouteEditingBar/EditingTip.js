@@ -86,6 +86,7 @@ For Mobile device:
 
     return (
             <button
+                type="button"
                 className={classNames({
                   'editing-tip': true,
                   button: true,
@@ -95,7 +96,7 @@ For Mobile device:
                 onMouseOver={this.handleMouseIn}
                 onMouseOut={this.handleMouseOut}
             >
-                <img src={helpIcon} />
+                <img src={helpIcon} alt="" aria-hidden="true" />
                 <div style={textStyle} className="tip-popup">
                     <div className="title">To navigate through the map</div>
                     {this.renderTipContent()}

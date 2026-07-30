@@ -116,11 +116,27 @@ export default class Options {
         this[option] = !this[option];
       }
 
-      // Disable other mutually exclusive options
+      // Main sidebar entries own the workspace exclusively. The POI library
+      // is the one exception: Route Editing opens it as a companion picker,
+      // while it still replaces every lower tool panel.
       if (this[option] && this.mainSideBarOptions.includes(option)) {
         for (const other of this.mainSideBarOptions) {
           if (other !== option) {
             this[other] = false;
+          }
+        }
+        for (const secondaryOption of this.secondarySideBarOptions) {
+          this[secondaryOption] = false;
+        }
+      } else if (this[option] && this.secondarySideBarOptions.includes(option)) {
+        for (const other of this.mainSideBarOptions) {
+          if (other !== 'showRouteEditingBar') {
+            this[other] = false;
+          }
+        }
+        for (const secondaryOption of this.secondarySideBarOptions) {
+          if (secondaryOption !== option) {
+            this[secondaryOption] = false;
           }
         }
       }

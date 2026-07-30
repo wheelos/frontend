@@ -2,8 +2,8 @@ import React from 'react';
 
 import classNames from 'classnames';
 
-import loaderImg from 'assets/images/logo_apollo.png';
 import loaderGif from 'assets/images/loader_apollo.gif';
+import BrandLockup from 'components/common/BrandLockup';
 
 export default class Loader extends React.PureComponent {
   render() {
@@ -13,12 +13,19 @@ export default class Loader extends React.PureComponent {
     if (OFFLINE_PLAYBACK) {
       message = offlineViewErr || 'Loading ....';
     }
-    const imgSrc = OFFLINE_PLAYBACK ? loaderGif : loaderImg;
 
     return (
             <div className="loader">
-                <div className={classNames('img-container', extraClasses)}>
-                    <img src={imgSrc} alt="Loader" />
+                <div
+                    className={classNames(
+                      'img-container',
+                      { 'initialization-loader': !OFFLINE_PLAYBACK },
+                      extraClasses,
+                    )}
+                >
+                    {OFFLINE_PLAYBACK
+                      ? <img src={loaderGif} alt="Loader" />
+                      : <BrandLockup />}
                     <div className={offlineViewErr ? 'error-message' : 'status-message'}>
                         {message}
                     </div>

@@ -4,6 +4,53 @@ import { loadTexture } from 'utils/models';
 import gridGround from 'assets/images/ground.png';
 import STORE from 'store';
 
+const LIGHT_GRID_TEXTURE_SIZE = 256;
+const LIGHT_GRID_REPEAT = 32;
+
+function createLightGridTexture() {
+  const data = new Uint8Array(
+    LIGHT_GRID_TEXTURE_SIZE * LIGHT_GRID_TEXTURE_SIZE * 3,
+  );
+  const base = [244, 247, 249];
+  const minor = [231, 236, 241];
+  const major = [210, 219, 227];
+
+  for (let y = 0; y < LIGHT_GRID_TEXTURE_SIZE; y += 1) {
+    for (let x = 0; x < LIGHT_GRID_TEXTURE_SIZE; x += 1) {
+      const isMajor = x % 64 === 0 || y % 64 === 0;
+      const isMinor = x % 16 === 0 || y % 16 === 0;
+      let color = base;
+      if (isMajor) {
+        color = major;
+      } else if (isMinor) {
+        color = minor;
+      }
+      const [red, green, blue] = color;
+      const index = (y * LIGHT_GRID_TEXTURE_SIZE + x) * 3;
+      data[index] = red;
+      data[index + 1] = green;
+      data[index + 2] = blue;
+    }
+  }
+
+  const texture = new THREE.DataTexture(
+    data,
+    LIGHT_GRID_TEXTURE_SIZE,
+    LIGHT_GRID_TEXTURE_SIZE,
+    THREE.RGBFormat,
+  );
+  texture.name = 'LightGroundGridTexture';
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(LIGHT_GRID_REPEAT, LIGHT_GRID_REPEAT);
+  texture.magFilter = THREE.LinearFilter;
+  texture.minFilter = THREE.LinearMipMapLinearFilter;
+  texture.generateMipmaps = true;
+  texture.anisotropy = 4;
+  texture.needsUpdate = true;
+  return texture;
+}
+
 export default class Ground {
   constructor() {
     this.type = 'default';
@@ -14,14 +61,54 @@ export default class Ground {
     this.initialized = false;
     this.inNaviMode = null;
     this.showCameraView = false;
+    this.themeMode = 'dark';
+    this.darkGridTexture = null;
+    this.lightGridTexture = createLightGridTexture();
 
     loadTexture(gridGround, (texture) => {
+      this.darkGridTexture = texture;
       this.geometry = new THREE.PlaneGeometry(1, 1);
       this.mesh = new THREE.Mesh(
         this.geometry,
-        new THREE.MeshBasicMaterial({ map: texture }),
+        new THREE.MeshBasicMaterial({ map: this.getGridTexture() }),
       );
+      this.mesh.type = 'grid';
+      this.mesh.renderOrder = -20;
+      this.applyMaterialStyle();
     });
+  }
+
+  applyMaterialStyle() {
+    if (!this.mesh || !this.mesh.material) {
+      return;
+    }
+
+    const isGrid = this.mesh.type === 'grid';
+    const isLight = this.themeMode === 'light';
+    if (isGrid) {
+      this.mesh.material.map = this.getGridTexture();
+      this.mesh.material.color.setHex(isLight ? 0xFFFFFF : 0x3A4B58);
+      this.mesh.material.opacity = isLight ? 1 : 0.38;
+      this.mesh.material.transparent = !isLight;
+      this.mesh.material.depthWrite = isLight;
+    } else {
+      this.mesh.material.color.setHex(0xFFFFFF);
+      this.mesh.material.opacity = isLight ? 0.14 : 1;
+      this.mesh.material.transparent = isLight;
+      this.mesh.material.depthWrite = !isLight;
+    }
+    this.mesh.material.needsUpdate = true;
+  }
+
+  getGridTexture() {
+    return this.themeMode === 'light'
+      ? this.lightGridTexture
+      : this.darkGridTexture;
+  }
+
+  updateTheme(themeMode) {
+    this.themeMode = themeMode === 'light' ? 'light' : 'dark';
+    this.applyMaterialStyle();
   }
 
   initialize(coordinates) {
@@ -40,9 +127,11 @@ export default class Ground {
   loadGrid(coordinates) {
     loadTexture(gridGround, (texture) => {
       console.log('using grid as ground image...');
-      this.mesh.material.map = texture;
+      this.darkGridTexture = texture;
+      this.mesh.material.map = this.getGridTexture();
       this.mesh.type = 'grid';
       this.mesh.visible = true;
+      this.applyMaterialStyle();
       this.render(coordinates);
     });
   }
@@ -89,12 +178,15 @@ export default class Ground {
         this.mesh.material.map = texture;
         this.mesh.type = 'reflection';
         this.mesh.visible = true;
+        this.applyMaterialStyle();
         this.render(coordinates, dir);
       }, (err) => {
         this.loadGrid(coordinates);
       });
       this.loadedMap = this.updateMap;
-      scene.background = new THREE.Color(0x000C17);
+      scene.background = new THREE.Color(
+        this.themeMode === 'light' ? 0xF2F5F7 : 0x000C17,
+      );
     }
   }
 

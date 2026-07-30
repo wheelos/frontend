@@ -25,9 +25,18 @@ import STORE from 'store';
 const _ = require('lodash');
 
 const THEME_SCENE_COLORS = {
-  dark: 0x000C17,
-  light: 0xE8EDF2,
+  dark: 0x07131F,
+  light: 0xF2F5F7,
 };
+
+const CAMERA_TRANSITION_DURATION = 360;
+const ROUTE_CAMERA_TRANSITION_DURATION = 680;
+
+function easeInOutCubic(progress) {
+  return progress < 0.5
+    ? 4 * progress * progress * progress
+    : 1 - ((-2 * progress + 2) ** 3) / 2;
+}
 
 class Renderer {
   constructor() {
@@ -41,9 +50,10 @@ class Renderer {
       alpha: true,
     });
     this.scene = new THREE.Scene();
+    this.sceneThemeMode = 'dark';
     if (OFFLINE_PLAYBACK) {
       this.scene.background = new THREE.Color(
-        THEME_SCENE_COLORS[STORE.options.themeMode] || THEME_SCENE_COLORS.dark,
+        THEME_SCENE_COLORS.dark,
       );
     }
 
@@ -133,12 +143,28 @@ class Renderer {
     // FPS tracking for the point cloud metrics panel.
     this._fpsFrameCount = 0;
     this._fpsLastTimestamp = performance.now();
+
+    this.lastCameraPov = null;
+    this.cameraTransition = null;
+    this.routeEditingCameraActive = false;
+    this.prefersReducedMotion = Boolean(
+      window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    );
   }
 
   initialize(canvasId, width, height, options, cameraData) {
     this.options = options;
     this.cameraData = cameraData;
     this.canvasId = canvasId;
+    this.sceneThemeMode = THEME_SCENE_COLORS[options.themeMode]
+      ? options.themeMode
+      : 'dark';
+    this.map.updateTheme(this.sceneThemeMode);
+    if (this.ground.updateTheme) {
+      this.ground.updateTheme(this.sceneThemeMode);
+    }
+    this.map.updateViewMode(options.showCameraView && !options.showRouteEditingBar);
 
     // Camera
     this.viewAngle = PARAMETERS.camera.viewAngle;
@@ -151,6 +177,7 @@ class Renderer {
       PARAMETERS.camera[this.options.cameraAngle].near,
       PARAMETERS.camera[this.options.cameraAngle].far,
     );
+    this.cameraPoseHelper = new THREE.PerspectiveCamera();
     this.camera.name = 'camera';
     this.scene.add(this.camera);
 
@@ -160,9 +187,12 @@ class Renderer {
     const container = document.getElementById(canvasId);
     container.appendChild(this.renderer.domElement);
 
-    const ambient = new THREE.AmbientLight(0x444444);
-    const directionalLight = new THREE.DirectionalLight(0xffeedd);
-    directionalLight.position.set(0, 0, 1).normalize();
+    const ambient = new THREE.AmbientLight(0x71808C, 0.58);
+    const hemisphere = new THREE.HemisphereLight(0xDCEEFF, 0x101820, 0.72);
+    const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.92);
+    const fillLight = new THREE.DirectionalLight(0x78BFFF, 0.32);
+    directionalLight.position.set(-3, -4, 8).normalize();
+    fillLight.position.set(4, 3, 5).normalize();
 
     // The orbit axis of the OrbitControl depends on camera's up vector
     // and can only be set during creation of the controls. Thus,
@@ -173,7 +203,7 @@ class Renderer {
 
     // Orbit control for moving map
     this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enable = false;
+    this.controls.enabled = false;
 
     // handler for route editing with mouse down events
     this.onMouseDownHandler = this.editRoute.bind(this);
@@ -186,7 +216,9 @@ class Renderer {
     this.onCustomObstacleKeyDownHandler = this.onCustomObstacleKeyDown.bind(this);
 
     this.scene.add(ambient);
+    this.scene.add(hemisphere);
     this.scene.add(directionalLight);
+    this.scene.add(fillLight);
 
     // TODO maybe add sanity check.
 
@@ -201,10 +233,15 @@ class Renderer {
   }
 
   updateSceneTheme(themeMode) {
-    if (OFFLINE_PLAYBACK) {
+    this.sceneThemeMode = THEME_SCENE_COLORS[themeMode] ? themeMode : 'dark';
+    if (!this.options.showCameraView || this.options.showRouteEditingBar) {
       this.scene.background = new THREE.Color(
-        THEME_SCENE_COLORS[themeMode] || THEME_SCENE_COLORS.dark,
+        THEME_SCENE_COLORS[this.sceneThemeMode],
       );
+    }
+    this.map.updateTheme(themeMode);
+    if (this.ground.updateTheme) {
+      this.ground.updateTheme(this.sceneThemeMode);
     }
   }
 
@@ -222,138 +259,227 @@ class Renderer {
     this.dimension.height = height;
   }
 
-  enableOrbitControls(enableRotate) {
-    // update camera
-    const carPosition = this.adc.mesh.position;
-    this.camera.position.set(carPosition.x, carPosition.y, 50);
-    if (this.coordinates.systemName === 'FLU') {
-      this.camera.up.set(1, 0, 0);
-    } else {
-      this.camera.up.set(0, 0, 1);
-    }
-    const lookAtPosition = new THREE.Vector3(carPosition.x, carPosition.y, 0);
-    this.camera.lookAt(lookAtPosition);
-
-    // update control reset values to match current camera's
-    this.controls.target0 = lookAtPosition.clone();
-    this.controls.position0 = this.camera.position.clone();
-    this.controls.zoom0 = this.camera.zoom;
-
-    // set distance control
-    this.controls.minDistance = 4;
-    this.controls.maxDistance = 4000;
-
-    // set vertical angle control
-    this.controls.minPolarAngle = 0;
-    this.controls.maxPolarAngle = Math.PI / 2;
-
-    this.controls.enabled = true;
-    this.controls.enableRotate = enableRotate;
-    this.controls.reset();
-  }
-
-  adjustCamera(target, pov) {
-    if (this.routingEditor.isInEditingMode()) {
-      return;
-    }
-
-    this.camera.fov = PARAMETERS.camera[pov].fov;
-    this.camera.near = PARAMETERS.camera[pov].near;
-    this.camera.far = PARAMETERS.camera[pov].far;
+  getCameraPose(target, pov) {
+    const cameraParameters = PARAMETERS.camera[pov];
+    const position = new THREE.Vector3();
+    const lookAt = new THREE.Vector3();
+    const up = new THREE.Vector3(0, 0, 1);
+    const quaternion = new THREE.Quaternion();
 
     switch (pov) {
       case 'Default':
-        let deltaX = (this.viewDistance * Math.cos(target.rotation.y)
-                * Math.cos(this.viewAngle));
-        let deltaY = (this.viewDistance * Math.sin(target.rotation.y)
-                * Math.cos(this.viewAngle));
-        let deltaZ = this.viewDistance * Math.sin(this.viewAngle);
-
-        this.camera.position.x = target.position.x - deltaX;
-        this.camera.position.y = target.position.y - deltaY;
-        this.camera.position.z = target.position.z + deltaZ;
-        this.camera.up.set(0, 0, 1);
-        this.camera.lookAt({
-          x: target.position.x + deltaX,
-          y: target.position.y + deltaY,
-          z: 0,
-        });
-
-        this.controls.enabled = false;
+      case 'Near': {
+        const distanceRatio = pov === 'Near' ? 0.5 : 1;
+        const deltaX = this.viewDistance * distanceRatio
+          * Math.cos(target.rotation.y)
+          * Math.cos(this.viewAngle);
+        const deltaY = this.viewDistance * distanceRatio
+          * Math.sin(target.rotation.y)
+          * Math.cos(this.viewAngle);
+        const deltaZ = this.viewDistance * distanceRatio * Math.sin(this.viewAngle);
+        position.set(
+          target.position.x - deltaX,
+          target.position.y - deltaY,
+          target.position.z + deltaZ,
+        );
+        lookAt.set(
+          target.position.x + deltaX,
+          target.position.y + deltaY,
+          0,
+        );
         break;
-      case 'Near':
-        deltaX = (this.viewDistance * 0.5 * Math.cos(target.rotation.y)
-                    * Math.cos(this.viewAngle));
-        deltaY = (this.viewDistance * 0.5 * Math.sin(target.rotation.y)
-                    * Math.cos(this.viewAngle));
-        deltaZ = this.viewDistance * 0.5 * Math.sin(this.viewAngle);
-
-        this.camera.position.x = target.position.x - deltaX;
-        this.camera.position.y = target.position.y - deltaY;
-        this.camera.position.z = target.position.z + deltaZ;
-        this.camera.up.set(0, 0, 1);
-        this.camera.lookAt({
-          x: target.position.x + deltaX,
-          y: target.position.y + deltaY,
-          z: 0,
-        });
-
-        this.controls.enabled = false;
-        break;
-      case 'Overhead':
-        deltaY = (this.viewDistance * 0.5 * Math.sin(target.rotation.y)
-                    * Math.cos(this.viewAngle));
-        deltaZ = this.viewDistance * 2 * Math.sin(this.viewAngle);
-
-        this.camera.position.x = target.position.x;
-        this.camera.position.y = target.position.y + deltaY;
-        this.camera.position.z = (target.position.z + deltaZ) * 2;
+      }
+      case 'Overhead': {
+        const deltaY = this.viewDistance * 0.5
+          * Math.sin(target.rotation.y)
+          * Math.cos(this.viewAngle);
+        const deltaZ = this.viewDistance * 2 * Math.sin(this.viewAngle);
+        position.set(
+          target.position.x,
+          target.position.y + deltaY,
+          (target.position.z + deltaZ) * 2,
+        );
+        lookAt.set(target.position.x, target.position.y + deltaY, 0);
         if (this.coordinates.systemName === 'FLU') {
-          this.camera.up.set(1, 0, 0);
+          up.set(1, 0, 0);
         } else {
-          this.camera.up.set(0, 1, 0);
+          up.set(0, 1, 0);
         }
-        this.camera.lookAt({
-          x: target.position.x,
-          y: target.position.y + deltaY,
-          z: 0,
-        });
-
-        this.controls.enabled = false;
         break;
+      }
       case 'Map':
-        if (!this.controls.enabled) {
-          this.enableOrbitControls(true);
+        position.set(target.position.x, target.position.y, 50);
+        lookAt.set(target.position.x, target.position.y, 0);
+        if (this.coordinates.systemName === 'FLU') {
+          up.set(1, 0, 0);
         }
         break;
       case 'CameraView': {
-        const { position, rotation } = this.cameraData.get();
-
-        const { x, y, z } = this.coordinates.applyOffset(position);
-        this.camera.position.set(x, y, z);
-
-        // Threejs camera is default facing towards to Z-axis negative direction,
-        // but the actual camera is looking at Z-axis positive direction. So we need
-        // to adjust the camera rotation considering the default camera orientation.
-        this.camera.rotation.set(rotation.x + Math.PI, -rotation.y, -rotation.z);
-
-        this.controls.enabled = false;
-
-        const image = document.getElementById('camera-image');
-        if (image && this.cameraData.imageSrcData) {
-          image.src = this.cameraData.imageSrcData;
-        }
-
+        const cameraData = this.cameraData.get();
+        const offsetPosition = this.coordinates.applyOffset(cameraData.position);
+        position.copy(offsetPosition);
+        up.copy(this.camera.up);
+        quaternion.setFromEuler(new THREE.Euler(
+          cameraData.rotation.x + Math.PI,
+          -cameraData.rotation.y,
+          -cameraData.rotation.z,
+        ));
         break;
       }
+      default:
+        position.copy(this.camera.position);
+        up.copy(this.camera.up);
+        quaternion.copy(this.camera.quaternion);
+        break;
     }
 
+    if (pov !== 'CameraView' && ['Default', 'Near', 'Overhead', 'Map'].includes(pov)) {
+      this.cameraPoseHelper.position.copy(position);
+      this.cameraPoseHelper.up.copy(up);
+      this.cameraPoseHelper.lookAt(lookAt);
+      quaternion.copy(this.cameraPoseHelper.quaternion);
+    }
+
+    return {
+      position,
+      lookAt,
+      up,
+      quaternion,
+      fov: cameraParameters.fov,
+      near: cameraParameters.near,
+      far: cameraParameters.far,
+    };
+  }
+
+  applyCameraPose(pose) {
+    this.camera.position.copy(pose.position);
+    this.camera.up.copy(pose.up);
+    this.camera.quaternion.copy(pose.quaternion);
+    this.camera.fov = pose.fov;
+    this.camera.near = pose.near;
+    this.camera.far = pose.far;
     this.camera.updateProjectionMatrix();
   }
 
+  activateOrbitControls(pose, enableRotate) {
+    this.controls.target.copy(pose.lookAt);
+    this.controls.target0 = pose.lookAt.clone();
+    this.controls.position0 = pose.position.clone();
+    this.controls.zoom0 = this.camera.zoom;
+    this.controls.minDistance = 4;
+    this.controls.maxDistance = 4000;
+    this.controls.minPolarAngle = 0;
+    this.controls.maxPolarAngle = Math.PI / 2;
+    this.controls.enabled = true;
+    this.controls.enableRotate = enableRotate;
+    this.controls.update();
+  }
+
+  enableOrbitControls(enableRotate) {
+    const pose = this.getCameraPose(this.adc.mesh, 'Map');
+    this.applyCameraPose(pose);
+    this.activateOrbitControls(pose, enableRotate);
+    this.lastCameraPov = 'Map';
+    this.cameraTransition = null;
+  }
+
+  updateCameraImage() {
+    const image = document.getElementById('camera-image');
+    if (image && this.cameraData.imageSrcData) {
+      image.src = this.cameraData.imageSrcData;
+    }
+  }
+
+  adjustCamera(target, pov, timestamp) {
+    const routeEditingActive = this.routingEditor.isInEditingMode();
+    const routeModeChanged = this.routeEditingCameraActive !== routeEditingActive;
+    const targetPov = routeEditingActive ? 'Map' : pov;
+    const pose = this.getCameraPose(target, targetPov);
+    const povChanged = this.lastCameraPov !== targetPov;
+    this.routeEditingCameraActive = routeEditingActive;
+
+    if (targetPov === 'CameraView') {
+      this.updateCameraImage();
+    }
+
+    if (povChanged && targetPov === 'Map' && this.controls.enabled) {
+      this.controls.enableRotate = !routeEditingActive;
+      this.lastCameraPov = targetPov;
+      this.cameraTransition = null;
+      return;
+    }
+
+    if (this.lastCameraPov === null || this.prefersReducedMotion) {
+      this.controls.enabled = false;
+      this.applyCameraPose(pose);
+      if (targetPov === 'Map') {
+        this.activateOrbitControls(pose, !routeEditingActive);
+      }
+      this.lastCameraPov = targetPov;
+      this.cameraTransition = null;
+      return;
+    }
+
+    if (povChanged) {
+      this.controls.enabled = false;
+      this.cameraTransition = {
+        pov: targetPov,
+        startedAt: timestamp,
+        duration: routeModeChanged
+          ? ROUTE_CAMERA_TRANSITION_DURATION
+          : CAMERA_TRANSITION_DURATION,
+        position: this.camera.position.clone(),
+        quaternion: this.camera.quaternion.clone(),
+        up: this.camera.up.clone(),
+        fov: this.camera.fov,
+      };
+      this.lastCameraPov = targetPov;
+    }
+
+    if (this.cameraTransition && this.cameraTransition.pov === targetPov) {
+      const elapsed = timestamp - this.cameraTransition.startedAt;
+      const progress = Math.min(1, elapsed / this.cameraTransition.duration);
+      const easedProgress = routeModeChanged || this.cameraTransition.duration
+        === ROUTE_CAMERA_TRANSITION_DURATION
+        ? easeInOutCubic(progress)
+        : 1 - ((1 - progress) ** 3);
+      this.camera.position
+        .copy(this.cameraTransition.position)
+        .lerp(pose.position, easedProgress);
+      this.camera.quaternion
+        .copy(this.cameraTransition.quaternion)
+        .slerp(pose.quaternion, easedProgress);
+      this.camera.up
+        .copy(this.cameraTransition.up)
+        .lerp(pose.up, easedProgress)
+        .normalize();
+      this.camera.fov = this.cameraTransition.fov
+        + (pose.fov - this.cameraTransition.fov) * easedProgress;
+      this.camera.near = pose.near;
+      this.camera.far = pose.far;
+      this.camera.updateProjectionMatrix();
+
+      if (progress >= 1) {
+        this.cameraTransition = null;
+        this.applyCameraPose(pose);
+        if (targetPov === 'Map') {
+          this.activateOrbitControls(pose, !routeEditingActive);
+        }
+      }
+      return;
+    }
+
+    if (targetPov !== 'Map') {
+      this.controls.enabled = false;
+      this.applyCameraPose(pose);
+    } else if (this.controls.enabled) {
+      this.controls.enableRotate = !routeEditingActive;
+    }
+  }
+
   enableRouteEditing() {
-    this.enableOrbitControls(false);
-    this.routingEditor.enableEditingMode(this.camera, this.adc);
+    this.controls.enableRotate = false;
+    this.routingEditor.enableEditingMode();
 
     document.getElementById(this.canvasId).addEventListener('mousedown',
       this.onMouseDownHandler,
@@ -437,6 +563,10 @@ class Renderer {
     return this.routingEditor.addDefaultRouting(routingName, this.coordinates);
   }
 
+  getRoutingPointCount() {
+    return this.routingEditor.getRoutePointCount();
+  }
+
   removeInvalidRoutingPoint(pointId, error) {
     const index = this.routingEditor.removeInvalidRoutingPoint(pointId, error, this.scene);
     if (index !== -1) {
@@ -486,7 +616,8 @@ class Renderer {
     if (event.target && !_.isEqual('CANVAS', event.target.tagName)) {
       return;
     }
-    if (!this.routingEditor.isInEditingMode() || event.button !== THREE.MOUSE.LEFT) {
+    if (!this.routingEditor.isInEditingMode()
+        || event.button !== THREE.MOUSE.LEFT) {
       return;
     }
 
@@ -561,7 +692,7 @@ class Renderer {
   }
 
   // Render one frame. This supports the main draw/render loop.
-  render() {
+  render(timestamp = performance.now()) {
     // TODO should also return when no need to update.
     if (!this.coordinates.isInitialized()) {
       return;
@@ -585,7 +716,24 @@ class Renderer {
       this.pointCloud.initialize();
     }
 
-    this.adjustCamera(this.adc.mesh, this.options.cameraAngle);
+    const cameraViewActive = this.options.showCameraView
+      && !this.options.showRouteEditingBar;
+    if (cameraViewActive) {
+      this.scene.background = null;
+    } else {
+      const sceneColor = THEME_SCENE_COLORS[this.sceneThemeMode];
+      if (!this.scene.background
+          || !this.scene.background.isColor
+          || this.scene.background.getHex() !== sceneColor) {
+        this.scene.background = new THREE.Color(sceneColor);
+      }
+    }
+
+    this.map.updateViewMode(cameraViewActive);
+    this.map.animate(timestamp);
+    this.adjustCamera(this.adc.mesh, this.options.cameraAngle, timestamp);
+    this.perceptionObstacles.animate(timestamp, this.camera, this.dimension.height);
+    this.groundTruthObstacles.animate(timestamp, this.camera, this.dimension.height);
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -609,7 +757,7 @@ class Renderer {
     if (this.stats) {
       this.stats.update();
     }
-    this.render();
+    this.render(now);
   }
 
   updateWorld(world) {
@@ -625,9 +773,8 @@ class Renderer {
     this.planningTrajectory.update(world, world.planningData, this.coordinates, this.scene);
     this.planningStatus.update(world.planningData, this.coordinates, this.scene);
 
-    const isBirdView = ['Overhead', 'Map'].includes(_.get(this, 'options.cameraAngle'));
-    this.perceptionObstacles.update(world, this.coordinates, this.scene, isBirdView);
-    this.groundTruthObstacles.update(world, this.coordinates, this.scene, isBirdView);
+    this.perceptionObstacles.update(world, this.coordinates, this.scene);
+    this.groundTruthObstacles.update(world, this.coordinates, this.scene);
     this.decision.update(world, this.coordinates, this.scene);
     this.prediction.update(world, this.coordinates, this.scene);
     this.updateRouting(world.routingTime, world.routePath);

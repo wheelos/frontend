@@ -2,7 +2,7 @@ import React from 'react';
 import { inject, observer } from 'mobx-react';
 
 import CheckboxItem from 'components/common/CheckboxItem';
-import WS, {CAMERA_WS} from 'store/websocket';
+import WS from 'store/websocket';
 
 @inject('store') @observer
 export default class Others extends React.Component {
@@ -14,26 +14,32 @@ export default class Others extends React.Component {
 
     return (
             <div className="others card">
-                <div className="card-header"><span>Others</span></div>
+                <div className="card-header">
+                    <span>Others</span>
+                    <small>Utilities</small>
+                </div>
                 <div className="card-content-column">
-                    <button
-                        className="command-button"
-                        disabled={disablePanel}
-                        onClick={() => {
-                          WS.resetBackend();
-                        }}
-                    >
-                        Reset Backend Data
-                    </button>
-                    <button
-                        className="command-button"
-                        disabled={disablePanel}
-                        onClick={() => {
-                          WS.dumpMessages();
-                        }}
-                    >
-                        Dump Message
-                    </button>
+                    <div className="utility-actions">
+                        <button
+                            className="command-button"
+                            disabled={disablePanel}
+                            onClick={() => {
+                              WS.resetBackend();
+                            }}
+                        >
+                            Reset Backend Data
+                        </button>
+                        <button
+                            className="command-button"
+                            disabled={disablePanel}
+                            onClick={() => {
+                              WS.dumpMessages();
+                            }}
+                        >
+                            Dump Message
+                        </button>
+                    </div>
+                    <div className="utility-toggles">
                     <CheckboxItem
                         id="panelLock"
                         title="Lock Task Panel"
@@ -95,19 +101,9 @@ export default class Others extends React.Component {
                         extraClasses="others-checkbox"
                         onClick={() => {
                           this.props.store.handleOptionToggle('showVideo');
-                          CAMERA_WS
-                            .getCameraChannel().then((channels) => {
-                              if (Array.isArray(channels) && channels.length > 0) {
-                                if (hmi.currentCameraSensorChannel !== '') {
-                                  // CAMERA_WS.changeCameraChannel(hmi.currentCameraSensorChannel)
-                                  //   .startCamera();
-                                }
-                              } else {
-                                alert('No camera channel found!');
-                              }
-                            });
                         }}
                     />
+                    </div>
                 </div>
             </div>
     );

@@ -39,8 +39,13 @@ export default class Selector extends React.Component {
 
     return (
             <div className="header-item selector scenario-set-selector">
+                <span className="selector-label">{name}</span>
                 <span className="arrow" />
-                <select onChange={this.onChangeHandler} value={this.state.value}>
+                <select
+                    aria-label={name}
+                    onChange={this.onChangeHandler}
+                    value={this.state.value}
+                >
                     {this.entries}
                 </select>
             </div>

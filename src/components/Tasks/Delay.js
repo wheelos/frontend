@@ -22,11 +22,13 @@ class Delay extends React.PureComponent {
 export default class DelayTable extends React.Component {
   render() {
     const { moduleDelay } = this.props.store;
+    let hasWarning = false;
 
     const items = moduleDelay.keys().sort()
       .map((key) => {
         const module = moduleDelay.get(key);
         const warning = module.delay > 2000 && module.name !== 'TrafficLight';
+        hasWarning = hasWarning || warning;
 
         return (
                     <div className="delay-item" key={`delay_${key}`}>
@@ -38,7 +40,10 @@ export default class DelayTable extends React.Component {
 
     return (
             <div className="delay card">
-                <div className="card-header"><span>Module Delay</span></div>
+                <div className="card-header">
+                    <span>Module Delay</span>
+                    <small>{items.length ? (hasWarning ? 'Attention' : 'All nominal') : 'Waiting'}</small>
+                </div>
                 <div className="card-content-column">
                     {items}
                 </div>

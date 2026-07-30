@@ -1,5 +1,6 @@
 import React from 'react';
 import { inject, observer } from 'mobx-react';
+import classNames from 'classnames';
 
 import DataRecorder from 'components/DataRecorder';
 import ModuleController from 'components/ModuleController';
@@ -16,7 +17,7 @@ export default class ToolView extends React.Component {
     } = this.props.store;
 
     return (
-            <div className="tools">
+            <div className={classNames('tools', { 'tools-visible': options.showTools })}>
                 {options.showTasks && <Tasks options={options} />}
                 {options.showModuleController && <ModuleController />}
                 {options.showMenu && <Menu options={options} />}
@@ -25,6 +26,7 @@ export default class ToolView extends React.Component {
                         routeEditingManager={routeEditingManager}
                         options={options}
                         inNavigationMode={hmi.inNavigationMode}
+                        onClose={() => this.props.store.setOptionStatus('showPOI', false)}
                     />
                 )}
                 {options.showDataRecorder && (

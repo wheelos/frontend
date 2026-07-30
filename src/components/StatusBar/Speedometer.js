@@ -33,13 +33,19 @@ export default class Speedometer extends React.Component {
 
     const currUnit = UNITS[this.state.unit];
     const name = currUnit.name;
-    const read = Math.round(meterPerSecond * currUnit.conversionFromMeterPerSecond);
+    const read = Math.round((Number(meterPerSecond) || 0)
+      * currUnit.conversionFromMeterPerSecond);
 
     return (
-            <span onClick={this.changeUnit}>
+            <button
+                type="button"
+                className="speedometer"
+                onClick={this.changeUnit}
+                aria-label={`Speed ${read} ${name}. Change speed unit`}
+            >
                 <span className="speed-read">{read}</span>
                 <span className="speed-unit">{name}</span>
-            </span>
+            </button>
     );
   }
 }

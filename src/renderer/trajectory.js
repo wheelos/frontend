@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import STORE from 'store';
-import { drawThickBandFromPoints, drawDashedLineFromPoints } from 'utils/draw';
+import { drawThickBandFromPoints, drawDashedBandFromPoints } from 'utils/draw';
 
 function normalizePlanningTrajectory(trajectory, coordinates) {
   if (!trajectory) {
@@ -92,9 +92,15 @@ export default class PlanningTrajectory {
         if (newPaths[name]) {
           const points = normalizePlanningTrajectory(newPaths[name], coordinates);
           if (property.style === 'dash') {
-            this.paths[name] = drawDashedLineFromPoints(points, property.color,
-              width * property.width, 1 /* dash size */, 1 /* gapSize */,
-              property.zOffset, property.opacity);
+            this.paths[name] = drawDashedBandFromPoints(
+              points,
+              Math.max(width * property.width, 0.06),
+              property.color,
+              1,
+              1,
+              property.zOffset,
+              property.opacity,
+            );
           } else {
             this.paths[name] = drawThickBandFromPoints(points, width * property.width,
               property.color, property.opacity, property.zOffset);

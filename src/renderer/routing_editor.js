@@ -30,15 +30,8 @@ export default class RoutingEditor {
     return this.inEditingMode;
   }
 
-  enableEditingMode(camera, adc) {
+  enableEditingMode() {
     this.inEditingMode = true;
-
-    const pov = 'Map';
-    camera.fov = PARAMETERS.camera[pov].fov;
-    camera.near = PARAMETERS.camera[pov].near;
-    camera.far = PARAMETERS.camera[pov].far;
-
-    camera.updateProjectionMatrix();
     WS.requestMapElementIdsByRadius(PARAMETERS.routingEditor.radiusOfMapRequest);
   }
 
@@ -175,7 +168,6 @@ export default class RoutingEditor {
     // add dead end junction routing request when select three points
     // and the second point is in dead end junction.
     if (this.routePoints.length === 0 && routingPoints.length === 0) {
-      alert('Please provide at least an end point.');
       return false;
     }
 
@@ -200,19 +192,22 @@ export default class RoutingEditor {
     const start_heading = (points.length > 1) ? null : carHeading;
     const end = points[points.length - 1];
     const waypoint = (points.length > 1) ? points.slice(1, -1) : [];
-    if (parkingRoutingRequest) {
-      const parkingSpace = this.map.data.parkingSpace[index];
-      const parkingId = parkingSpace.id?.id || parkingSpace.id;
-      const parkingInfo = {
-        parkingSpaceId: parkingId,
-      };
+    try {
+      if (parkingRoutingRequest) {
+        const parkingSpace = this.map.data.parkingSpace[index];
+        const parkingId = parkingSpace.id?.id || parkingSpace.id;
+        const parkingInfo = {
+          parkingSpaceId: parkingId,
+        };
 
-      WS.sendParkingRequest(
-        start, start_heading, waypoint, end, parkingInfo);
-    } else {
-      WS.requestRoute(start, start_heading, waypoint, end, this.parkingInfo);
+        return WS.sendParkingRequest(
+          start, start_heading, waypoint, end, parkingInfo) !== false;
+      }
+      return WS.requestRoute(start, start_heading, waypoint, end, this.parkingInfo) !== false;
+    } catch (error) {
+      console.error('Failed to send routing request:', error);
+      return false;
     }
-    return true;
   }
 
   sendCycleRoutingRequest(routingName, cycleRoutingPoints, cycleNumber,
@@ -226,13 +221,18 @@ export default class RoutingEditor {
     const start_heading = carHeading;
     const end = points[points.length - 1];
     const waypoint = (points.length > 1) ? points.slice(0, -1) : [];
-    WS.requestDefaultCycleRouting(start, start_heading, waypoint, end, cycleNumber);
-    return true;
+    try {
+      return WS.requestDefaultCycleRouting(
+        start, start_heading, waypoint, end, cycleNumber,
+      ) !== false;
+    } catch (error) {
+      console.error('Failed to send cycle routing request:', error);
+      return false;
+    }
   }
 
   addDefaultRouting(routingName, coordinates) {
     if (this.routePoints.length < 1) {
-      alert('Please provide at least one end point.');
       return false;
     }
 
@@ -245,7 +245,16 @@ export default class RoutingEditor {
       }
       return point;
     });
-    WS.saveDefaultRouting(routingName, points);
+    try {
+      return WS.saveDefaultRouting(routingName, points) !== false;
+    } catch (error) {
+      console.error('Failed to save default routing:', error);
+      return false;
+    }
+  }
+
+  getRoutePointCount() {
+    return this.routePoints.length;
   }
 
   checkCycleRoutingAvailable(cycleRoutingPoints, carPosition, threshold) {

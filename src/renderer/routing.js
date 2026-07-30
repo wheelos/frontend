@@ -1,8 +1,6 @@
 import STORE from 'store';
 
-import { drawThickBandFromPoints } from 'utils/draw';
-
-const _ = require('lodash');
+import { drawPolylineBandFromPoints } from 'utils/draw';
 
 export default class Routing {
   constructor() {
@@ -12,7 +10,8 @@ export default class Routing {
 
   update(routingTime, routePath, coordinates, scene) {
     this.routePaths.forEach((path) => {
-      path.visible = STORE.options.showRouting;
+      const routePathMesh = path;
+      routePathMesh.visible = STORE.options.showRouting;
     });
     // There has not been a new routing published since last time.
     if (this.lastRoutingTime === routingTime || routePath === undefined) {
@@ -30,8 +29,14 @@ export default class Routing {
 
     routePath.forEach((path) => {
       const points = coordinates.applyOffsetToArray(path.point);
-      const pathMesh = drawThickBandFromPoints(points, 0.3 /* width */,
-        0xFF0000 /* red */, 0.6, 5 /* z offset */);
+      const pathMesh = drawPolylineBandFromPoints(
+        points,
+        0.72,
+        0x2F8FFF,
+        0.7,
+        0.42,
+      );
+      pathMesh.renderOrder = 2;
       pathMesh.visible = STORE.options.showRouting;
       scene.add(pathMesh);
       this.routePaths.push(pathMesh);

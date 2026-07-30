@@ -39,8 +39,10 @@ export default class Selector extends React.Component {
 
     return (
             <div className="header-item selector">
+                <span className="selector-label">{name}</span>
                 <span className="arrow" />
                 <select
+                    aria-label={name}
                     onChange={this.onChangeHandler}
                     value={this.state.value}
                     disabled={disabled}

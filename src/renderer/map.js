@@ -5,7 +5,10 @@ import _ from 'lodash';
 
 import {
   drawSegmentsFromPoints,
-  drawDashedLineFromPoints,
+  drawPolylineBandFromPoints,
+  drawDashedBandFromPoints,
+  drawPolygonSurfaceFromRings,
+  offsetPolylinePoints,
   drawShapeFromPoints,
   changeMaterial,
 } from 'utils/draw';
@@ -31,6 +34,87 @@ const colorMapping = {
   PURE_WHITE: 0xFFFFFF,
   DEFAULT: 0xC0C0C0,
 };
+
+const MAP_VISUAL_THEME = {
+  dark: {
+    laneSurface: { color: 0x1A2B35, opacity: 1 },
+    roadSurface: { color: 0x101E28, opacity: 1 },
+    junctionSurface: { color: 0x1C303B, opacity: 1 },
+    roadEdge: { color: 0x82919D, opacity: 0.72 },
+    laneCenter: { color: 0x4D7180, opacity: 0.38 },
+    laneWhite: { color: 0xEDF3F7, opacity: 0.92 },
+    laneYellow: { color: 0xF3C75D, opacity: 0.96 },
+    laneCurb: { color: 0x92A3AE, opacity: 0.82 },
+    laneDefault: { color: 0xA7B4BD, opacity: 0.72 },
+    junctionBorder: { color: 0x4CAEFF, opacity: 0.78 },
+  },
+  light: {
+    laneSurface: { color: 0xAEB8C0, opacity: 1 },
+    roadSurface: { color: 0xBCC4CA, opacity: 1 },
+    junctionSurface: { color: 0xA7B3BC, opacity: 1 },
+    roadEdge: { color: 0x526875, opacity: 0.84 },
+    laneCenter: { color: 0x627D89, opacity: 0.44 },
+    laneWhite: { color: 0xF9FBFC, opacity: 1 },
+    laneYellow: { color: 0xB77A00, opacity: 0.98 },
+    laneCurb: { color: 0x455D6C, opacity: 0.9 },
+    laneDefault: { color: 0x5B7180, opacity: 0.84 },
+    junctionBorder: { color: 0x147DE1, opacity: 0.88 },
+  },
+};
+
+const CAMERA_HIDDEN_MAP_ROLES = new Set([
+  'laneSurface', 'roadSurface', 'junctionSurface',
+]);
+const MAP_LAYER_FADE_DURATION = 220;
+const ASPHALT_TEXTURE_SIZE = 128;
+
+function createAsphaltSurfaceTexture() {
+  const data = new Uint8Array(ASPHALT_TEXTURE_SIZE * ASPHALT_TEXTURE_SIZE * 3);
+  let seed = 1831565813;
+  const random = () => {
+    seed = (seed * 16807) % 2147483647;
+    return (seed - 1) / 2147483646;
+  };
+
+  for (let y = 0; y < ASPHALT_TEXTURE_SIZE; y += 1) {
+    for (let x = 0; x < ASPHALT_TEXTURE_SIZE; x += 1) {
+      const wave = Math.sin(x * 0.17) * 2.2
+        + Math.sin(y * 0.11) * 1.8
+        + Math.sin((x + y) * 0.07) * 1.4;
+      const grain = (random() - 0.5) * 9;
+      const aggregate = random() < 0.018 ? -24 : 0;
+      const value = Math.max(208, Math.min(255, Math.round(
+        244 + wave + grain + aggregate,
+      )));
+      const index = (y * ASPHALT_TEXTURE_SIZE + x) * 3;
+      data[index] = value;
+      data[index + 1] = value;
+      data[index + 2] = value;
+    }
+  }
+
+  const texture = new THREE.DataTexture(
+    data,
+    ASPHALT_TEXTURE_SIZE,
+    ASPHALT_TEXTURE_SIZE,
+    THREE.RGBFormat,
+  );
+  texture.name = 'AsphaltSurfaceTexture';
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.magFilter = THREE.LinearFilter;
+  texture.minFilter = THREE.LinearMipMapLinearFilter;
+  texture.generateMipmaps = true;
+  texture.anisotropy = 4;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function distanceSquared(pointA, pointB) {
+  const deltaX = pointA.x - pointB.x;
+  const deltaY = pointA.y - pointB.y;
+  return deltaX * deltaX + deltaY * deltaY;
+}
 
 // parallel=1 0-1 2-3
 const order1 = [
@@ -63,6 +147,127 @@ export default class Map {
     );
 
     this.zOffsetFactor = 1;
+    this.themeMode = 'dark';
+    this.cameraViewEnabled = false;
+    this.fadingObjects = new Set();
+    this.surfaceTexture = createAsphaltSurfaceTexture();
+    this.reducedMotion = window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  applyVisualStyle(object) {
+    const role = _.get(object, 'userData.mapVisualRole');
+    const theme = MAP_VISUAL_THEME[this.themeMode] || MAP_VISUAL_THEME.dark;
+    const style = theme[role];
+    if (style && object.material) {
+      const materials = Array.isArray(object.material)
+        ? object.material
+        : [object.material];
+      object.userData.mapVisualTargetOpacity = style.opacity;
+      materials.forEach((material) => {
+        if (material.color) {
+          material.color.setHex(style.color);
+        }
+        if (object.userData.mapVisualFadeStartedAt === undefined) {
+          material.opacity = style.opacity;
+          material.transparent = style.opacity < 1;
+          material.depthWrite = style.opacity >= 1;
+        }
+        material.needsUpdate = true;
+      });
+    }
+    if (role) {
+      object.visible = !this.cameraViewEnabled
+        || !CAMERA_HIDDEN_MAP_ROLES.has(role);
+    }
+  }
+
+  startVisualFade(object) {
+    if (this.reducedMotion || !object.material || !object.visible) {
+      return;
+    }
+    const materials = Array.isArray(object.material)
+      ? object.material
+      : [object.material];
+    object.userData.mapVisualFadeStartedAt = performance.now();
+    materials.forEach((material) => {
+      material.opacity = 0;
+      material.transparent = true;
+      material.depthWrite = false;
+    });
+    this.fadingObjects.add(object);
+  }
+
+  setVisualRole(object, role) {
+    if (!object) {
+      return object;
+    }
+    object.traverse((child) => {
+      const isNewVisual = !child.userData.mapVisualRole;
+      child.userData.mapVisualRole = role;
+      this.applyVisualStyle(child);
+      if (isNewVisual) {
+        this.startVisualFade(child);
+      }
+    });
+    return object;
+  }
+
+  forEachDrewObject(callback) {
+    Object.keys(this.data).forEach((kind) => {
+      this.data[kind].forEach((element) => {
+        if (element.drewObjects) {
+          element.drewObjects.forEach((object) => object.traverse(callback));
+        }
+      });
+    });
+  }
+
+  updateTheme(themeMode) {
+    this.themeMode = MAP_VISUAL_THEME[themeMode] ? themeMode : 'dark';
+    this.forEachDrewObject((object) => this.applyVisualStyle(object));
+  }
+
+  updateViewMode(cameraViewEnabled) {
+    if (this.cameraViewEnabled === cameraViewEnabled) {
+      return;
+    }
+    this.cameraViewEnabled = cameraViewEnabled;
+    this.forEachDrewObject((object) => {
+      const wasVisible = object.visible;
+      this.applyVisualStyle(object);
+      if (!object.visible) {
+        delete object.userData.mapVisualFadeStartedAt;
+        this.fadingObjects.delete(object);
+      } else if (!wasVisible) {
+        this.startVisualFade(object);
+      }
+    });
+  }
+
+  animate(timestamp) {
+    this.fadingObjects.forEach((object) => {
+      if (!object.visible || !object.material) {
+        this.fadingObjects.delete(object);
+        return;
+      }
+      const startedAt = object.userData.mapVisualFadeStartedAt;
+      const targetOpacity = object.userData.mapVisualTargetOpacity;
+      const progress = Math.min(1, (timestamp - startedAt) / MAP_LAYER_FADE_DURATION);
+      const easedProgress = 1 - ((1 - progress) ** 3);
+      const materials = Array.isArray(object.material)
+        ? object.material
+        : [object.material];
+      materials.forEach((material) => {
+        material.opacity = targetOpacity * easedProgress;
+        material.transparent = progress < 1 || targetOpacity < 1;
+        material.depthWrite = progress >= 1 && targetOpacity >= 1;
+      });
+      if (progress >= 1) {
+        delete object.userData.mapVisualFadeStartedAt;
+        this.fadingObjects.delete(object);
+      }
+    });
   }
 
   // The result will be the all the elements in current but not in data.
@@ -94,56 +299,161 @@ export default class Map {
   addLaneMesh(laneType, points) {
     switch (laneType) {
       case 'DOTTED_YELLOW':
-        return drawDashedLineFromPoints(
-          points, colorMapping.YELLOW, 4, 3, 3, this.zOffsetFactor, 1, false,
+        return this.setVisualRole(
+          drawDashedBandFromPoints(
+            points, 0.11, colorMapping.YELLOW, 2.2, 1.4,
+            this.zOffsetFactor, 1, false,
+          ),
+          'laneYellow',
         );
       case 'DOTTED_WHITE':
-        return drawDashedLineFromPoints(
-          points, colorMapping.WHITE, 2, 0.5, 0.25, this.zOffsetFactor, 0.4, false,
+        return this.setVisualRole(
+          drawDashedBandFromPoints(
+            points, 0.1, colorMapping.WHITE, 1.4, 0.9,
+            this.zOffsetFactor, 1, false,
+          ),
+          'laneWhite',
         );
       case 'SOLID_YELLOW':
-        return drawSegmentsFromPoints(
-          points, colorMapping.YELLOW, 3, this.zOffsetFactor, false,
+        return this.setVisualRole(
+          drawPolylineBandFromPoints(
+            points, 0.11, colorMapping.YELLOW, this.zOffsetFactor, 1, false,
+          ),
+          'laneYellow',
         );
       case 'SOLID_WHITE':
-        return drawSegmentsFromPoints(
-          points, colorMapping.WHITE, 3, this.zOffsetFactor, false,
+        return this.setVisualRole(
+          drawPolylineBandFromPoints(
+            points, 0.1, colorMapping.WHITE, this.zOffsetFactor, 1, false,
+          ),
+          'laneWhite',
         );
-      case 'DOUBLE_YELLOW':
-        const left = drawSegmentsFromPoints(
-          points, colorMapping.YELLOW, 2, this.zOffsetFactor, false,
+      case 'DOUBLE_YELLOW': {
+        const left = drawPolylineBandFromPoints(
+          offsetPolylinePoints(points, -0.13),
+          0.09,
+          colorMapping.YELLOW,
+          this.zOffsetFactor,
+          1,
+          false,
         );
-        const right = drawSegmentsFromPoints(
-          points.map((point) => new THREE.Vector3(point.x + 0.3, point.y + 0.3, point.z)),
-          colorMapping.YELLOW, 3, this.zOffsetFactor, false,
+        const right = drawPolylineBandFromPoints(
+          offsetPolylinePoints(points, 0.13),
+          0.09,
+          colorMapping.YELLOW,
+          0,
+          1,
+          false,
         );
         left.add(right);
-        return left;
+        return this.setVisualRole(left, 'laneYellow');
+      }
       case 'CURB':
-        return drawSegmentsFromPoints(
-          points, colorMapping.CORAL, 3, this.zOffsetFactor, false,
+        return this.setVisualRole(
+          drawPolylineBandFromPoints(
+            points, 0.14, colorMapping.CORAL, this.zOffsetFactor, 1, false,
+          ),
+          'laneCurb',
         );
       default:
-        return drawSegmentsFromPoints(
-          points, colorMapping.DEFAULT, 3, this.zOffsetFactor, false,
+        return this.setVisualRole(
+          drawPolylineBandFromPoints(
+            points, 0.08, colorMapping.DEFAULT, this.zOffsetFactor, 1, false,
+          ),
+          'laneDefault',
         );
     }
+  }
+
+  getLaneBoundaryPoints(boundary, coordinates) {
+    const points = [];
+    _.get(boundary, 'curve.segment', []).forEach((segment) => {
+      const segmentPoints = coordinates.applyOffsetToArray(
+        _.get(segment, 'lineSegment.point', []),
+      ) || [];
+      segmentPoints.forEach((point) => {
+        const previous = points[points.length - 1];
+        if (!previous || distanceSquared(previous, point) > 0.000001) {
+          points.push(point);
+        }
+      });
+    });
+    return points;
+  }
+
+  addLaneSurface(lane, coordinates, scene) {
+    const leftBoundary = this.getLaneBoundaryPoints(lane.leftBoundary, coordinates);
+    let rightBoundary = this.getLaneBoundaryPoints(lane.rightBoundary, coordinates);
+    if (leftBoundary.length < 2 || rightBoundary.length < 2) {
+      return null;
+    }
+
+    const leftStart = leftBoundary[0];
+    const leftEnd = leftBoundary[leftBoundary.length - 1];
+    const rightStart = rightBoundary[0];
+    const rightEnd = rightBoundary[rightBoundary.length - 1];
+    const sameDirectionClosure = distanceSquared(leftEnd, rightEnd)
+      + distanceSquared(leftStart, rightStart);
+    const oppositeDirectionClosure = distanceSquared(leftEnd, rightStart)
+      + distanceSquared(leftStart, rightEnd);
+    if (sameDirectionClosure <= oppositeDirectionClosure) {
+      rightBoundary = rightBoundary.slice().reverse();
+    }
+
+    const material = new THREE.MeshBasicMaterial({
+      color: MAP_VISUAL_THEME[this.themeMode].laneSurface.color,
+      map: this.surfaceTexture,
+      side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: 2,
+      polygonOffsetUnits: 2,
+    });
+    const surface = drawPolygonSurfaceFromRings(
+      leftBoundary.concat(rightBoundary),
+      [],
+      material,
+      0.16,
+      false,
+    );
+    if (!surface) {
+      material.dispose();
+      return null;
+    }
+
+    surface.name = `LaneSurface-${lane.id.id}`;
+    surface.renderOrder = -11;
+    this.setVisualRole(surface, 'laneSurface');
+    scene.add(surface);
+    return surface;
   }
 
   addLane(lane, coordinates, scene) {
     const drewObjects = [];
 
+    const laneSurface = this.addLaneSurface(lane, coordinates, scene);
+    if (laneSurface) {
+      drewObjects.push(laneSurface);
+    }
+
     const centralLine = lane.centralCurve.segment;
     centralLine.forEach((segment) => {
       const points = coordinates.applyOffsetToArray(segment.lineSegment.point);
-      const centerLine = drawSegmentsFromPoints(
-        points, colorMapping.GREEN, 1, this.zOffsetFactor, false);
+      const centerLine = this.setVisualRole(
+        drawPolylineBandFromPoints(
+          points, 0.025, colorMapping.GREEN, this.zOffsetFactor, 0.4, false,
+        ),
+        'laneCenter',
+      );
       centerLine.name = `CentralLine-${lane.id.id}`;
       scene.add(centerLine);
       drewObjects.push(centerLine);
     });
 
-    const rightLaneType = lane.rightBoundary.boundaryType[0].types[0];
+    const rightLaneType = _.get(
+      lane,
+      'rightBoundary.boundaryType[0].types[0]',
+      'UNKNOWN',
+    );
     // TODO: this is a temp. fix for repeated boundary types.
     lane.rightBoundary.curve.segment.forEach((segment, index) => {
       const points = coordinates.applyOffsetToArray(segment.lineSegment.point);
@@ -153,7 +463,11 @@ export default class Map {
       drewObjects.push(boundary);
     });
 
-    const leftLaneType = lane.leftBoundary.boundaryType[0].types[0];
+    const leftLaneType = _.get(
+      lane,
+      'leftBoundary.boundaryType[0].types[0]',
+      'UNKNOWN',
+    );
     lane.leftBoundary.curve.segment.forEach((segment, index) => {
       const points = coordinates.applyOffsetToArray(segment.lineSegment.point);
       const boundary = this.addLaneMesh(leftLaneType, points);
@@ -197,15 +511,125 @@ export default class Map {
     return text;
   }
 
+  getBoundaryEdgePoints(edge, coordinates) {
+    const points = [];
+    _.get(edge, 'curve.segment', []).forEach((segment) => {
+      const segmentPoints = coordinates.applyOffsetToArray(
+        _.get(segment, 'lineSegment.point', []),
+      );
+      segmentPoints.filter(Boolean).forEach((point) => {
+        const previous = points[points.length - 1];
+        if (!previous || distanceSquared(previous, point) > 0.000001) {
+          points.push(point);
+        }
+      });
+    });
+    return points;
+  }
+
+  stitchBoundaryPolygon(boundaryPolygon, coordinates) {
+    const edgeLines = _.get(boundaryPolygon, 'edge', [])
+      .map((edge) => this.getBoundaryEdgePoints(edge, coordinates))
+      .filter((points) => points.length > 1);
+    if (!edgeLines.length) {
+      return [];
+    }
+
+    const ring = edgeLines.shift().slice();
+    while (edgeLines.length) {
+      const end = ring[ring.length - 1];
+      let nearestIndex = 0;
+      let shouldReverse = false;
+      let nearestDistance = Number.POSITIVE_INFINITY;
+
+      edgeLines.forEach((line, index) => {
+        const startDistance = distanceSquared(end, line[0]);
+        const endDistance = distanceSquared(end, line[line.length - 1]);
+        if (startDistance < nearestDistance) {
+          nearestDistance = startDistance;
+          nearestIndex = index;
+          shouldReverse = false;
+        }
+        if (endDistance < nearestDistance) {
+          nearestDistance = endDistance;
+          nearestIndex = index;
+          shouldReverse = true;
+        }
+      });
+
+      let nextLine = edgeLines.splice(nearestIndex, 1)[0].slice();
+      if (shouldReverse) {
+        nextLine = nextLine.reverse();
+      }
+      if (distanceSquared(end, nextLine[0]) < 0.000001) {
+        nextLine.shift();
+      }
+      ring.push(...nextLine);
+    }
+
+    if (ring.length > 2 && distanceSquared(ring[0], ring[ring.length - 1]) < 0.000001) {
+      ring.pop();
+    }
+    return ring;
+  }
+
+  addRoadSurface(road, section, sectionIndex, coordinates, scene) {
+    const contour = this.stitchBoundaryPolygon(
+      _.get(section, 'boundary.outerPolygon'),
+      coordinates,
+    );
+    const holes = _.get(section, 'boundary.hole', [])
+      .map((hole) => this.stitchBoundaryPolygon(hole, coordinates))
+      .filter((ring) => ring.length >= 3);
+    const material = new THREE.MeshBasicMaterial({
+      color: MAP_VISUAL_THEME[this.themeMode].roadSurface.color,
+      map: this.surfaceTexture,
+      side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
+    });
+    const surface = drawPolygonSurfaceFromRings(
+      contour,
+      holes,
+      material,
+      0.08,
+      false,
+    );
+    if (!surface) {
+      material.dispose();
+      return null;
+    }
+
+    surface.name = `RoadSurface-${road.id.id}-${sectionIndex}`;
+    surface.renderOrder = -10;
+    this.setVisualRole(surface, 'roadSurface');
+    scene.add(surface);
+    return surface;
+  }
+
   addRoad(road, coordinates, scene) {
     const drewObjects = [];
 
-    road.section.forEach((section) => {
-      section.boundary.outerPolygon.edge.forEach((edge) => {
+    road.section.forEach((section, sectionIndex) => {
+      const surface = this.addRoadSurface(
+        road,
+        section,
+        sectionIndex,
+        coordinates,
+        scene,
+      );
+      if (surface) {
+        drewObjects.push(surface);
+      }
+
+      _.get(section, 'boundary.outerPolygon.edge', []).forEach((edge) => {
         edge.curve.segment.forEach((segment, index) => {
           const points = coordinates.applyOffsetToArray(segment.lineSegment.point);
           const boundary = this.addLaneMesh('CURB', points);
           boundary.name = `Road-${road.id.id}`;
+          this.setVisualRole(boundary, 'roadEdge');
+          boundary.renderOrder = 1;
           scene.add(boundary);
           drewObjects.push(boundary);
         });
@@ -215,19 +639,66 @@ export default class Map {
     return drewObjects;
   }
 
-  addBorder(borderPolygon, color, coordinates, scene) {
+  addBorder(borderPolygon, color, coordinates, scene, visualRole = null) {
     const drewObjects = [];
 
     const border = coordinates.applyOffsetToArray(borderPolygon.polygon.point);
+    if (!border || !border.length) {
+      return drewObjects;
+    }
     border.push(border[0]);
 
-    const mesh = drawSegmentsFromPoints(
-      border, color, 2, this.zOffsetFactor, true, false, 1.0,
+    const mesh = drawPolylineBandFromPoints(
+      border, 0.08, color, this.zOffsetFactor, 1, true,
     );
+    if (visualRole) {
+      this.setVisualRole(mesh, visualRole);
+    }
     scene.add(mesh);
     drewObjects.push(mesh);
 
     return drewObjects;
+  }
+
+  addJunction(junction, coordinates, scene) {
+    const drewObjects = [];
+    const contour = coordinates.applyOffsetToArray(
+      _.get(junction, 'polygon.point', []),
+    );
+    const material = new THREE.MeshBasicMaterial({
+      color: MAP_VISUAL_THEME[this.themeMode].junctionSurface.color,
+      map: this.surfaceTexture,
+      side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
+    });
+    const surface = drawPolygonSurfaceFromRings(
+      contour,
+      [],
+      material,
+      0.35,
+      false,
+    );
+    if (surface) {
+      surface.name = `JunctionSurface-${junction.id.id}`;
+      surface.renderOrder = -9;
+      this.setVisualRole(surface, 'junctionSurface');
+      scene.add(surface);
+      drewObjects.push(surface);
+    } else {
+      material.dispose();
+    }
+
+    return drewObjects.concat(
+      this.addBorder(
+        junction,
+        colorMapping.BLUE,
+        coordinates,
+        scene,
+        'junctionBorder',
+      ),
+    );
   }
 
   addParkingSpaceId(parkingSpace, coordinates, scene) {
@@ -285,8 +756,8 @@ export default class Map {
     lines.forEach((line) => {
       line.segment.forEach((segment) => {
         const points = coordinates.applyOffsetToArray(segment.lineSegment.point);
-        const mesh = drawSegmentsFromPoints(
-          points, color, 5, this.zOffsetFactor * 2, false,
+        const mesh = drawPolylineBandFromPoints(
+          points, 0.16, color, this.zOffsetFactor * 2, 1, false,
         );
         scene.add(mesh);
         drewObjects.push(mesh);
@@ -313,12 +784,18 @@ export default class Map {
     if (drewObjects) {
       drewObjects.forEach((object) => {
         scene.remove(object);
-        if (object.geometry) {
-          object.geometry.dispose();
-        }
-        if (object.material) {
-          object.material.dispose();
-        }
+        object.traverse((child) => {
+          this.fadingObjects.delete(child);
+          if (child.geometry) {
+            child.geometry.dispose();
+          }
+          if (child.material) {
+            const materials = Array.isArray(child.material)
+              ? child.material
+              : [child.material];
+            materials.forEach((material) => material.dispose());
+          }
+        });
       });
     }
   }
@@ -388,9 +865,7 @@ export default class Map {
             break;
           case 'junction':
             this.data[kind].push(Object.assign(newData[kind][i], {
-              drewObjects: this.addBorder(
-                newData[kind][i], colorMapping.BLUE, coordinates, scene,
-              ),
+              drewObjects: this.addJunction(newData[kind][i], coordinates, scene),
             }));
             break;
           case 'pncJunction':
@@ -524,7 +999,10 @@ export default class Map {
     }
     // Do not set zOffset in camera view, since zOffset will affect the accuracy of matching
     // between hdmap and camera image
-    this.zOffsetFactor = STORE.options.showCameraView ? 0 : 1;
+    const cameraViewEnabled = STORE.options.showCameraView
+      && !STORE.options.showRouteEditingBar;
+    this.zOffsetFactor = cameraViewEnabled ? 0 : 1;
+    this.updateViewMode(cameraViewEnabled);
   }
 
   update(world) {

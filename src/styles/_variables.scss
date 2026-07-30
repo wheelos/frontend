@@ -9,52 +9,55 @@
 // ============================================
 .theme-dark {
   // Background layers (from darkest to lightest)
-  --bg-scene:           #000C17;
-  --bg-body:            #14171A;
-  --bg-header:          #000000;
-  --bg-panel:           #1D2226;
-  --bg-card:            #1D2226;
-  --bg-sidebar:         #1D2226;
-  --bg-button:          #181818;
-  --bg-hover:           #2A3238;
-  --bg-sub-button:      #3E4041;
-  --bg-input:           #101315;
-  --bg-toggle-track:    #3F4548;
-  --bg-progress:        #333639;
-  --bg-scrollbar-track: #555555;
-  --bg-modal:           rgba(0, 0, 0, 0.8);
-  --bg-modal-mask:      rgba(0, 0, 0, 0.5);
-  --bg-overlay:         rgba(0, 0, 0, 0.8);
-  --bg-overlay-light:   rgba(0, 0, 0, 0.55);
-  --bg-overlay-medium:  rgba(0, 0, 0, 0.5);
-  --bg-loader:          #000C17;
-  --bg-guide-modal:     #010c17;
-  --bg-delete-modal:    #272A2E;
-  --bg-scenario-btn:    #303438;
-  --bg-scenario-hover:  #616467;
-  --bg-event-row:       #101315;
-  --bg-tool-menu:       #000000;
+  --bg-scene:           #050D16;
+  --bg-body:            #070D15;
+  --bg-header:          #090F18;
+  --bg-panel:           #0B141F;
+  --bg-card:            #0A121C;
+  --bg-sidebar:         #080F18;
+  --bg-button:          #111B28;
+  --bg-hover:           #172638;
+  --bg-sub-button:      #172832;
+  --bg-input:           #0C1720;
+  --bg-toggle-track:    #354651;
+  --bg-progress:        #293741;
+  --bg-scrollbar-track: #1B2831;
+  --bg-modal:           rgba(7, 15, 23, 0.94);
+  --bg-modal-mask:      rgba(2, 8, 13, 0.62);
+  --bg-overlay:         rgba(7, 13, 22, 0.88);
+  --bg-overlay-light:   rgba(7, 13, 22, 0.76);
+  --bg-overlay-medium:  rgba(7, 13, 22, 0.82);
+  --bg-loader:          #07131F;
+  --bg-guide-modal:     #08141E;
+  --bg-delete-modal:    #16232C;
+  --bg-scenario-btn:    #1B2C37;
+  --bg-scenario-hover:  #29404D;
+  --bg-event-row:       #0C1720;
+  --bg-tool-menu:       #0A141D;
+  --bg-raised:          #121D2A;
+  --bg-accent-soft:     rgba(47, 140, 255, 0.16);
 
   // Text layers
-  --text-primary:       #FFFFFF;
-  --text-secondary:     #999999;
-  --text-tertiary:      #A0A0A0;
-  --text-muted:         #888888;
-  --text-label:         #D8D8D8;
-  --text-inverse:       #000000;
-  --text-disabled:      #414141;
+  --text-primary:       #EEF3F7;
+  --text-secondary:     #96A5B5;
+  --text-tertiary:      #77899D;
+  --text-muted:         #71838E;
+  --text-label:         #D4DEE5;
+  --text-inverse:       #07131F;
+  --text-disabled:      #52616A;
 
   // Borders
-  --border-primary:     #383838;
-  --border-dark:        #000000;
-  --border-light:       #333333;
-  --border-divider:     #999999;
-  --border-hover-row:   #393E43;
-  --border-section:     #080A0C;
+  --border-primary:     #31434F;
+  --border-dark:        #071019;
+  --border-light:       #273945;
+  --border-divider:     #526875;
+  --border-hover-row:   #263A47;
+  --border-section:     #1C2C36;
+  --border-subtle:      rgba(143, 170, 187, 0.2);
 
   // Accent colors
-  --accent-blue:        #30A5FF;
-  --accent-blue-dark:   #006AFF;
+  --accent-blue:        #2F8CFF;
+  --accent-blue-dark:   #2178DB;
   --accent-green:       #1C9063;
   --accent-blue-hover:  #49a9ee;
 
@@ -73,12 +76,12 @@
   --toggle-checked-bg:  #0E3D62;
 
   // Command button
-  --command-bg-start:   #000000;
-  --command-bg-end:     #111F1D;
-  --command-bg-hover:   #151E1B;
+  --command-bg-start:   #101C24;
+  --command-bg-end:     #142721;
+  --command-bg-hover:   #1A3028;
   --command-bg-active:  rgba(35, 51, 45, 0.6);
-  --command-bg-disabled-start: rgba(0, 0, 0, 0.8);
-  --command-bg-disabled-end:   rgba(9, 17, 16, 0.8);
+  --command-bg-disabled-start: rgba(12, 22, 29, 0.8);
+  --command-bg-disabled-end:   rgba(15, 27, 27, 0.8);
 
   // Driving mode
   --auto-mode-gradient-start: rgba(17, 30, 48, 0.8);
@@ -117,6 +120,7 @@
   --point-cloud-label:  #aaaaaa;
   --blink-from:         #006AFF;
   --blink-to:           #30435E;
+  --shadow-panel:       0 18px 48px rgba(0, 4, 10, 0.32);
 
   --icon-filter:        none;
 }
@@ -126,7 +130,7 @@
 // ============================================
 .theme-light {
   // Background layers — soft warm grays with distinct tiers
-  --bg-scene:           #DDE3EA;
+  --bg-scene:           #F2F5F7;
   --bg-body:            #E8ECF1;
   --bg-header:          #F5F6F8;
   --bg-panel:           #EEF0F4;
@@ -151,6 +155,8 @@
   --bg-scenario-hover:  #D5D9DF;
   --bg-event-row:       #F0F2F5;
   --bg-tool-menu:       #F5F6F8;
+  --bg-raised:          #FFFFFF;
+  --bg-accent-soft:     rgba(0, 106, 255, 0.1);
 
   // Text layers
   --text-primary:       #2C2C2C;
@@ -168,10 +174,11 @@
   --border-divider:     #A0A7B0;
   --border-hover-row:   #D0D5DD;
   --border-section:     #A8AEB8;
+  --border-subtle:      rgba(75, 93, 108, 0.22);
 
   // Accent colors (kept the same)
-  --accent-blue:        #30A5FF;
-  --accent-blue-dark:   #006AFF;
+  --accent-blue:        #2F8CFF;
+  --accent-blue-dark:   #2178DB;
   --accent-green:       #1C9063;
   --accent-blue-hover:  #49a9ee;
 
@@ -234,6 +241,7 @@
   --point-cloud-label:  #5A5A5A;
   --blink-from:         #006AFF;
   --blink-to:           #A8C4DE;
+  --shadow-panel:       0 10px 28px rgba(34, 52, 67, 0.14);
 
   // Icon filter: invert + reduce brightness so icons are dark gray, not pure black
   --icon-filter:        invert(1) brightness(0.6);

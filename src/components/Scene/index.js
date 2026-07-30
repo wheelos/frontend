@@ -11,6 +11,11 @@ import CycleNumberInput from '../DefaultRouting/CycleNumberInput';
 
 @inject('store') @observer
 export default class Scene extends React.Component {
+  constructor(props) {
+    super(props);
+    this.lastThemeMode = props.themeMode;
+  }
+
   componentDidMount() {
     RENDERER.initialize('canvas', this.props.width, this.props.height,
       this.props.options, this.props.store.cameraData);
@@ -24,8 +29,9 @@ export default class Scene extends React.Component {
       RENDERER.updateDimension(nextProps.width, nextProps.height);
     }
 
-    if (nextProps.options.themeMode !== this.props.options.themeMode) {
-      RENDERER.updateSceneTheme(nextProps.options.themeMode);
+    if (nextProps.themeMode !== this.lastThemeMode) {
+      RENDERER.updateSceneTheme(nextProps.themeMode);
+      this.lastThemeMode = nextProps.themeMode;
     }
   }
 
@@ -38,29 +44,40 @@ export default class Scene extends React.Component {
 
     return (
             <React.Fragment>
-                {shouldDisplayCameraImage && <img id="camera-image" />}
+                <img
+                    id="camera-image"
+                    className={classNames({
+                      'camera-image': true,
+                      'camera-image-visible': shouldDisplayCameraImage,
+                    })}
+                    aria-hidden="true"
+                    alt=""
+                />
                 <div
                     id="canvas"
-                    className="dreamview-canvas"
+                    className={classNames({
+                      'dreamview-canvas': true,
+                      'camera-overlay-active': shouldDisplayCameraImage,
+                    })}
                     style={{ left: leftPosition }}
                     onMouseMove={(event) => {
                       const geo = RENDERER.getGeolocation(event);
                       STORE.setGeolocation(geo);
                     }}
                 >
-                    {options.showRouteEditingBar && options.showDefaultRoutingInput
-                        && <DefaultRoutingInput
-                            routeEditingManager={routeEditingManager}
-                            options={options}
-                        />}
-                    {!options.showRouteEditingBar && options.showCycleNumberInput
-                        && <CycleNumberInput
-                            routeEditingManager={routeEditingManager}
-                            options={options}
-                        />}
                     {options.showGeo && <Geolocation />}
                     <PointCloudMetrics />
                 </div>
+                {options.showRouteEditingBar && options.showDefaultRoutingInput
+                    && <DefaultRoutingInput
+                        routeEditingManager={routeEditingManager}
+                        options={options}
+                    />}
+                {!options.showRouteEditingBar && options.showCycleNumberInput
+                    && <CycleNumberInput
+                        routeEditingManager={routeEditingManager}
+                        options={options}
+                    />}
             </React.Fragment>
     );
   }
