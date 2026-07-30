@@ -233,6 +233,19 @@ export default class RealtimeWebSocketEndpoint {
     return this.initialize();
   }
 
+  sendJsonRequest(request) {
+    if (!this.websocket || this.websocket.readyState !== this.websocket.OPEN) {
+      return false;
+    }
+    try {
+      this.websocket.send(JSON.stringify(request));
+      return true;
+    } catch (error) {
+      console.error(`Failed to send ${request.type}:`, error);
+      return false;
+    }
+  }
+
   updateMapIndex(message) {
     const now = new Date();
     const duration = now - this.mapLastUpdateTimestamp;
@@ -270,14 +283,14 @@ export default class RealtimeWebSocketEndpoint {
       type: 'CheckRoutingPoint',
       point,
     };
-    this.websocket.send(JSON.stringify(request));
+    return this.sendJsonRequest(request);
   }
 
   requestMapElementIdsByRadius(radius) {
-    this.websocket.send(JSON.stringify({
+    return this.sendJsonRequest({
       type: 'RetrieveMapElementIdsByRadius',
       radius,
-    }));
+    });
   }
 
   requestRoute(start, start_heading, waypoint, end, parkingInfo) {
@@ -295,7 +308,7 @@ export default class RealtimeWebSocketEndpoint {
     if (start_heading) {
       request.start.heading = start_heading;
     }
-    this.websocket.send(JSON.stringify(request));
+    return this.sendJsonRequest(request);
   }
 
   requestDefaultCycleRouting(start, start_heading, waypoint, end, cycleNumber) {
@@ -309,7 +322,7 @@ export default class RealtimeWebSocketEndpoint {
     if (start_heading) {
       request.start.heading = start_heading;
     }
-    this.websocket.send(JSON.stringify(request));
+    return this.sendJsonRequest(request);
   }
 
   requestDefaultRoutingEndPoint() {
@@ -565,7 +578,7 @@ export default class RealtimeWebSocketEndpoint {
       point: points,
       routingType: 'defaultRouting',
     };
-    this.websocket.send(JSON.stringify(request));
+    return this.sendJsonRequest(request);
   }
 
   requestPreprocessProgress() {
@@ -596,7 +609,7 @@ export default class RealtimeWebSocketEndpoint {
     if (start_heading) {
       request.start.heading = start_heading;
     }
-    this.websocket.send(JSON.stringify(request));
+    return this.sendJsonRequest(request);
   }
 
   startWheelFlow(payload) {

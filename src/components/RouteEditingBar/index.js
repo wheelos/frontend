@@ -12,11 +12,18 @@ import exitDefaultRoutingModeIcon from 'assets/images/routing/exit_default_routi
 
 class RouteEditingButton extends React.Component {
   render() {
-    const { label, icon, onClick, disabled } = this.props;
+    const {
+      label, icon, onClick, disabled, active,
+    } = this.props;
 
     return (
-            <button onClick={onClick} className="button" disabled={disabled}>
-                <img src={icon} />
+            <button
+                type="button"
+                onClick={onClick}
+                className={`button ${active ? 'active' : ''}`}
+                disabled={disabled}
+            >
+                <img src={icon} alt="" aria-hidden="true" />
                 <span>{label}</span>
             </button>
     );
@@ -25,16 +32,79 @@ class RouteEditingButton extends React.Component {
 
 @inject('store') @observer
 export default class RouteEditingMenu extends React.Component {
-  render() {
+  constructor(props) {
+    super(props);
+    this.state = {
+      requestError: '',
+    };
+    this.sendRoutingRequest = this.sendRoutingRequest.bind(this);
+    this.toggleDefaultRoutingMode = this.toggleDefaultRoutingMode.bind(this);
+  }
+
+  sendRoutingRequest() {
+    const { routeEditingManager } = this.props.store;
+    if (routeEditingManager.getRoutingPointCount() < 1) {
+      this.setState({
+        requestError: 'Add at least one point on the map before sending.',
+      });
+      return;
+    }
+
+    if (routeEditingManager.sendRoutingRequest(false)) {
+      this.props.store.setOptionStatus('showRouteEditingBar', false);
+      return;
+    }
+
+    this.setState({
+      requestError: 'The routing request was not sent. Check the connection and try again.',
+    });
+  }
+
+  toggleDefaultRoutingMode() {
     const { routeEditingManager, options } = this.props.store;
+    const pointCount = routeEditingManager.getRoutingPointCount();
+    this.setState({ requestError: '' });
+
+    if (routeEditingManager.inDefaultRoutingMode) {
+      if (pointCount < 1) {
+        this.setState({
+          requestError: 'Add at least one point on the map before saving.',
+        });
+        return;
+      }
+      options.showDefaultRoutingInput = true;
+      routeEditingManager.toggleDefaultRoutingMode();
+      return;
+    }
+
+    if (pointCount > 0) {
+      options.showDefaultRoutingInput = true;
+      return;
+    }
+
+    routeEditingManager.toggleDefaultRoutingMode();
+  }
+
+  render() {
+    const { routeEditingManager } = this.props.store;
 
     return (
             <div className="route-editing-bar">
                 <div className="editing-panel">
                     <RouteEditingButton
-                        label="Add Point of Interest"
+                        label="Use Saved POI"
                         icon={addPoiIcon}
                         onClick={() => {
+                          if (Object.keys(
+                            routeEditingManager.defaultRoutingEndPoint,
+                          ).length === 0) {
+                            this.setState({
+                              requestError: 'No saved POIs are configured for this map. '
+                                + 'Click directly on the map to add a routing point.',
+                            });
+                            return;
+                          }
+                          this.setState({ requestError: '' });
                           this.props.store.handleOptionToggle('showPOI');
                         }}
                     />
@@ -42,6 +112,7 @@ export default class RouteEditingMenu extends React.Component {
                         label="Remove Last Point"
                         icon={removeLastIcon}
                         onClick={() => {
+                          this.setState({ requestError: '' });
                           routeEditingManager.removeLastRoutingPoint();
                         }}
                     />
@@ -49,6 +120,7 @@ export default class RouteEditingMenu extends React.Component {
                         label="Remove All Points"
                         icon={removeAllIcon}
                         onClick={() => {
+                          this.setState({ requestError: '' });
                           routeEditingManager.removeAllRoutingPoints();
                         }}
                     />
@@ -56,28 +128,31 @@ export default class RouteEditingMenu extends React.Component {
                         label="Send Routing Request"
                         icon={sendRouteIcon}
                         disabled={routeEditingManager.inDefaultRoutingMode}
-                        onClick={() => {
-                          if (routeEditingManager.sendRoutingRequest(false)) {
-                            options.showRouteEditingBar = false;
-                          }
-                        }}
+                        onClick={this.sendRoutingRequest}
                     />
                     <RouteEditingButton
-                        label="Add Default Routing"
+                        label={routeEditingManager.inDefaultRoutingMode
+                          ? 'Save Default Routing' : 'Add Default Routing'}
                         icon={routeEditingManager.inDefaultRoutingMode
                           ? exitDefaultRoutingModeIcon : inDefaultRoutingModeIcon}
-                        onClick={() => {
-                          if (routeEditingManager.inDefaultRoutingMode) {
-                            options.showDefaultRoutingInput = true;
-                          }
-                          else {
-                            routeEditingManager.removeAllRoutingPoints();
-                          }
-                          routeEditingManager.toggleDefaultRoutingMode();
-                        }}
+                        active={routeEditingManager.inDefaultRoutingMode}
+                        onClick={this.toggleDefaultRoutingMode}
                     />
                     <EditingTip />
                 </div>
+                {this.state.requestError && (
+                    <div className="route-editing-feedback" role="alert">
+                        <span aria-hidden="true">!</span>
+                        <p>{this.state.requestError}</p>
+                        <button
+                            type="button"
+                            aria-label="Dismiss"
+                            onClick={() => this.setState({ requestError: '' })}
+                        >
+                            ×
+                        </button>
+                    </div>
+                )}
             </div>
     );
   }

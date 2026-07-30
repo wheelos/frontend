@@ -35,7 +35,7 @@ export class MonitorItem extends React.Component {
 
     return (
             <li className="monitor-item">
-                <img src={icon} className="icon" />
+                <img src={icon} className="icon" alt="" aria-hidden="true" />
                 <span className={classNames('text', levelClass)}>
                     {text}
                 </span>
@@ -51,8 +51,11 @@ export default class Console extends React.Component {
     const { monitor } = this.props.store;
 
     return (
-            <div className="card" style={{ maxWidth: '50%' }}>
-                <div className="card-header"><span>Console</span></div>
+            <div className="console-card card">
+                <div className="card-header">
+                    <span>Console</span>
+                    <small>Latest events</small>
+                </div>
                 <div className="card-content-column">
                     <ul className="console">
                         {monitor.items.map((item, index) => (
@@ -63,6 +66,8 @@ export default class Console extends React.Component {
                                 time={timestampMsToTimeString(item.timestampMs)}
                             />
                         ))}
+                        {!monitor.items.length
+                            && <li className="console-empty">No recent events</li>}
                     </ul>
                 </div>
             </div>

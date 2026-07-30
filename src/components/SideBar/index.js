@@ -24,11 +24,11 @@ const sidebarIconMapping = {
 
 const sidebarLabelMapping = {
   showTasks: 'Tasks',
-  showModuleController: 'Module Controller',
-  showMenu: 'Layer Menu',
-  showRouteEditingBar: 'Route Editing',
-  showDataRecorder: 'Data Recorder',
-  showPOI: 'Default Routing',
+  showModuleController: 'Modules',
+  showMenu: 'Layers',
+  showRouteEditingBar: 'Route',
+  showDataRecorder: 'Recorder',
+  showPOI: 'Default route',
   showWheelFlow: 'WheelFlow',
 };
 

@@ -58,7 +58,7 @@ export default class HMISelectors extends React.Component {
                   && currentScenarioSet.scenarios.length > 0)
                 && (
                   <ScenarioSetSelector
-                    name='scenarioSet'
+                    name='scenario'
                     options={
                       currentScenarioSet
                         .scenarios

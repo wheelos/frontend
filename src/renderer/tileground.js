@@ -37,6 +37,7 @@ export default class TileGround {
 
     this.hash = -1;
     this.currentTiles = {};
+    this.themeMode = 'dark';
     this.currentTrafficLights = [];
     this.currentStopSigns = [];
     this.currentYieldSigns = [];
@@ -49,6 +50,26 @@ export default class TileGround {
     this.yieldSigns = new TrafficSigns(
       yieldSignMaterial, yieldSignObject, YIELD_SIGN_SCALE,
     );
+  }
+
+  applyTileStyle(tile) {
+    if (!tile || !tile.material) {
+      return;
+    }
+    const isLight = this.themeMode === 'light';
+    const { material } = tile;
+    material.color.setHex(0xFFFFFF);
+    material.opacity = isLight ? 0.14 : 1;
+    material.transparent = isLight;
+    material.depthWrite = !isLight;
+    material.needsUpdate = true;
+  }
+
+  updateTheme(themeMode) {
+    this.themeMode = themeMode === 'light' ? 'light' : 'dark';
+    Object.keys(this.currentTiles).forEach((key) => {
+      this.applyTileStyle(this.currentTiles[key]);
+    });
   }
 
   initialize(metadata) {
@@ -129,6 +150,7 @@ export default class TileGround {
       mesh.position.set(position.x, position.y, position.z);
       mesh.scale.set(this.metadata.tileLength, this.metadata.tileLength, 1);
       mesh.overdraw = false;
+      this.applyTileStyle(mesh);
 
       this.currentTiles[key] = mesh;
       scene.add(mesh);

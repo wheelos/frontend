@@ -13,10 +13,13 @@ export default class SideBarButton extends React.PureComponent {
 
     return (
             <button
+                type="button"
                 onClick={onClick}
                 disabled={disabled}
                 data-for="sidebar-button"
                 data-tip={tooltip}
+                aria-label={tooltip}
+                aria-pressed={Boolean(active)}
                 className={classNames({
                   button: !isSubButton,
                   'button-active': !isSubButton && active,
@@ -25,7 +28,8 @@ export default class SideBarButton extends React.PureComponent {
                 },
                 extraClasses)}
             >
-                {iconSrc && <img src={iconSrc} className="icon" />}
+                {hotkey && <span className="shortcut" aria-hidden="true">{hotkey}</span>}
+                {iconSrc && <img src={iconSrc} className="icon" alt="" aria-hidden="true" />}
                 <div className="label">{label}</div>
             </button>
     );

@@ -3,6 +3,7 @@ import { inject, observer } from 'mobx-react';
 import _ from 'lodash';
 
 import SETTING from 'store/config/PlanningGraph.yml';
+import MonitorEmptyState from 'components/PNCMonitor/MonitorEmptyState';
 import ScatterGraph, { generateScatterGraph } from 'components/PNCMonitor/ScatterGraph';
 import PlanningScenarioTable from 'components/PNCMonitor/PlanningScenarioTable';
 
@@ -16,7 +17,7 @@ export default class PlanningMonitor extends React.Component {
     }
 
     return _.get(setting, 'datasets', []).map(({ name, graphTitle }) => {
-      const graph = datasets[name];
+      const graph = datasets ? datasets[name] : null;
       const polygons = graph ? graph.obstaclesBoundary : [];
       return (
                 <ScatterGraph
@@ -36,15 +37,21 @@ export default class PlanningMonitor extends React.Component {
     } = this.props.store.planningData;
 
     if (!planningTimeSec) {
-      return null;
+      return (
+        <MonitorEmptyState
+          title="Waiting for planning telemetry"
+          detail="Scenario and trajectory charts appear when Planning publishes data."
+        />
+      );
     }
 
     const chartCount = {};
+    const graphData = data || {};
 
     return (
-            <div>
+            <div className="pnc-diagnostic-stack">
                 <PlanningScenarioTable scenarios={scenarioHistory} />
-                {chartData.map((chart) => {
+                {(chartData || []).map((chart) => {
                   // Adding count to chart key to prevent duplicate chart title
                   if (!chartCount[chart.title]) {
                     chartCount[chart.title] = 1;
@@ -62,16 +69,16 @@ export default class PlanningMonitor extends React.Component {
                         />
                   );
                 })}
-                {generateScatterGraph(SETTING.speedGraph, data.speedGraph)}
-                {generateScatterGraph(SETTING.accelerationGraph, data.accelerationGraph)}
-                {generateScatterGraph(SETTING.planningThetaGraph, data.thetaGraph)}
-                {generateScatterGraph(SETTING.planningKappaGraph, data.kappaGraph)}
-                {this.generateGraphsFromDatasets('stGraph', data.stGraph)}
-                {this.generateGraphsFromDatasets('stSpeedGraph', data.stSpeedGraph)}
-                {generateScatterGraph(SETTING.planningDkappaGraph, data.dkappaGraph)}
-                {generateScatterGraph(SETTING.referenceLineThetaGraph, data.thetaGraph)}
-                {generateScatterGraph(SETTING.referenceLineKappaGraph, data.kappaGraph)}
-                {generateScatterGraph(SETTING.referenceLineDkappaGraph, data.dkappaGraph)}
+                {generateScatterGraph(SETTING.speedGraph, graphData.speedGraph)}
+                {generateScatterGraph(SETTING.accelerationGraph, graphData.accelerationGraph)}
+                {generateScatterGraph(SETTING.planningThetaGraph, graphData.thetaGraph)}
+                {generateScatterGraph(SETTING.planningKappaGraph, graphData.kappaGraph)}
+                {this.generateGraphsFromDatasets('stGraph', graphData.stGraph)}
+                {this.generateGraphsFromDatasets('stSpeedGraph', graphData.stSpeedGraph)}
+                {generateScatterGraph(SETTING.planningDkappaGraph, graphData.dkappaGraph)}
+                {generateScatterGraph(SETTING.referenceLineThetaGraph, graphData.thetaGraph)}
+                {generateScatterGraph(SETTING.referenceLineKappaGraph, graphData.kappaGraph)}
+                {generateScatterGraph(SETTING.referenceLineDkappaGraph, graphData.dkappaGraph)}
             </div>
     );
   }

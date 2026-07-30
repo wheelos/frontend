@@ -70,11 +70,22 @@ export default class QuickStarter extends React.Component {
     const { lockTaskPanel } = this.props.store.options;
 
     return (
-            <div className="card">
-                <div className="card-header"><span>Quick Start</span></div>
+            <div className="quick-start card">
+                <div className="card-header">
+                    <span>Quick Start</span>
+                    <small>3 commands</small>
+                </div>
                 <div className="card-content-column">
-                    <CommandGroup disabled={lockTaskPanel} commands={this.setup} />
-                    <CommandGroup disabled={lockTaskPanel} commands={this.reset} />
+                    <CommandGroup
+                        disabled={lockTaskPanel}
+                        commands={this.setup}
+                        extraButtonClass="setup-button"
+                    />
+                    <CommandGroup
+                        disabled={lockTaskPanel}
+                        commands={this.reset}
+                        extraButtonClass="reset-button"
+                    />
                     <CommandGroup
                         disabled={!hmi.enableStartAuto || lockTaskPanel}
                         commands={this.auto}

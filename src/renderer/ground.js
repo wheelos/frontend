@@ -1,27 +1,55 @@
 import * as THREE from 'three';
 
-import { loadTexture } from 'utils/models';
-import gridGround from 'assets/images/ground.png';
 import STORE from 'store';
+
+const GROUND_COLORS = {
+  dark: 0x020810,
+  light: 0xF2F5F7,
+};
 
 export default class Ground {
   constructor() {
     this.type = 'default';
-    this.loadedMap = null;
-    this.updateMap = null;
+    this.mapName = null;
     this.mesh = null;
     this.geometry = null;
     this.initialized = false;
-    this.inNaviMode = null;
-    this.showCameraView = false;
+    this.themeMode = 'dark';
 
-    loadTexture(gridGround, (texture) => {
-      this.geometry = new THREE.PlaneGeometry(1, 1);
-      this.mesh = new THREE.Mesh(
-        this.geometry,
-        new THREE.MeshBasicMaterial({ map: texture }),
-      );
-    });
+    this.geometry = new THREE.PlaneGeometry(1, 1);
+    this.mesh = new THREE.Mesh(
+      this.geometry,
+      new THREE.MeshBasicMaterial({
+        color: this.getGroundColor(),
+        depthWrite: false,
+      }),
+    );
+    this.mesh.type = 'solid';
+    this.mesh.renderOrder = -20;
+    this.applyMaterialStyle();
+  }
+
+  applyMaterialStyle() {
+    if (!this.mesh || !this.mesh.material) {
+      return;
+    }
+
+    this.mesh.material.map = null;
+    this.mesh.material.color.setHex(this.getGroundColor());
+    this.mesh.material.opacity = 1;
+    this.mesh.material.transparent = false;
+    // Ground is a backdrop. It must not occlude near-coplanar map surfaces.
+    this.mesh.material.depthWrite = false;
+    this.mesh.material.needsUpdate = true;
+  }
+
+  getGroundColor() {
+    return GROUND_COLORS[this.themeMode] || GROUND_COLORS.dark;
+  }
+
+  updateTheme(themeMode) {
+    this.themeMode = themeMode === 'light' ? 'light' : 'dark';
+    this.applyMaterialStyle();
   }
 
   initialize(coordinates) {
@@ -29,7 +57,7 @@ export default class Ground {
       return false;
     }
 
-    if (this.loadedMap === this.updateMap && !this.render(coordinates)) {
+    if (!this.render(coordinates)) {
       return false;
     }
 
@@ -37,73 +65,32 @@ export default class Ground {
     return true;
   }
 
-  loadGrid(coordinates) {
-    loadTexture(gridGround, (texture) => {
-      console.log('using grid as ground image...');
-      this.mesh.material.map = texture;
-      this.mesh.type = 'grid';
-      this.mesh.visible = true;
-      this.render(coordinates);
-    });
-  }
-
   update(world, coordinates, scene) {
     if (this.initialized !== true) {
       return;
     }
 
-    // Remove ground image when camera view is on
+    // Hide the rendered ground while the camera feed is active.
     const showCameraView = STORE.options.showCameraView;
-    const cameraAngleChanged = (showCameraView !== this.showCameraView);
-    this.showCameraView = showCameraView;
 
-    const modeChanged = this.inNaviMode !== STORE.hmi.inNavigationMode;
-    this.inNaviMode = STORE.hmi.inNavigationMode;
-    if (this.inNaviMode) {
-      this.mesh.type = 'grid';
-      if (modeChanged) {
-        this.loadGrid(coordinates);
-      }
-    } else {
-      this.mesh.type = 'reflection';
+    if (showCameraView) {
+      scene.background = null;
+      this.mesh.visible = false;
+      return;
     }
 
-    if (this.mesh.type === 'grid') {
-      const adc = world.autoDrivingCar;
-      const position = coordinates.applyOffset({ x: adc.positionX, y: adc.positionY });
-      this.mesh.position.set(position.x, position.y, 0);
-    } else if (this.loadedMap !== this.updateMap || modeChanged || cameraAngleChanged) {
-      if (showCameraView) {
-        scene.background = null;
-        this.mesh.visible = false;
-        return;
-      }
-      // Only reload reflection map upon map/mode/camera(cameraView->non-CameraView) change.
-      const dir = this.titleCaseToSnakeCase(this.updateMap);
-      const host = window.location;
-      const port = PARAMETERS.server.port;
-      const server = `${host.protocol}//${host.hostname}:${port}`;
-      const imgUrl = `${server}/assets/map_data/${dir}/background.jpg`;
-      loadTexture(imgUrl, (texture) => {
-        console.log(`updating ground image with ${dir}`);
-        this.mesh.material.map = texture;
-        this.mesh.type = 'reflection';
-        this.mesh.visible = true;
-        this.render(coordinates, dir);
-      }, (err) => {
-        this.loadGrid(coordinates);
-      });
-      this.loadedMap = this.updateMap;
-      scene.background = new THREE.Color(0x000C17);
-    }
+    this.mesh.visible = true;
+    const adc = world.autoDrivingCar;
+    const position = coordinates.applyOffset({ x: adc.positionX, y: adc.positionY });
+    this.mesh.position.set(position.x, position.y, 0);
   }
 
   updateImage(mapName) {
-    this.updateMap = mapName;
+    this.mapName = mapName;
   }
 
   render(coordinates, mapName = 'defaults') {
-    console.log('rendering ground image...');
+    console.log('rendering solid ground...');
     const {
       xres, yres, mpp, xorigin, yorigin,
     } = PARAMETERS.ground[mapName];
@@ -113,9 +100,7 @@ export default class Ground {
       console.warn('Cannot find position for ground mesh!');
       return false;
     }
-    // NOTE: Setting the position to (0, 0) makes the center of
-    // the ground image to overlap with the offset point, which
-    // is the car position on the first received frame.
+    // Center the default ground plane on the initial coordinate offset.
     if (mapName === 'defaults') {
       position = { x: 0, y: 0 };
     }
@@ -126,9 +111,5 @@ export default class Ground {
     this.mesh.overdraw = false;
 
     return true;
-  }
-
-  titleCaseToSnakeCase(str) {
-    return str.replace(/\s/g, '_').toLowerCase();
   }
 }

@@ -2,11 +2,12 @@ import * as THREE from 'three';
 import _ from 'lodash';
 
 import STORE from 'store';
-import Text3D from 'renderer/text3d';
+import ObstacleLabels from 'renderer/obstacle_labels';
 import { copyProperty, hideArrayObjects, calculateLaneMarkerPoints } from 'utils/misc';
 import {
   drawSegmentsFromPoints, drawDashedLineFromPoints,
   drawBox, drawSolidBox, drawDashedBox, drawArrow, drawImage, drawSolidPolygonFace,
+  drawPolylineBandFromPoints,
 } from 'utils/draw';
 
 import iconObjectYield from 'assets/images/decision/object-yield.png';
@@ -40,9 +41,8 @@ export default class PerceptionObstacles {
     this.zOffset = options.zOffset || 0;
     this.skipSensorMeasurements = Boolean(options.skipSensorMeasurements);
     this.skipLaneMarkers = Boolean(options.skipLaneMarkers);
-    this.textRender = new Text3D();
+    this.obstacleLabels = new ObstacleLabels();
     this.arrows = []; // for indication of direction of moving obstacles
-    this.ids = []; // for obstacle id labels
     this.solidCubes = []; // for obstacles with only length/width/height
     this.dashedCubes = []; // for obstacles with only length/width/height
     this.extrusionSolidFaces = []; // for obstacles with polygon points
@@ -62,9 +62,9 @@ export default class PerceptionObstacles {
     this.v2xSolidFaceIdx = 0;
   }
 
-  update(world, coordinates, scene, isBirdView) {
+  update(world, coordinates, scene) {
     this.resetObjects(scene, _.isEmpty(world[this.objectsField]));
-    this.updateObjects(world, coordinates, scene, isBirdView);
+    this.updateObjects(world, coordinates, scene);
     if (!this.skipSensorMeasurements) {
       this.updateSensorMeasurements(world, coordinates, scene);
     }
@@ -75,7 +75,7 @@ export default class PerceptionObstacles {
     }
   }
 
-  updateObjects(world, coordinates, scene, isBirdView) {
+  updateObjects(world, coordinates, scene) {
     const objects = world[this.objectsField];
     if (_.isEmpty(objects)) {
       return;
@@ -123,7 +123,7 @@ export default class PerceptionObstacles {
         this.arrowIdx++;
       }
 
-      this.updateTexts(adc, obstacle, position, scene, isBirdView, isV2X);
+      this.updateTexts(adc, obstacle, position, color, scene, isV2X);
 
       // get the confidence and validate its range
       let confidence = obstacle.confidence;
@@ -214,18 +214,7 @@ export default class PerceptionObstacles {
   }
 
   resetObjects(scene, empty) {
-    // Id meshes need to be recreated every time.
-    // Each text mesh needs to be removed from the scene,
-    // and its char meshes need to be hidden for reuse purpose.
-    if (!_.isEmpty(this.ids)) {
-      this.ids.forEach((t) => {
-        t.children.forEach((c) => c.visible = false);
-        scene.remove(t);
-      });
-      this.ids = [];
-    }
-
-    this.textRender.reset();
+    this.obstacleLabels.beginFrame();
     this.arrowIdx = 0;
     this.cubeIdx = 0;
     this.extrusionFaceIdx = 0;
@@ -248,6 +237,7 @@ export default class PerceptionObstacles {
     hideArrayObjects(this.trafficCones, this.trafficConeIdx);
     hideArrayObjects(this.v2xCubes, this.v2xCubeIdx);
     hideArrayObjects(this.v2xSolidFaces, this.v2xSolidFaceIdx);
+    this.obstacleLabels.endFrame();
   }
 
   deduceSensorType(key) {
@@ -272,68 +262,52 @@ export default class PerceptionObstacles {
     return arrowMesh;
   }
 
-  updateTexts(adc, obstacle, obstaclePosition, scene, isBirdView, isV2X) {
-    const initPosition = {
-      x: obstaclePosition.x,
-      y: obstaclePosition.y,
-      z: obstacle.height || 3,
+  updateTexts(adc, obstacle, obstaclePosition, color, scene, isV2X) {
+    const content = {
+      id: null,
+      metrics: [],
+      tags: [],
     };
-
-    const lineSpacing = 0.5;
-    const deltaX = isBirdView ? 0.0 : lineSpacing * Math.cos(adc.heading);
-    const deltaY = isBirdView ? 0.7 : lineSpacing * Math.sin(adc.heading);
-    const deltaZ = isBirdView ? 0.0 : lineSpacing;
-    let lineCount = 0;
-    if (STORE.options.showObstaclesInfo) {
-      const distance = adc.distanceTo(obstaclePosition).toFixed(1);
-      const speed = obstacle.speed.toFixed(1);
-      this.drawTexts(`(${distance}m, ${speed}m/s)`, initPosition, scene);
-      lineCount++;
+    if (STORE.options.showObstaclesId && obstacle.id !== undefined) {
+      content.id = String(obstacle.id);
     }
-    if (STORE.options.showObstaclesId) {
-      const textPosition = {
-        x: initPosition.x + (lineCount * deltaX),
-        y: initPosition.y + (lineCount * deltaY),
-        z: initPosition.z + (lineCount * deltaZ),
-      };
-      this.drawTexts(obstacle.id, textPosition, scene);
-      lineCount++;
+    if (STORE.options.showObstaclesInfo) {
+      const distance = adc.distanceTo(obstaclePosition);
+      const speed = Number.isFinite(obstacle.speed)
+        ? `${obstacle.speed.toFixed(1)} m/s`
+        : '--';
+      content.metrics.push(
+        { label: 'DIST', value: `${distance.toFixed(1)} m` },
+        { label: 'SPEED', value: speed },
+      );
     }
     if (STORE.options.showPredictionPriority) {
       const priority = _.get(obstacle, 'obstaclePriority.priority');
       if (priority && priority !== 'NORMAL') {
-        const textPosition = {
-          x: initPosition.x + (lineCount * deltaX),
-          y: initPosition.y + (lineCount * deltaY),
-          z: initPosition.z + (lineCount * deltaZ),
-        };
-        this.drawTexts(priority, textPosition, scene);
-        lineCount++;
+        content.tags.push(priority);
       }
     }
     if (STORE.options.showPredictionInteractiveTag) {
       const interactiveTag = _.get(obstacle, 'interactiveTag.interactiveTag');
       if (interactiveTag && interactiveTag !== 'NONINTERACTION') {
-        const textPosition = {
-          x: initPosition.x + (lineCount * deltaX),
-          y: initPosition.y + (lineCount * deltaY),
-          z: initPosition.z + (lineCount * deltaZ),
-        };
-        this.drawTexts(interactiveTag, textPosition, scene);
-        lineCount++;
+        content.tags.push(interactiveTag);
       }
     }
     if (isV2X) {
-      _.get(obstacle,'v2xInfo.v2xType',[]).forEach((t) => {
-        const textPosition = {
-          x: initPosition.x + (lineCount * deltaX),
-          y: initPosition.y + (lineCount * deltaY),
-          z: initPosition.z + (lineCount * deltaZ),
-        };
-        this.drawTexts(t, textPosition, scene, 0xFF0000);
-        lineCount++;
-      });
+      content.tags.push(..._.get(obstacle, 'v2xInfo.v2xType', []));
     }
+
+    const labelPosition = {
+      x: obstaclePosition.x,
+      y: obstaclePosition.y,
+      z: obstaclePosition.z + (obstacle.height || DEFAULT_HEIGHT) / 2 + 0.55,
+    };
+    this.obstacleLabels.update(
+      content,
+      labelPosition,
+      isV2X ? 0xFF5A5F : color,
+      scene,
+    );
   }
 
   updatePolygon(points, height, color, coordinates, confidence, scene, isForV2X = false) {
@@ -513,15 +487,6 @@ export default class PerceptionObstacles {
     return icon;
   }
 
-  drawTexts(content, position, scene, color = 0xFFEA00) {
-    const text = this.textRender.drawText(content, scene, color);
-    if (text) {
-      text.position.set(position.x, position.y, position.z);
-      this.ids.push(text);
-      scene.add(text);
-    }
-  }
-
   drawObstacleHeading(position, heading, scene) {
     const arrowMesh = this.updateArrow(position, heading, 0xFFFFFF, scene);
     arrowMesh.scale.set(1, 1, 1);
@@ -545,12 +510,24 @@ export default class PerceptionObstacles {
         if (absolutePoints.length) {
           const offsetPoints = absolutePoints.map(
             (point) => coordinates.applyOffset(point));
-          const mesh = drawSegmentsFromPoints(offsetPoints, 0x006AFF, 2, 4, false);
+          const mesh = drawPolylineBandFromPoints(
+            offsetPoints,
+            0.15,
+            0x30A5FF,
+            4,
+            0.94,
+            false,
+          );
+          mesh.renderOrder = 5;
           scene.add(mesh);
           this.laneMarkers.push(mesh);
         }
       }
     }
+  }
+
+  animate(timestamp, camera, viewportHeight) {
+    this.obstacleLabels.animate(timestamp, camera, viewportHeight);
   }
 
   getTrafficCone(index, scene) {

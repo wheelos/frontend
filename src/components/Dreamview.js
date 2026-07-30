@@ -18,7 +18,12 @@ import WS, { MAP_WS, POINT_CLOUD_WS, CAMERA_WS } from 'store/websocket';
 export default class Dreamview extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      isPaneResizing: false,
+    };
     this.handleDrag = this.handleDrag.bind(this);
+    this.handleDragStarted = this.handleDragStarted.bind(this);
+    this.handleDragFinished = this.handleDragFinished.bind(this);
     this.handleKeyPress = this.handleKeyPress.bind(this);
     this.updateDimension = this.props.store.dimension.update.bind(this.props.store.dimension);
   }
@@ -33,6 +38,14 @@ export default class Dreamview extends React.Component {
         ),
       );
     }
+  }
+
+  handleDragStarted() {
+    this.setState({ isPaneResizing: true });
+  }
+
+  handleDragFinished() {
+    this.setState({ isPaneResizing: false });
   }
 
   handleKeyPress(event) {
@@ -76,6 +89,7 @@ export default class Dreamview extends React.Component {
 
   render() {
     const { dimension, options, hmi } = this.props.store;
+    const { isPaneResizing } = this.state;
     const { currentVehicleType } = hmi;
 
     return (
@@ -87,11 +101,19 @@ export default class Dreamview extends React.Component {
             }}>
             <div className={`theme-${options.themeMode}`}>
                 <Header />
-                <div className="pane-container">
+                <div
+                    className={[
+                      'pane-container',
+                      options.showMonitor ? 'monitor-visible' : '',
+                      isPaneResizing ? 'pane-resizing' : '',
+                    ].filter(Boolean).join(' ')}
+                >
                     <SplitPane
                         split="vertical"
                         size={dimension.pane.width}
                         onChange={this.handleDrag}
+                        onDragStarted={this.handleDragStarted}
+                        onDragFinished={this.handleDragFinished}
                         allowResize={options.showMonitor}
                     >
                         <div className="left-pane">

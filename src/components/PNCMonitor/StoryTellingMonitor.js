@@ -1,24 +1,21 @@
 import React from 'react';
 import { inject, observer } from 'mobx-react';
 import classNames from 'classnames';
-import {
-  Tabs, TabList, Tab, TabPanel,
-} from 'react-tabs';
 
 class StoryItem extends React.PureComponent {
   render() {
     const { name, value } = this.props;
 
     const textClassNames = classNames({
-      text: true,
-      active: value,
+      'pnc-story-state': true,
+      'is-active': value,
     });
 
     return (
-            <tr className="monitor-table-item">
-                <td className={textClassNames}>{name.toUpperCase()}</td>
-                <td className={textClassNames}>{value ? 'YES' : 'No'}</td>
-            </tr>
+            <li className="pnc-story-item">
+                <span className="pnc-story-name" title={name}>{name}</span>
+                <span className={textClassNames}>{value ? 'Active' : 'Idle'}</span>
+            </li>
     );
   }
 }
@@ -27,31 +24,32 @@ class StoryItem extends React.PureComponent {
 export default class StoryTellingMonitor extends React.Component {
   render() {
     const { stories } = this.props.store.storyTellers;
-
-    let storyTable = null;
-    if (stories.size > 0) {
-      storyTable = stories.entries().map(([story, isOn]) =>
-                <StoryItem key={`story_${story}`} name={story} value={isOn} />
-      );
-    } else {
-      storyTable = (
-                <tr className="monitor-table-item">
-                    <td className="text">No Data</td>
-                </tr>
-      );
-    }
+    const storyEntries = Array.from(stories.entries());
+    const activeCount = storyEntries.filter(([, isOn]) => isOn).length;
 
     return (
-            <Tabs>
-                <TabList>
-                    <Tab>Story Tellers</Tab>
-                </TabList>
-                <TabPanel className="monitor-table-container">
-                    <table className="monitor-table">
-                        <tbody>{storyTable}</tbody>
-                    </table>
-                </TabPanel>
-            </Tabs>
+            <section className="pnc-story-panel">
+                <header>
+                    <div>
+                        <h2>Story signals</h2>
+                        <p>Scenario triggers published by planning</p>
+                    </div>
+                    <span>{activeCount} active</span>
+                </header>
+                {storyEntries.length > 0
+                  ? (
+                    <ul className="pnc-story-list">
+                        {storyEntries.map(([story, isOn]) => (
+                            <StoryItem key={`story_${story}`} name={story} value={isOn} />
+                        ))}
+                    </ul>
+                  )
+                  : (
+                    <div className="pnc-story-empty">
+                        No story signals received
+                    </div>
+                  )}
+            </section>
     );
   }
 }

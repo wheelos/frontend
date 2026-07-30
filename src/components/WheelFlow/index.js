@@ -39,10 +39,24 @@ function StatusItem({ label, value }) {
   } else if (value === false) {
     normalized = 'Stopped';
   }
+  const displayValue = normalized === undefined || normalized === null || normalized === ''
+    ? '-'
+    : normalized;
+  const normalizedText = String(displayValue).toLowerCase();
+  let tone = 'neutral';
+  if ([
+    'running', 'connected', 'loaded', 'spawned', 'enabled', 'ready', 'publishing',
+  ].includes(normalizedText)) {
+    tone = 'positive';
+  } else if ([
+    'disconnected', 'not loaded', 'not spawned', 'disabled', 'not ready', 'error', 'failed',
+  ].includes(normalizedText)) {
+    tone = 'negative';
+  }
   return (
-    <div className="wheelflow-status-item">
+    <div className={`wheelflow-status-item status-${tone}`}>
       <span>{label}</span>
-      <strong>{normalized}</strong>
+      <strong>{displayValue}</strong>
     </div>
   );
 }
@@ -109,9 +123,33 @@ export default class WheelFlow extends React.Component {
     const controlsDisabled = busy || running;
     const sensorsEnabled = !!status.sensorDataEnabled;
     const customObstaclesOpen = store.options.showWheelFlowCustomObstacles;
+    const stage = status.stage || 'Waiting';
+    const normalizedStage = String(stage).toUpperCase();
+    const stageTone = ['ERROR', 'FAILED'].includes(normalizedStage) ? 'negative'
+      : (['READY', 'RUNNING'].includes(normalizedStage) ? 'positive' : 'neutral');
 
     return (
       <div className="wheelflow-panel">
+        <div className="wheelflow-toolbar">
+          <div className="wheelflow-title">
+            <span>WheelFlow</span>
+            <small>Simulation bridge and scenario controls</small>
+          </div>
+          <div className="wheelflow-toolbar-actions">
+            <div className={`wheelflow-stage status-${stageTone}`}>
+              <span>Stage</span>
+              <strong>{stage}</strong>
+            </div>
+            <button
+              type="button"
+              className="wheelflow-close"
+              aria-label="Close WheelFlow"
+              onClick={() => store.handleOptionToggle('showWheelFlow')}
+            >
+              ×
+            </button>
+          </div>
+        </div>
         <div className="wheelflow-grid">
           <section className="wheelflow-column">
             <div className="wheelflow-section-title">Configuration</div>
@@ -149,14 +187,22 @@ export default class WheelFlow extends React.Component {
             <div className="wheelflow-actions">
               <button
                 type="button"
+                className="wheelflow-action-start"
                 disabled={busy || running}
                 onClick={() => this.handleStart()}
               >
                 Start
               </button>
-              <button type="button" onClick={() => WS.stopWheelFlow()}>Stop</button>
               <button
                 type="button"
+                className="wheelflow-action-stop"
+                onClick={() => WS.stopWheelFlow()}
+              >
+                Stop
+              </button>
+              <button
+                type="button"
+                className="wheelflow-action-reset"
                 disabled={busy && status.stage !== 'ERROR'}
                 onClick={() => WS.resetWheelFlow()}
               >
@@ -164,6 +210,7 @@ export default class WheelFlow extends React.Component {
               </button>
               <button
                 type="button"
+                className="wheelflow-action-sensors"
                 disabled={!running || busy}
                 onClick={() => WS.setWheelFlowSensors(!sensorsEnabled)}
               >
@@ -171,6 +218,7 @@ export default class WheelFlow extends React.Component {
               </button>
               <button
                 type="button"
+                className="wheelflow-action-engage"
                 disabled={!running}
                 onClick={() => WS.engageWheelFlow()}
               >
@@ -178,6 +226,7 @@ export default class WheelFlow extends React.Component {
               </button>
               <button
                 type="button"
+                className="wheelflow-action-disengage"
                 disabled={!running}
                 onClick={() => WS.disengageWheelFlow()}
               >
@@ -187,6 +236,7 @@ export default class WheelFlow extends React.Component {
                 type="button"
                 className={`wheelflow-monitor-toggle ${customObstaclesOpen ? 'active' : ''}`}
                 disabled={!running && !customObstaclesOpen}
+                aria-pressed={customObstaclesOpen}
                 onClick={() => this.handleCustomObstacles()}
               >
                 <span>Custom Obstacles</span>
@@ -219,7 +269,9 @@ export default class WheelFlow extends React.Component {
 
           <section className="wheelflow-column wheelflow-log-column">
             <div className="wheelflow-section-title">Error Log</div>
-            <pre className="wheelflow-error-log">{status.lastError || 'No errors'}</pre>
+            <div className={`wheelflow-log-shell ${status.lastError ? 'has-error' : 'is-empty'}`}>
+              <pre className="wheelflow-error-log">{status.lastError || 'No errors'}</pre>
+            </div>
           </section>
         </div>
       </div>

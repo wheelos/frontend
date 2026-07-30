@@ -4,14 +4,19 @@ import classNames from 'classnames';
 import UTTERANCE from 'store/utterance';
 
 export default class DrivingMode extends React.PureComponent {
-  componentWillUpdate() {
-    UTTERANCE.cancelAllInQueue();
+  componentDidUpdate(previousProps) {
+    const { drivingMode, isAutoMode } = this.props;
+    const drivingModeChanged = previousProps.drivingMode !== drivingMode;
+    const autoStateChanged = previousProps.isAutoMode !== isAutoMode;
+
+    if (drivingModeChanged || autoStateChanged) {
+      UTTERANCE.cancelAllInQueue();
+      UTTERANCE.speakOnce(`Entering to ${drivingMode} mode`);
+    }
   }
 
   render() {
     const { drivingMode, isAutoMode } = this.props;
-
-    UTTERANCE.speakOnce(`Entering to ${drivingMode} mode`);
 
     return (
             <div className={classNames({
