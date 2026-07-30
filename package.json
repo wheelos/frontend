@@ -1,6 +1,6 @@
 {
   "name": "dreamview",
-  "version": "5.6.0",
+  "version": "6.0.0",
   "description": "Visualization of the Apollo simulator.",
   "main": "app.js",
   "author": "adu-sim",

@@ -37,9 +37,9 @@ const colorMapping = {
 
 const MAP_VISUAL_THEME = {
   dark: {
-    laneSurface: { color: 0x1A2B35, opacity: 1 },
-    roadSurface: { color: 0x101E28, opacity: 1 },
-    junctionSurface: { color: 0x1C303B, opacity: 1 },
+    laneSurface: { color: 0x263F4B, opacity: 1 },
+    roadSurface: { color: 0x1D323C, opacity: 1 },
+    junctionSurface: { color: 0x233B46, opacity: 1 },
     roadEdge: { color: 0x82919D, opacity: 0.72 },
     laneCenter: { color: 0x4D7180, opacity: 0.38 },
     laneWhite: { color: 0xEDF3F7, opacity: 0.92 },
