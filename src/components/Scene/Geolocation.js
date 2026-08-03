@@ -6,8 +6,8 @@ export default class Geolocation extends React.Component {
   render() {
     const { geolocation } = this.props.store;
 
-    const x = geolocation.x ? geolocation.x.toFixed(2) : '?';
-    const y = geolocation.y ? geolocation.y.toFixed(2) : '?';
+    const x = Number.isFinite(geolocation.x) ? geolocation.x.toFixed(2) : '?';
+    const y = Number.isFinite(geolocation.y) ? geolocation.y.toFixed(2) : '?';
 
     return (
             <div className="geolocation">

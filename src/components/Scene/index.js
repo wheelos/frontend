@@ -58,6 +58,7 @@ export default class Scene extends React.Component {
                     className={classNames({
                       'dreamview-canvas': true,
                       'camera-overlay-active': shouldDisplayCameraImage,
+                      'route-editing-active': options.showRouteEditingBar,
                     })}
                     style={{ left: leftPosition }}
                     onMouseMove={(event) => {
