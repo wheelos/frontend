@@ -351,10 +351,26 @@ body {
   .geolocation {
     z-index: 10;
     position: absolute;
-    bottom: 10px;
-    right: 10px;
+    right: 14px;
+    bottom: 58px;
 
-    color: white;
+    padding: 5px 8px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 7px;
+    background: var(--bg-overlay-medium);
+    box-shadow: var(--shadow-panel);
+    color: var(--text-secondary);
+    font-family: "Roboto Mono", "SFMono-Regular", Consolas, monospace;
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+    line-height: 14px;
+    pointer-events: none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  &.route-editing-active .geolocation {
+    bottom: 14px;
   }
 
   .point-cloud-metrics {

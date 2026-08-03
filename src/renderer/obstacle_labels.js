@@ -7,9 +7,78 @@ const LABEL_MIN_WIDTH = 168;
 const LABEL_MAX_WIDTH = 360;
 const LABEL_CORNER_RADIUS = 8;
 const LABEL_FADE_DURATION = 160;
+const LABEL_VIEWPORT_MARGIN = 10;
+const LABEL_OBSTACLE_GAP = 10;
+const LABEL_COLLISION_GAP = 4;
+const LABEL_MIN_FOOTPRINT_RADIUS = 10;
+const LABEL_MAX_FOOTPRINT_RADIUS = 96;
 const METRIC_FONT = '600 12px "Roboto Mono", "SFMono-Regular", monospace';
 const ID_FONT = '700 14px "Roboto Mono", "SFMono-Regular", monospace';
 const TAG_FONT = '700 10px "Roboto Mono", "SFMono-Regular", monospace';
+
+function clamp(value, minimum, maximum) {
+  return Math.max(minimum, Math.min(value, maximum));
+}
+
+function createRect(centerX, centerY, width, height) {
+  return {
+    left: centerX - width / 2,
+    right: centerX + width / 2,
+    top: centerY - height / 2,
+    bottom: centerY + height / 2,
+  };
+}
+
+function expandRect(rect, amount) {
+  return {
+    left: rect.left - amount,
+    right: rect.right + amount,
+    top: rect.top - amount,
+    bottom: rect.bottom + amount,
+  };
+}
+
+function getIntersectionArea(first, second) {
+  const width = Math.max(
+    0,
+    Math.min(first.right, second.right) - Math.max(first.left, second.left),
+  );
+  const height = Math.max(
+    0,
+    Math.min(first.bottom, second.bottom) - Math.max(first.top, second.top),
+  );
+  return width * height;
+}
+
+function getViewportOverflow(rect, viewportWidth, viewportHeight) {
+  return Math.max(0, LABEL_VIEWPORT_MARGIN - rect.left)
+    + Math.max(0, rect.right - viewportWidth + LABEL_VIEWPORT_MARGIN)
+    + Math.max(0, LABEL_VIEWPORT_MARGIN - rect.top)
+    + Math.max(0, rect.bottom - viewportHeight + LABEL_VIEWPORT_MARGIN);
+}
+
+function projectToScreen(position, camera, viewportWidth, viewportHeight) {
+  const projected = position.clone().project(camera);
+  return {
+    x: ((projected.x + 1) * viewportWidth) / 2,
+    y: ((1 - projected.y) * viewportHeight) / 2,
+  };
+}
+
+function getCandidateOffsets(labelWidth, labelHeight, footprintRadius) {
+  const horizontal = footprintRadius + LABEL_OBSTACLE_GAP + labelWidth / 2;
+  const vertical = footprintRadius + LABEL_OBSTACLE_GAP + labelHeight / 2;
+  return [
+    { x: -horizontal, y: -vertical },
+    { x: horizontal, y: -vertical },
+    { x: -horizontal, y: vertical },
+    { x: horizontal, y: vertical },
+    { x: 0, y: -vertical },
+    { x: -horizontal, y: 0 },
+    { x: horizontal, y: 0 },
+    { x: 0, y: vertical },
+  ];
+}
 
 function drawRoundedRect(context, x, y, width, height, radius) {
   const clampedRadius = Math.min(radius, width / 2, height / 2);
@@ -71,6 +140,9 @@ function createLabel(scene) {
     aspectRatio: 1,
     pixelHeight: 48,
     fadeStartedAt: 0,
+    anchor: new THREE.Vector3(),
+    footprintRadius: 1,
+    heading: null,
   };
 }
 
@@ -186,7 +258,14 @@ export default class ObstacleLabels {
     this.activeCount = 0;
   }
 
-  update(content, position, accentColor, scene) {
+  update(
+    content,
+    position,
+    accentColor,
+    scene,
+    footprintRadius = 1,
+    heading = null,
+  ) {
     if (!content.id && !content.metrics.length && !content.tags.length) {
       return;
     }
@@ -209,7 +288,10 @@ export default class ObstacleLabels {
       label.fadeStartedAt = performance.now();
       label.material.opacity = this.reducedMotion ? 1 : 0;
     }
-    label.sprite.position.set(position.x, position.y, position.z);
+    label.anchor.set(position.x, position.y, position.z);
+    label.footprintRadius = Math.max(0.1, footprintRadius);
+    label.heading = Number.isFinite(heading) ? heading : null;
+    label.sprite.position.copy(label.anchor);
     label.sprite.visible = true;
     this.activeCount += 1;
   }
@@ -222,29 +304,156 @@ export default class ObstacleLabels {
 
   animate(timestamp, camera, viewportHeight) {
     const safeViewportHeight = Math.max(viewportHeight, 1);
+    const safeViewportWidth = Math.max(safeViewportHeight * camera.aspect, 1);
     const verticalFov = THREE.Math.degToRad(camera.fov);
-    this.labels.forEach((labelEntry) => {
+    camera.updateMatrixWorld();
+    const cameraRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+    const cameraUp = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
+    const activeLabels = this.labels.filter((labelEntry) => labelEntry.sprite.visible);
+
+    const layoutEntries = activeLabels.map((labelEntry) => {
       const {
-        sprite, material, fadeStartedAt, pixelHeight, aspectRatio,
+        anchor, footprintRadius, pixelHeight, aspectRatio,
       } = labelEntry;
-      if (!sprite.visible) {
-        return;
+      const distance = anchor.distanceTo(camera.position);
+      const worldPerPixel = (
+        2 * Math.tan(verticalFov / 2) * distance
+      ) / safeViewportHeight;
+      const worldHeight = Math.max(
+        0.55,
+        Math.min(worldPerPixel * pixelHeight, 4.5),
+      );
+      const renderedPixelHeight = worldHeight / Math.max(worldPerPixel, 0.000001);
+      const renderedPixelWidth = renderedPixelHeight * aspectRatio;
+      const screenAnchor = projectToScreen(
+        anchor,
+        camera,
+        safeViewportWidth,
+        safeViewportHeight,
+      );
+      const footprintPixels = clamp(
+        footprintRadius / Math.max(worldPerPixel, 0.000001),
+        LABEL_MIN_FOOTPRINT_RADIUS,
+        LABEL_MAX_FOOTPRINT_RADIUS,
+      );
+
+      let screenHeading = null;
+      if (labelEntry.heading !== null) {
+        const headingPoint = anchor.clone();
+        headingPoint.x += Math.cos(labelEntry.heading);
+        headingPoint.y += Math.sin(labelEntry.heading);
+        const projectedHeading = projectToScreen(
+          headingPoint,
+          camera,
+          safeViewportWidth,
+          safeViewportHeight,
+        );
+        const deltaX = projectedHeading.x - screenAnchor.x;
+        const deltaY = projectedHeading.y - screenAnchor.y;
+        const magnitude = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        if (magnitude > 0.001) {
+          screenHeading = {
+            x: deltaX / magnitude,
+            y: deltaY / magnitude,
+          };
+        }
       }
+
+      return {
+        labelEntry,
+        distance,
+        worldPerPixel,
+        worldHeight,
+        width: renderedPixelWidth,
+        height: renderedPixelHeight,
+        footprintPixels,
+        screenAnchor,
+        screenHeading,
+      };
+    }).sort((first, second) => first.distance - second.distance);
+
+    const obstacleRects = layoutEntries.map((entry) => expandRect(
+      createRect(
+        entry.screenAnchor.x,
+        entry.screenAnchor.y,
+        entry.footprintPixels * 2,
+        entry.footprintPixels * 2,
+      ),
+      LABEL_COLLISION_GAP,
+    ));
+    const placedLabelRects = [];
+
+    layoutEntries.forEach((entry) => {
+      const {
+        labelEntry, width, height, footprintPixels, screenAnchor, screenHeading,
+      } = entry;
+      const {
+        sprite, material, fadeStartedAt, aspectRatio,
+      } = labelEntry;
 
       if (!this.reducedMotion && material.opacity < 1) {
         const elapsed = timestamp - fadeStartedAt;
         material.opacity = Math.min(1, elapsed / LABEL_FADE_DURATION);
       }
 
-      const distance = sprite.position.distanceTo(camera.position);
-      const visibleWorldHeight = (
-        2
-        * Math.tan(verticalFov / 2)
-        * distance
-        * pixelHeight
-      ) / safeViewportHeight;
-      const worldHeight = Math.max(0.55, Math.min(visibleWorldHeight, 4.5));
-      sprite.scale.set(worldHeight * aspectRatio, worldHeight, 1);
+      const candidates = getCandidateOffsets(width, height, footprintPixels);
+      let bestCandidate = candidates[0];
+      let bestRect = null;
+      let bestScore = Number.POSITIVE_INFINITY;
+
+      candidates.forEach((candidate, candidateIndex) => {
+        const rect = createRect(
+          screenAnchor.x + candidate.x,
+          screenAnchor.y + candidate.y,
+          width,
+          height,
+        );
+        const collisionRect = expandRect(rect, LABEL_COLLISION_GAP);
+        const viewportPenalty = getViewportOverflow(
+          collisionRect,
+          safeViewportWidth,
+          safeViewportHeight,
+        );
+        const obstaclePenalty = obstacleRects.reduce(
+          (total, obstacleRect) => total + getIntersectionArea(collisionRect, obstacleRect),
+          0,
+        );
+        const labelPenalty = placedLabelRects.reduce(
+          (total, labelRect) => total + getIntersectionArea(collisionRect, labelRect),
+          0,
+        );
+        const candidateMagnitude = Math.sqrt(
+          candidate.x * candidate.x + candidate.y * candidate.y,
+        );
+        const headingAlignment = screenHeading && candidateMagnitude > 0
+          ? (candidate.x * screenHeading.x + candidate.y * screenHeading.y)
+            / candidateMagnitude
+          : 0;
+        const directionPenalty = Math.max(0, headingAlignment) * width * height * 0.4;
+        const score = viewportPenalty * 100000
+          + obstaclePenalty * 40
+          + labelPenalty * 80
+          + directionPenalty
+          + candidateIndex;
+
+        if (score < bestScore) {
+          bestScore = score;
+          bestCandidate = candidate;
+          bestRect = collisionRect;
+        }
+      });
+
+      placedLabelRects.push(bestRect);
+      sprite.position.copy(labelEntry.anchor);
+      sprite.position.addScaledVector(
+        cameraRight,
+        bestCandidate.x * entry.worldPerPixel,
+      );
+      sprite.position.addScaledVector(
+        cameraUp,
+        -bestCandidate.y * entry.worldPerPixel,
+      );
+      sprite.scale.set(entry.worldHeight * aspectRatio, entry.worldHeight, 1);
     });
   }
 }

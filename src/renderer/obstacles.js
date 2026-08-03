@@ -33,6 +33,23 @@ const CUBE_TYPE = Object.freeze({
   SOLID_FACE: 'v2xCubes',
 });
 
+function getObstacleFootprintRadius(obstacle) {
+  const length = Number.isFinite(obstacle.length) ? obstacle.length : 0;
+  const width = Number.isFinite(obstacle.width) ? obstacle.width : 0;
+  let radius = Math.sqrt(length * length + width * width) / 2;
+
+  _.get(obstacle, 'polygonPoint', []).forEach((point) => {
+    if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) {
+      return;
+    }
+    const deltaX = point.x - obstacle.positionX;
+    const deltaY = point.y - obstacle.positionY;
+    radius = Math.max(radius, Math.sqrt(deltaX * deltaX + deltaY * deltaY));
+  });
+
+  return Math.max(0.75, radius);
+}
+
 export default class PerceptionObstacles {
   constructor(options = {}) {
     this.objectsField = options.objectsField || 'object';
@@ -302,11 +319,22 @@ export default class PerceptionObstacles {
       y: obstaclePosition.y,
       z: obstaclePosition.z + (obstacle.height || DEFAULT_HEIGHT) / 2 + 0.55,
     };
+    let labelHeading = null;
+    if (STORE.options.showObstaclesVelocity
+        && Number.isFinite(obstacle.speedHeading)
+        && obstacle.speed > 0.5) {
+      labelHeading = obstacle.speedHeading;
+    } else if (STORE.options.showObstaclesHeading
+        && Number.isFinite(obstacle.heading)) {
+      labelHeading = obstacle.heading;
+    }
     this.obstacleLabels.update(
       content,
       labelPosition,
       isV2X ? 0xFF5A5F : color,
       scene,
+      getObstacleFootprintRadius(obstacle),
+      labelHeading,
     );
   }
 
