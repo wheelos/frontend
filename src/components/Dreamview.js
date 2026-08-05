@@ -10,8 +10,10 @@ import MonitorPanel from 'components/Layouts/MonitorPanel';
 import SideBar from 'components/SideBar';
 
 import ApplicationGuideModal from 'components/ApplicationGuideModal';
+import AppHost from '../plugin/AppHost';
+import PluginLifecycleHost from '../plugin/PluginLifecycleHost';
+import '../plugin/style.scss';
 
-import HOTKEYS_CONFIG from 'store/config/hotkeys.yml';
 import WS, { MAP_WS, POINT_CLOUD_WS, CAMERA_WS } from 'store/websocket';
 
 @inject('store') @observer
@@ -24,7 +26,6 @@ export default class Dreamview extends React.Component {
     this.handleDrag = this.handleDrag.bind(this);
     this.handleDragStarted = this.handleDragStarted.bind(this);
     this.handleDragFinished = this.handleDragFinished.bind(this);
-    this.handleKeyPress = this.handleKeyPress.bind(this);
     this.updateDimension = this.props.store.dimension.update.bind(this.props.store.dimension);
   }
 
@@ -48,27 +49,6 @@ export default class Dreamview extends React.Component {
     this.setState({ isPaneResizing: false });
   }
 
-  handleKeyPress(event) {
-    const { options, enableHMIButtonsOnly, hmi } = this.props.store;
-
-    const optionName = HOTKEYS_CONFIG[event.key];
-    if (!optionName || options.showDataRecorder
-      || options.showDefaultRoutingInput || options.showCycleNumberInput
-      || options.showFuelClient) {
-      return;
-    }
-
-    event.preventDefault();
-    if (optionName === 'cameraAngle') {
-      // press 'v' to switch camera angle
-      options.rotateCameraAngle();
-    } else if (
-      !options.isSideBarButtonDisabled(optionName, enableHMIButtonsOnly, hmi.inNavigationMode)
-    ) {
-      this.props.store.handleOptionToggle(optionName);
-    }
-  }
-
   componentWillMount() {
     this.props.store.dimension.initialize();
   }
@@ -78,13 +58,13 @@ export default class Dreamview extends React.Component {
     MAP_WS.initialize();
     POINT_CLOUD_WS.initialize();
     CAMERA_WS.initialize();
+    this.props.store.pluginRegistry.initialize();
     window.addEventListener('resize', this.updateDimension, false);
-    window.addEventListener('keypress', this.handleKeyPress, false);
   }
 
   componentWillUnmount() {
+    this.props.store.pluginRegistry.dispose();
     window.removeEventListener('resize', this.updateDimension, false);
-    window.removeEventListener('keypress', this.handleKeyPress, false);
   }
 
   render() {
@@ -100,6 +80,7 @@ export default class Dreamview extends React.Component {
               return document.body;
             }}>
             <div className={`theme-${options.themeMode}`}>
+                <PluginLifecycleHost />
                 <Header />
                 <div
                     className={[
@@ -119,8 +100,14 @@ export default class Dreamview extends React.Component {
                         <div className="left-pane">
                             <SideBar />
                             <div className="dreamview-body">
-                                <MainView />
-                                <ToolView />
+                                {options.pluginAppActive
+                                  ? <AppHost />
+                                  : (
+                                    <React.Fragment>
+                                      <MainView />
+                                      <ToolView />
+                                    </React.Fragment>
+                                  )}
                             </div>
                         </div>
                         <MonitorPanel

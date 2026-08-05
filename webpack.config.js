@@ -8,6 +8,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
+const { ModuleFederationPlugin } = webpack.container;
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = (env, argv) => {
@@ -33,8 +34,8 @@ module.exports = (env, argv) => {
 
     output: {
       path: path.join(__dirname, 'dist'),
-      filename: './[name].bundle.js',
-      publicPath: '',
+      filename: '[name].bundle.js',
+      publicPath: '/',
     },
 
     devtool: isEnvDevelopment ? 'inline-source-map' : 'hidden-source-map',
@@ -259,6 +260,33 @@ module.exports = (env, argv) => {
     },
 
     plugins: [
+      // The host owns singleton UI runtimes. Plugin remoteEntry bundles are
+      // built and distributed independently and are discovered at runtime.
+      new ModuleFederationPlugin({
+        name: 'dreamviewHost',
+        shared: {
+          react: {
+            singleton: true,
+            requiredVersion: '16.14.0',
+            eager: true,
+          },
+          'react-dom': {
+            singleton: true,
+            requiredVersion: '16.14.0',
+            eager: true,
+          },
+          mobx: {
+            singleton: true,
+            requiredVersion: '^3.1.10',
+            eager: true,
+          },
+          'mobx-react': {
+            singleton: true,
+            requiredVersion: '^4.1.8',
+            eager: true,
+          },
+        },
+      }),
       // Show compilation progress bar.
       new ProgressBarPlugin({
         format: 'build [:bar] :percent (:elapsed seconds)',

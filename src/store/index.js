@@ -16,7 +16,7 @@ import StoryTellers from 'store/story_tellers';
 import Teleop from 'store/teleop';
 import TrafficSignal from 'store/traffic_signal';
 import PointCloudMetrics from 'store/point_cloud_metrics';
-import WheelFlow from 'store/wheelflow';
+import PluginRegistryStore from '../plugin/PluginRegistryStore';
 
 class DreamviewStore {
     // Mutable States
@@ -58,9 +58,10 @@ class DreamviewStore {
 
     @observable dimension = new Dimension(this.hmi, this.options);
 
+    @observable pluginRegistry = new PluginRegistryStore(this);
+
     @observable pointCloudMetrics = new PointCloudMetrics();
 
-    @observable wheelflow = new WheelFlow();
 
     @observable newDisengagementReminder = false;
 
@@ -103,11 +104,25 @@ class DreamviewStore {
       }
     }
 
-    handleOptionToggle(option) {
+    handleOptionToggle(option, pluginLeaveApproved = false) {
+      if (
+        this.pluginRegistry.activeSurface
+        && (this.options.mainSideBarOptions.includes(option)
+          || this.options.secondarySideBarOptions.includes(option))
+      ) {
+        if (!pluginLeaveApproved) {
+          this.pluginRegistry.requestCloseSurface().then((closed) => {
+            if (closed) {
+              this.handleOptionToggle(option, true);
+            }
+          });
+          return;
+        }
+        this.pluginRegistry.closeSurface();
+      }
       const oldShowMonitor = this.options.showMonitor;
       const oldShowTools = this.options.showTools;
       const oldShowRouteEditingBar = this.options.showRouteEditingBar;
-      const oldShowWheelFlowCustomObstacles = this.options.showWheelFlowCustomObstacles;
 
       this.options.toggle(option);
 
@@ -130,20 +145,18 @@ class DreamviewStore {
         this.options.showCycleNumberInput = false;
         this.routeEditingManager.enableRouteEditing();
       }
-      if (!oldShowWheelFlowCustomObstacles && this.options.showWheelFlowCustomObstacles) {
-        if (this.options.showRouteEditingBar) {
-          this.options.showRouteEditingBar = false;
-          this.routeEditingManager.disableRouteEditing();
-        }
-        this.options.selectCamera('Map');
-        this.dimension.enableMonitor();
-        this.wheelflow.openCustomObstaclePanel();
-      } else if (
-        oldShowWheelFlowCustomObstacles
-        && !this.options.showWheelFlowCustomObstacles
-      ) {
-        this.wheelflow.closeCustomObstaclePanel();
-      }
+    }
+
+    @action closeBuiltinSurfaces() {
+      this.options.mainSideBarOptions.forEach((option) => {
+        this.options[option] = false;
+      });
+      this.options.secondarySideBarOptions.forEach((option) => {
+        this.options[option] = false;
+      });
+      this.options.showDefaultRoutingInput = false;
+      this.options.showCycleNumberInput = false;
+      this.routeEditingManager.disableRouteEditing();
     }
 
     setOptionStatus(option, enabled) {

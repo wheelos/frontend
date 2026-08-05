@@ -1,17 +1,14 @@
 import React from 'react';
 import { inject, observer } from 'mobx-react';
 import ReactTooltip from 'react-tooltip';
-import _ from 'lodash';
 
 import SideBarButton from 'components/SideBar/SideBarButton';
-import HOTKEYS_CONFIG from 'store/config/hotkeys.yml';
 
 import TasksIcon from 'assets/images/sidebar/tasks.png';
 import ModuleControllerIcon from 'assets/images/sidebar/module_controller.png';
 import LayerMenuIcon from 'assets/images/sidebar/layer_menu.png';
 import RouteEditingIcon from 'assets/images/sidebar/route_editing.png';
 import DataRecorderIcon from 'assets/images/sidebar/data_recorder.png';
-import ProfileIcon from 'assets/images/sidebar/profile.png';
 
 const sidebarIconMapping = {
   showTasks: TasksIcon,
@@ -19,7 +16,6 @@ const sidebarIconMapping = {
   showMenu: LayerMenuIcon,
   showRouteEditingBar: RouteEditingIcon,
   showDataRecorder: DataRecorderIcon,
-  showWheelFlow: ProfileIcon,
 };
 
 const sidebarLabelMapping = {
@@ -29,15 +25,15 @@ const sidebarLabelMapping = {
   showRouteEditingBar: 'Route',
   showDataRecorder: 'Recorder',
   showPOI: 'Default route',
-  showWheelFlow: 'WheelFlow',
 };
 
 @inject('store') @observer
 export default class SideBar extends React.Component {
   render() {
-    const { options, enableHMIButtonsOnly, hmi } = this.props.store;
+    const {
+      options, enableHMIButtonsOnly, hmi, pluginRegistry,
+    } = this.props.store;
 
-    const hotkeys = _.invert(HOTKEYS_CONFIG);
     const settings = {};
     const optionNames = [...options.mainSideBarOptions, ...options.secondarySideBarOptions];
     optionNames.forEach((optionName) => {
@@ -52,7 +48,6 @@ export default class SideBar extends React.Component {
           enableHMIButtonsOnly,
           hmi.inNavigationMode,
         ),
-        hotkey: hotkeys[optionName],
         iconSrc: sidebarIconMapping[optionName],
       };
     });
@@ -65,7 +60,25 @@ export default class SideBar extends React.Component {
                     <SideBarButton type="main" {...settings.showMenu} />
                     <SideBarButton type="main" {...settings.showRouteEditingBar} />
                     <SideBarButton type="main" {...settings.showDataRecorder} />
-                    <SideBarButton type="main" {...settings.showWheelFlow} />
+                    {pluginRegistry.navigationItems.map((item) => (
+                      <SideBarButton
+                        key={item.key}
+                        type="main"
+                        label={item.title}
+                        iconSrc={item.icon}
+                        active={pluginRegistry.activeSurface
+                          && pluginRegistry.activeSurface.key === item.key}
+                        disabled={item.disabled}
+                        onClick={() => {
+                          if (pluginRegistry.activeSurface
+                            && pluginRegistry.activeSurface.key === item.key) {
+                            pluginRegistry.requestCloseSurface();
+                          } else {
+                            pluginRegistry.requestOpenSurface(item);
+                          }
+                        }}
+                      />
+                    ))}
                 </div>
                 <div className="sub-button-panel">
                     <SideBarButton

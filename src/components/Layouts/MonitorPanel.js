@@ -14,11 +14,17 @@ import PNCMonitor from 'components/PNCMonitor';
 import ConsoleTeleOp from 'components/TeleopMonitor/ConsoleTeleop';
 import CarTeleOp from 'components/TeleopMonitor/CarTeleop';
 import FuelClient from 'components/FuelClient';
-import CustomObstaclePanel from 'components/WheelFlow/CustomObstaclePanel';
+import PanelHost from '../../plugin/PanelHost';
+import { inject, observer } from 'mobx-react';
 
+@inject('store') @observer
 export default class MonitorPanel extends React.Component {
   renderMonitor() {
     const { viewName } = this.props;
+
+    if (this.props.store.pluginRegistry.activePanel) {
+      return <PanelHost />;
+    }
 
     switch (viewName) {
       case MONITOR_MENU.CONSOLE_TELEOP_MONITOR:
@@ -31,8 +37,6 @@ export default class MonitorPanel extends React.Component {
         return <DataCollectionMonitor />;
       case MONITOR_MENU.PNC_MONITOR:
         return <PNCMonitor />;
-      case MONITOR_MENU.WHEELFLOW_CUSTOM_OBSTACLES:
-        return <CustomObstaclePanel />;
       case MONITOR_MENU.FUEL_CLIENT:
         return <FuelClient />;
       default:

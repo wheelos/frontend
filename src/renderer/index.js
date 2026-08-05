@@ -16,9 +16,9 @@ import Decision from 'renderer/decision.js';
 import Prediction from 'renderer/prediction.js';
 import Routing from 'renderer/routing.js';
 import RoutingEditor from 'renderer/routing_editor.js';
-import CustomObstacleEditor from 'renderer/custom_obstacle_editor.js';
 import Gnss from 'renderer/gnss.js';
 import OccDebugOverlay from 'renderer/occ_debug.js';
+import PluginSceneRenderer from 'renderer/plugin_scene.js';
 import PointCloud from 'renderer/point_cloud.js';
 import STORE from 'store';
 
@@ -89,14 +89,6 @@ class Renderer {
     this.perceptionObstacles = new PerceptionObstacles({
       lineThickness: 3,
     });
-    this.groundTruthObstacles = new PerceptionObstacles({
-      objectsField: 'gtObject',
-      colorOverride: 0x1E8BFF,
-      lineThickness: 1,
-      zOffset: 0.08,
-      skipSensorMeasurements: true,
-      skipLaneMarkers: true,
-    });
 
     // The decision.
     this.decision = new Decision();
@@ -112,7 +104,6 @@ class Renderer {
     this.routingEditor.setMap(this.map);
     this.routingEditor.setCoordinates(this.coordinates);
     this.routingPoint = null;
-    this.customObstacleEditor = new CustomObstacleEditor();
 
     // Distinguish between drawing point and drawing arrow
     this.startMove = false;
@@ -121,6 +112,11 @@ class Renderer {
     this.gnss = new Gnss();
 
     this.occDebug = new OccDebugOverlay();
+
+    // Declarative scene boundary for plugins. Raw Three.js objects stay
+    // private to Dreamview so renderer changes do not leak into extensions.
+    this.pluginScene = new PluginSceneRenderer(this);
+    this.lastWorld = null;
 
     this.pointCloud = new PointCloud();
 
@@ -147,6 +143,7 @@ class Renderer {
     this.lastCameraPov = null;
     this.cameraTransition = null;
     this.routeEditingCameraActive = false;
+    this.initialized = false;
     this.prefersReducedMotion = Boolean(
       window.matchMedia
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -166,6 +163,22 @@ class Renderer {
     }
     this.map.updateViewMode(options.showCameraView && !options.showRouteEditingBar);
 
+    const container = document.getElementById(canvasId);
+    if (this.initialized) {
+      // Scene is temporarily unmounted while a plugin App is open. Reattach
+      // the existing WebGL canvas when returning instead of constructing a
+      // second camera and another full light rig in the same scene. Duplicate
+      // lights progressively overexpose the vehicle material from blue to
+      // white on every page round trip.
+      this.updateDimension(width, height);
+      this.renderer.setPixelRatio(window.devicePixelRatio);
+      if (container && this.renderer.domElement.parentNode !== container) {
+        container.appendChild(this.renderer.domElement);
+      }
+      this.updateSceneTheme(this.sceneThemeMode);
+      return;
+    }
+
     // Camera
     this.viewAngle = PARAMETERS.camera.viewAngle;
     this.viewDistance = (
@@ -184,7 +197,6 @@ class Renderer {
     this.updateDimension(width, height);
     this.renderer.setPixelRatio(window.devicePixelRatio);
 
-    const container = document.getElementById(canvasId);
     container.appendChild(this.renderer.domElement);
 
     const ambient = new THREE.AmbientLight(0x71808C, 0.58);
@@ -209,16 +221,13 @@ class Renderer {
     this.onMouseDownHandler = this.editRoute.bind(this);
     this.onMouseMoveHandler = this.onMouseMoveHandler.bind(this);
     this.onMouseUpHandler = this.onMouseUpHandler.bind(this);
-    this.onCustomObstacleMouseDownHandler = this.onCustomObstacleMouseDown.bind(this);
-    this.onCustomObstacleMouseMoveHandler = this.onCustomObstacleMouseMove.bind(this);
-    this.onCustomObstacleMouseUpHandler = this.onCustomObstacleMouseUp.bind(this);
-    this.onCustomObstacleContextMenuHandler = this.onCustomObstacleContextMenu.bind(this);
-    this.onCustomObstacleKeyDownHandler = this.onCustomObstacleKeyDown.bind(this);
 
     this.scene.add(ambient);
     this.scene.add(hemisphere);
     this.scene.add(directionalLight);
     this.scene.add(fillLight);
+
+    this.initialized = true;
 
     // TODO maybe add sanity check.
 
@@ -511,48 +520,6 @@ class Renderer {
     }
   }
 
-  enableCustomObstacleEditing() {
-    this.options.selectCamera('Map');
-    this.enableOrbitControls(false);
-    this.customObstacleEditor.enable(this.scene);
-    this.updateCustomObstacles(
-      STORE.wheelflow.customObstacles,
-      STORE.wheelflow.selectedCustomObstacleId,
-      STORE.wheelflow.customObstacleMode,
-      STORE.wheelflow.customObstacleDraft,
-    );
-
-    const element = document.getElementById(this.canvasId);
-    if (!element) {
-      return;
-    }
-    element.addEventListener('mousedown', this.onCustomObstacleMouseDownHandler, false);
-    element.addEventListener('mouseup', this.onCustomObstacleMouseUpHandler, false);
-    element.addEventListener('mousemove', this.onCustomObstacleMouseMoveHandler, false);
-    element.addEventListener('contextmenu', this.onCustomObstacleContextMenuHandler, false);
-    window.addEventListener('keydown', this.onCustomObstacleKeyDownHandler, false);
-  }
-
-  disableCustomObstacleEditing() {
-    this.customObstacleEditor.disable(this.scene);
-    const element = document.getElementById(this.canvasId);
-    if (element) {
-      element.removeEventListener('mousedown', this.onCustomObstacleMouseDownHandler, false);
-      element.removeEventListener('mouseup', this.onCustomObstacleMouseUpHandler, false);
-      element.removeEventListener('mousemove', this.onCustomObstacleMouseMoveHandler, false);
-      element.removeEventListener('contextmenu', this.onCustomObstacleContextMenuHandler, false);
-    }
-    window.removeEventListener('keydown', this.onCustomObstacleKeyDownHandler, false);
-  }
-
-  updateCustomObstacles(obstacles, selectedId, mode, draft) {
-    this.customObstacleEditor.update(obstacles, selectedId, mode, draft, this.coordinates);
-  }
-
-  focusCustomObstacle(id) {
-    this.customObstacleEditor.focus(id, this.coordinates, this.camera, this.controls);
-  }
-
   addDefaultEndPoint(points) {
     for (let i = 0; i < points.length; i++) {
       this.routingEditor.addRoutingPoint(points[i], this.coordinates, this.scene, true);
@@ -651,46 +618,6 @@ class Renderer {
     this.startMove = false;
   }
 
-  onCustomObstacleMouseDown(event) {
-    if (event.target && !_.isEqual('CANVAS', event.target.tagName)) {
-      return;
-    }
-    const point = this.getGeolocation(event);
-    if (this.customObstacleEditor.handleMouseDown(point, event)) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-  }
-
-  onCustomObstacleMouseMove(event) {
-    if (event.target && !_.isEqual('CANVAS', event.target.tagName)) {
-      return;
-    }
-    this.customObstacleEditor.handleMouseMove(this.getGeolocation(event), this.coordinates);
-  }
-
-  onCustomObstacleMouseUp(event) {
-    if (this.customObstacleEditor.handleMouseUp()) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-  }
-
-  onCustomObstacleContextMenu(event) {
-    const point = this.getGeolocation(event);
-    if (this.customObstacleEditor.handleContextMenu(point)) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-  }
-
-  onCustomObstacleKeyDown(event) {
-    if (this.customObstacleEditor.handleKeyDown(event)) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-  }
-
   // Render one frame. This supports the main draw/render loop.
   render(timestamp = performance.now()) {
     // TODO should also return when no need to update.
@@ -733,7 +660,7 @@ class Renderer {
     this.map.animate(timestamp);
     this.adjustCamera(this.adc.mesh, this.options.cameraAngle, timestamp);
     this.perceptionObstacles.animate(timestamp, this.camera, this.dimension.height);
-    this.groundTruthObstacles.animate(timestamp, this.camera, this.dimension.height);
+    this.pluginScene.animate(timestamp);
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -761,6 +688,7 @@ class Renderer {
   }
 
   updateWorld(world) {
+    this.lastWorld = world;
     const adcPose = world.autoDrivingCar;
     this.adc.update(this.coordinates, adcPose);
     if (!_.isNumber(adcPose.positionX) || !_.isNumber(adcPose.positionY)) {
@@ -774,14 +702,13 @@ class Renderer {
     this.planningStatus.update(world.planningData, this.coordinates, this.scene);
 
     this.perceptionObstacles.update(world, this.coordinates, this.scene);
-    this.groundTruthObstacles.update(world, this.coordinates, this.scene);
     this.decision.update(world, this.coordinates, this.scene);
     this.prediction.update(world, this.coordinates, this.scene);
     this.updateRouting(world.routingTime, world.routePath);
     this.gnss.update(world, this.coordinates, this.scene);
     this.map.update(world);
     this.occDebug.update(world, this.coordinates, this.scene);
-    this.customObstacleEditor.redraw(this.coordinates);
+    this.pluginScene.redrawAll();
 
     const planningAdcPose = _.get(world, 'planningData.initPoint.pathPoint');
     if (this.planningAdc && planningAdcPose) {
@@ -823,12 +750,60 @@ class Renderer {
     this.map.appendMapData(newData, this.coordinates, this.scene);
   }
 
+  invalidateMap() {
+    this.map.invalidate(this.scene);
+  }
+
   updatePointCloud(pointCloud) {
     if (!this.coordinates.isInitialized() || !this.adc.mesh) {
       return;
     }
     this.pointCloud.update(pointCloud, this.adc.mesh, this.scene);
     STORE.pointCloudMetrics.updatePointCount(this.pointCloud.getPointCount());
+  }
+
+  createPluginLayer(id, options) {
+    return this.pluginScene.createLayer(id, options);
+  }
+
+  removePluginLayer(id) {
+    this.pluginScene.removeLayer(id);
+  }
+
+  removePluginLayers(prefix) {
+    this.pluginScene.removeLayers(prefix);
+  }
+
+  upsertPluginEntities(layerId, entities) {
+    this.pluginScene.upsertEntities(layerId, entities);
+  }
+
+  replacePluginEntities(layerId, entities) {
+    this.pluginScene.replaceEntities(layerId, entities);
+  }
+
+  removePluginEntities(layerId, entityIds) {
+    this.pluginScene.removeEntities(layerId, entityIds);
+  }
+
+  clearPluginLayer(layerId) {
+    this.pluginScene.clearLayer(layerId);
+  }
+
+  setPluginLayerVisible(layerId, visible) {
+    this.pluginScene.setLayerVisible(layerId, visible);
+  }
+
+  pluginWorldToScreen(point) {
+    return this.pluginScene.worldToScreen(point);
+  }
+
+  pickPluginEntity(event) {
+    return this.pluginScene.pickEntity(event);
+  }
+
+  fitPluginBounds(bounds) {
+    this.pluginScene.fitBounds(bounds);
   }
 
   updateMapIndex(hash, elementIds, radius) {

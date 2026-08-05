@@ -37,11 +37,11 @@ function deduceWebsocketServerAddr(type) {
       path = 'plugin';
       break;
   }
-  let pathname = '';
-  if (window.location.pathname !== '/') {
-    pathname = window.location.pathname;
-  }
-  return `${protocol}://${link.hostname}:${port}${pathname}/${path}`;
+  // Browser routes such as /workspace/:id and /apps/:id are handled by the
+  // frontend router. Dreamview's websocket handlers remain mounted at the
+  // server root, so the current SPA pathname must never become part of a
+  // websocket endpoint after a deep-link refresh.
+  return `${protocol}://${link.hostname}:${port}/${path}`;
 }
 
 // NOTE: process.env.NODE_ENV will be set to "production" by webpack when

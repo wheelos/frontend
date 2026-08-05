@@ -7,7 +7,7 @@ import { copyProperty, hideArrayObjects, calculateLaneMarkerPoints } from 'utils
 import {
   drawSegmentsFromPoints, drawDashedLineFromPoints,
   drawBox, drawSolidBox, drawDashedBox, drawArrow, drawImage, drawSolidPolygonFace,
-  drawPolylineBandFromPoints,
+  drawPolylineBandFromPoints, disposeMeshGroup,
 } from 'utils/draw';
 
 import iconObjectYield from 'assets/images/decision/object-yield.png';
@@ -556,6 +556,44 @@ export default class PerceptionObstacles {
 
   animate(timestamp, camera, viewportHeight) {
     this.obstacleLabels.animate(timestamp, camera, viewportHeight);
+  }
+
+  setVisible(visible) {
+    [
+      this.arrows,
+      this.solidCubes,
+      this.dashedCubes,
+      this.extrusionSolidFaces,
+      this.extrusionDashedFaces,
+      this.icons,
+      this.trafficCones,
+      this.v2xCubes,
+      this.v2xSolidFaces,
+    ].forEach((collection) => collection.forEach((object) => {
+      object.visible = visible;
+    }));
+    this.obstacleLabels.labels.forEach((label) => {
+      label.sprite.visible = visible;
+    });
+  }
+
+  dispose(scene) {
+    [
+      this.arrows,
+      this.solidCubes,
+      this.dashedCubes,
+      this.extrusionSolidFaces,
+      this.extrusionDashedFaces,
+      this.icons,
+      this.trafficCones,
+      this.v2xCubes,
+      this.v2xSolidFaces,
+      this.laneMarkers,
+    ].forEach((collection) => collection.forEach((object) => {
+      scene.remove(object);
+      disposeMeshGroup(object);
+    }));
+    this.obstacleLabels.dispose(scene);
   }
 
   getTrafficCone(index, scene) {

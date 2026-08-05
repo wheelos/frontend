@@ -20,9 +20,6 @@ export default class RealtimeWebSocketEndpoint {
     this.pointcloudWS = null;
     this.requestHmiStatus = this.requestHmiStatus.bind(this);
     this.updateParkingRoutingDistance = true;
-    this.wheelFlowMapChangeTarget = null;
-    this.wheelFlowPendingMap = null;
-    this.wheelFlowLastMapChangeMs = 0;
   }
 
   initialize() {
@@ -105,6 +102,14 @@ export default class RealtimeWebSocketEndpoint {
           RENDERER.updateMapIndex(message.mapHash,
             message.mapElementIds, message.mapRadius);
           break;
+        case 'MapReloaded':
+          // A map may be replaced in place while keeping the same map name and
+          // element IDs. Invalidate the rendered element cache only after the
+          // backend has finished reloading, otherwise old lane meshes can be
+          // retained and mixed with the new map geometry.
+          RENDERER.invalidateMap();
+          this.mapLastUpdateTimestamp = 0;
+          break;
         case 'DefaultEndPoint':
           STORE.routeEditingManager.updateDefaultRoutingEndPoint(message);
           break;
@@ -137,39 +142,6 @@ export default class RealtimeWebSocketEndpoint {
           if (message) {
             STORE.routeEditingManager.updateParkingRoutingDistance(message.threshold);
           }
-          break;
-        case 'WheelFlowStatus':
-          STORE.wheelflow.updateStatus(message);
-          {
-            const targetMap = message.mapName
-              || this.wheelFlowPendingMap
-              || STORE.wheelflow.status.mapName;
-            const mapReady = message.stage === 'READY'
-              || message.stage === 'RUNNING'
-              || message.bridgeRunning;
-            if (targetMap && mapReady && STORE.hmi.currentMap !== targetMap) {
-              const now = Date.now();
-              if (
-                this.wheelFlowMapChangeTarget !== targetMap
-                || now - this.wheelFlowLastMapChangeMs > 2000
-              ) {
-                this.wheelFlowMapChangeTarget = targetMap;
-                this.wheelFlowLastMapChangeMs = now;
-                this.changeMap(targetMap);
-              }
-            }
-            if (targetMap && STORE.hmi.currentMap === targetMap) {
-              this.wheelFlowPendingMap = null;
-            }
-          }
-          if (message.stage === 'IDLE' || message.stage === 'STOPPED' || message.stage === 'ERROR') {
-            this.wheelFlowMapChangeTarget = null;
-            this.wheelFlowPendingMap = null;
-            this.wheelFlowLastMapChangeMs = 0;
-          }
-          break;
-        case 'WheelFlowCustomObstacleList':
-          STORE.wheelflow.updateCustomObstacles(message.obstacles || []);
           break;
       }
     };
@@ -612,89 +584,4 @@ export default class RealtimeWebSocketEndpoint {
     return this.sendJsonRequest(request);
   }
 
-  startWheelFlow(payload) {
-    this.wheelFlowPendingMap = payload && payload.mapName;
-    this.wheelFlowMapChangeTarget = null;
-    this.wheelFlowLastMapChangeMs = 0;
-    this.websocket.send(JSON.stringify({
-      type: 'WheelFlowStart',
-      ...payload,
-    }));
-  }
-
-  stopWheelFlow() {
-    this.websocket.send(JSON.stringify({
-      type: 'WheelFlowStop',
-    }));
-  }
-
-  resetWheelFlow() {
-    this.websocket.send(JSON.stringify({
-      type: 'WheelFlowReset',
-    }));
-  }
-
-  requestWheelFlowStatus() {
-    this.websocket.send(JSON.stringify({
-      type: 'WheelFlowStatus',
-    }));
-  }
-
-  setWheelFlowSensors(enabled) {
-    this.websocket.send(JSON.stringify({
-      type: 'WheelFlowSetSensors',
-      enabled,
-    }));
-  }
-
-  requestWheelFlowCustomObstacles() {
-    this.websocket.send(JSON.stringify({
-      type: 'WheelFlowCustomObstacleGetList',
-    }));
-  }
-
-  addWheelFlowCustomObstacle(obstacle) {
-    this.websocket.send(JSON.stringify({
-      type: 'WheelFlowCustomObstacleAdd',
-      obstacle,
-    }));
-  }
-
-  updateWheelFlowCustomObstacle(obstacle) {
-    this.websocket.send(JSON.stringify({
-      type: 'WheelFlowCustomObstacleUpdate',
-      obstacle,
-    }));
-  }
-
-  deleteWheelFlowCustomObstacle(id) {
-    this.websocket.send(JSON.stringify({
-      type: 'WheelFlowCustomObstacleDelete',
-      id,
-    }));
-  }
-
-  clearWheelFlowCustomObstacles() {
-    this.websocket.send(JSON.stringify({
-      type: 'WheelFlowCustomObstacleClear',
-    }));
-  }
-
-  sendWheelFlowRouting() {
-    this.websocket.send(JSON.stringify({
-      type: 'WheelFlowSendRouting',
-    }));
-  }
-
-  engageWheelFlow() {
-    this.websocket.send(JSON.stringify({
-      type: 'WheelFlowEngage',
-    }));
-  }
-
-  disengageWheelFlow() {
-    this.websocket.send(JSON.stringify({
-      type: 'WheelFlowDisengage',
-    }));
-  }
 }
