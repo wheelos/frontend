@@ -14,11 +14,7 @@ export default class HMISelectors extends React.Component {
       modes, currentMode,
       maps, currentMap,
     } = this.props.store.hmi;
-    const { status: wheelFlowStatus } = this.props.store.wheelflow;
-    const wheelFlowLocked = Boolean(
-      wheelFlowStatus.bridgeRunning
-      || !['IDLE', 'ERROR', 'STOPPED'].includes(wheelFlowStatus.stage),
-    );
+    const hmiLock = this.props.store.pluginRegistry.hmiLock;
 
     const enableSimControl = this.props.store.options.enableSimControl;
 
@@ -38,7 +34,7 @@ export default class HMISelectors extends React.Component {
                     name="setup mode"
                     options={modes}
                     currentOption={currentMode}
-                    disabled={wheelFlowLocked}
+                    disabled={Boolean(hmiLock && hmiLock.mode)}
                     onChange={(event) => {
                       WS.changeSetupMode(event.target.value);
                     }}
@@ -47,7 +43,7 @@ export default class HMISelectors extends React.Component {
                     name="map"
                     options={maps}
                     currentOption={currentMap}
-                    disabled={wheelFlowLocked}
+                    disabled={Boolean(hmiLock && hmiLock.map)}
                     onChange={(event) => {
                       WS.changeMap(event.target.value);
                     }}

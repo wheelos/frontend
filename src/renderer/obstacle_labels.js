@@ -456,4 +456,18 @@ export default class ObstacleLabels {
       sprite.scale.set(entry.worldHeight * aspectRatio, entry.worldHeight, 1);
     });
   }
+
+  dispose(scene) {
+    this.labels.forEach((label) => {
+      scene.remove(label.sprite);
+      if (label.material) {
+        label.material.dispose();
+      }
+      if (label.texture) {
+        label.texture.dispose();
+      }
+    });
+    this.labels = [];
+    this.activeCount = 0;
+  }
 }

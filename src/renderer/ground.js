@@ -3,7 +3,10 @@ import * as THREE from 'three';
 import STORE from 'store';
 
 const GROUND_COLORS = {
-  dark: 0x020810,
+  // Match the infinite scene backdrop so the finite interaction plane never
+  // appears as a rectangular patch in the overhead Map view. Lane and road
+  // surfaces provide the intended inside/outside contrast.
+  dark: 0x07131F,
   light: 0xF2F5F7,
 };
 

@@ -2839,9 +2839,7 @@ body {
   > .module-controller,
   > .tool-view-menu,
   > .data-recorder,
-  > .data-profile,
-  > .wheelflow-panel,
-  > .wheel-flow {
+  > .data-profile {
     border: 1px solid var(--border-subtle);
     border-radius: 12px;
     overflow: hidden;
@@ -2959,43 +2957,6 @@ body {
     select {
       min-height: 32px;
       padding: 0 38px 0 10px;
-    }
-  }
-
-  .wheelflow-panel {
-    .wheelflow-column {
-      border-color: var(--border-subtle);
-      border-radius: 0;
-    }
-
-    .wheelflow-row select,
-    .wheelflow-row input,
-    .wheelflow-actions button {
-      border-color: var(--border-subtle);
-      border-radius: 8px;
-      transition:
-        transform 140ms ease,
-        border-color 160ms ease,
-        background-color 160ms ease;
-    }
-
-    .wheelflow-actions button:active {
-      transform: scale(0.98);
-    }
-
-    .wheelflow-monitor-toggle .wheelflow-toggle-track {
-      border-radius: 999px;
-    }
-
-    .wheelflow-monitor-toggle .wheelflow-toggle-thumb {
-      left: 2px;
-      border-radius: 50%;
-      transition: transform 160ms ease, background-color 160ms ease;
-    }
-
-    .wheelflow-monitor-toggle.active .wheelflow-toggle-thumb {
-      left: 2px;
-      transform: translateX(16px);
     }
   }
 
@@ -3575,16 +3536,6 @@ body {
       line-height: 1.15;
     }
 
-    .shortcut {
-      position: absolute;
-      top: 5px;
-      right: 7px;
-      color: var(--text-tertiary);
-      font-family: "Roboto Mono", "SFMono-Regular", Consolas, monospace;
-      font-size: 8px;
-      line-height: 1;
-    }
-
     &:not(:disabled):hover {
       transform: translateY(-1px);
     }
@@ -3638,8 +3589,7 @@ body {
   padding: 0;
   background: var(--bg-body);
 
-  > .tasks-shell,
-  > .wheelflow-panel {
+  > .tasks-shell {
     width: 100%;
     border: 0;
     border-radius: 0;

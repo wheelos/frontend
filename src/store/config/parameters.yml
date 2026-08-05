@@ -100,13 +100,9 @@ options:
     default: false
   showDataRecorder:
     default: false
-  showWheelFlow:
-    default: false
 
   # task panel options
   showPNCMonitor:
-    default: false
-  showWheelFlowCustomObstacles:
     default: false
   showDataCollectionMonitor:
     default: false

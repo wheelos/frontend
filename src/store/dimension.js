@@ -10,13 +10,13 @@ export const MAP_SIZE = {
 };
 
 const MONITOR_WIDTH_IN_PX = {
+  pluginPanel: {
+    small: 420,
+    large: 480,
+  },
   [MONITOR_MENU.PNC_MONITOR]: {
     small: 400,
     large: 450,
-  },
-  [MONITOR_MENU.WHEELFLOW_CUSTOM_OBSTACLES]: {
-    small: 420,
-    large: 480,
   },
   [MONITOR_MENU.DATA_COLLECTION_MONITOR]: {
     small: 500,

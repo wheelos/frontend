@@ -7,7 +7,7 @@ import ModuleController from 'components/ModuleController';
 import Menu from 'components/SideBar/Menu';
 import DefaultRouting from 'components/DefaultRouting';
 import Tasks from 'components/Tasks';
-import WheelFlow from 'components/WheelFlow';
+import PluginSlotHost from '../../plugin/PluginSlotHost';
 
 @inject('store') @observer
 export default class ToolView extends React.Component {
@@ -34,7 +34,7 @@ export default class ToolView extends React.Component {
                         newDisengagementReminder={newDisengagementReminder}
                     />
                 )}
-              {options.showWheelFlow && <WheelFlow />}
+              {options.pluginWorkspaceActive && <PluginSlotHost slot="bottomDock" />}
             </div>
     );
   }

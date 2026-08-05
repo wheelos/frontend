@@ -9,6 +9,7 @@ import PlaybackControls from 'components/PlaybackControls';
 import RouteEditingBar from 'components/RouteEditingBar';
 import Scene from 'components/Scene';
 import StatusBar from 'components/StatusBar';
+import PluginSlotHost from '../../plugin/PluginSlotHost';
 
 const Navigation = Loadable({
   loader: () => import('components/Navigation'),
@@ -34,6 +35,12 @@ class SceneView extends React.Component {
                     themeMode={options.themeMode}
                     shouldDisplayOnRight={dimension.shouldDivideSceneAndMapSpace}
                 />
+                <PluginSlotHost slot="mapOverlay" />
+                <PluginSlotHost slot="topToolbar" />
+                <PluginSlotHost slot="leftToolbar" />
+                <PluginSlotHost slot="rightSidebar" />
+                <PluginSlotHost slot="floatingPanel" />
+                <PluginSlotHost slot="statusBar" />
                 {monitor.isSirenOn &&
                   <EmergencyNotification msg="Emergency Siren Detected" />}
                 {options.showRouteEditingBar

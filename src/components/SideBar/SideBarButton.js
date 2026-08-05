@@ -4,12 +4,11 @@ import classNames from 'classnames';
 export default class SideBarButton extends React.PureComponent {
   render() {
     const {
-      type, label, iconSrc, hotkey,
+      type, label, iconSrc,
       active, disabled, extraClasses, onClick,
     } = this.props;
 
     const isSubButton = type === 'sub';
-    const tooltip = hotkey ? `${label} (${hotkey})` : label;
 
     return (
             <button
@@ -17,8 +16,8 @@ export default class SideBarButton extends React.PureComponent {
                 onClick={onClick}
                 disabled={disabled}
                 data-for="sidebar-button"
-                data-tip={tooltip}
-                aria-label={tooltip}
+                data-tip={label}
+                aria-label={label}
                 aria-pressed={Boolean(active)}
                 className={classNames({
                   button: !isSubButton,
@@ -28,7 +27,6 @@ export default class SideBarButton extends React.PureComponent {
                 },
                 extraClasses)}
             >
-                {hotkey && <span className="shortcut" aria-hidden="true">{hotkey}</span>}
                 {iconSrc && <img src={iconSrc} className="icon" alt="" aria-hidden="true" />}
                 <div className="label">{label}</div>
             </button>

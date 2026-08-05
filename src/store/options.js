@@ -7,7 +7,6 @@ import MENU_DATA from 'store/config/MenuData';
 
 export const MONITOR_MENU = Object.freeze({
   PNC_MONITOR: 'showPNCMonitor',
-  WHEELFLOW_CUSTOM_OBSTACLES: 'showWheelFlowCustomObstacles',
   DATA_COLLECTION_MONITOR: 'showDataCollectionMonitor',
   CONSOLE_TELEOP_MONITOR: 'showConsoleTeleopMonitor',
   CAR_TELEOP_MONITOR: 'showCarTeleopMonitor',
@@ -21,6 +20,12 @@ export default class Options {
 
     @observable themeMode = localStorage.getItem('dreamview-theme') || 'dark';
 
+    @observable pluginWorkspaceActive = false;
+
+    @observable pluginAppActive = false;
+
+    @observable pluginPanelActive = false;
+
     constructor() {
       this.cameraAngleNames = null;
       this.mainSideBarOptions = [
@@ -29,7 +34,6 @@ export default class Options {
         'showMenu',
         'showRouteEditingBar',
         'showDataRecorder',
-        'showWheelFlow',
       ];
       this.secondarySideBarOptions = ['showPOI'];
 
@@ -67,7 +71,7 @@ export default class Options {
                || this.showMenu
                || this.showPOI
                || this.showDataRecorder
-               || this.showWheelFlow;
+               || this.pluginWorkspaceActive;
     }
 
     @computed get showGeo() {
@@ -78,6 +82,9 @@ export default class Options {
     }
 
     @computed get showMonitor() {
+      if (this.pluginPanelActive) {
+        return true;
+      }
       for (const option of Object.values(MONITOR_MENU)) {
         if (this[option]) {
           return true;
@@ -87,6 +94,9 @@ export default class Options {
     }
 
     @computed get monitorName() {
+      if (this.pluginPanelActive) {
+        return 'pluginPanel';
+      }
       if (this.showConsoleTeleopMonitor) {
         return MONITOR_MENU.CONSOLE_TELEOP_MONITOR;
       } if (this.showCarTeleopMonitor) {
@@ -97,8 +107,6 @@ export default class Options {
         return MONITOR_MENU.DATA_COLLECTION_MONITOR;
       } if (this.showPNCMonitor) {
         return MONITOR_MENU.PNC_MONITOR;
-      } if (this.showWheelFlowCustomObstacles) {
-        return MONITOR_MENU.WHEELFLOW_CUSTOM_OBSTACLES;
       } if (this.showFuelClient) {
         return MONITOR_MENU.FUEL_CLIENT;
       }
@@ -169,7 +177,6 @@ export default class Options {
       if ([
         'showTasks',
         'showModuleController',
-        'showWheelFlow',
       ].includes(option)) {
         return false;
       } if (option === 'showRouteEditingBar') {
@@ -185,7 +192,7 @@ export default class Options {
         const cameraData = MENU_DATA.find((data) => data.id === 'camera');
 
         this.cameraAngleNames = Object.values(cameraData.data);
-        // Default screen shielding shortcut key v switch cameraView
+        // CameraView is unavailable when the current renderer does not provide it.
         const shouldFilterCameraView = _.get(PARAMETERS, 'cameraAngle.hasCameraView', false);
         if (shouldFilterCameraView) {
           this.cameraAngleNames = this.cameraAngleNames.filter((name) => name !== 'CameraView');

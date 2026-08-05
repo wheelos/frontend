@@ -137,6 +137,7 @@ export default class Map {
     this.data = {};
     this.initialized = false;
     this.elementKindsDrawn = '';
+    this.forceReload = false;
 
     this.trafficSignals = new TrafficSignals();
     this.stopSigns = new TrafficSigns(
@@ -807,6 +808,15 @@ export default class Map {
     this.yieldSigns.removeAll(scene);
   }
 
+  invalidate(scene) {
+    this.removeAllElements(scene);
+    this.hash = -1;
+    this.data = {};
+    this.initialized = false;
+    this.elementKindsDrawn = '';
+    this.forceReload = true;
+  }
+
   removeExpiredElements(elementIds, scene) {
     const newData = {};
     for (const kind in this.data) {
@@ -966,15 +976,26 @@ export default class Map {
         }
       }
 
-      if (hash !== this.hash || this.elementKindsDrawn !== newElementKindsDrawn) {
+      if (hash !== this.hash
+          || this.elementKindsDrawn !== newElementKindsDrawn
+          || this.forceReload) {
         this.hash = hash;
         this.elementKindsDrawn = newElementKindsDrawn;
+        if (this.forceReload) {
+          // A response requested before the backend reload may arrive on the
+          // independent map websocket after MapReloaded. Clear it again and
+          // force a full fetch from the newly loaded map.
+          this.removeAllElements(scene);
+          this.data = {};
+        }
         const diff = this.diffMapElements(elementIds, this.data);
 
         if (!_.isEmpty(diff) || !this.initialized) {
           MAP_WS.requestMapData(diff);
           this.initialized = true;
         }
+
+        this.forceReload = false;
 
         this.removeExpiredElements(elementIds, scene);
 
