@@ -33,6 +33,10 @@ export default class SideBar extends React.Component {
     const {
       options, enableHMIButtonsOnly, hmi, pluginRegistry,
     } = this.props.store;
+    const pluginNavigationItems = pluginRegistry.navigationItems;
+    const pluginNavigationActive = pluginNavigationItems.some((item) => (
+      pluginRegistry.activeSurface && pluginRegistry.activeSurface.key === item.key
+    ));
 
     const settings = {};
     const optionNames = [...options.mainSideBarOptions, ...options.secondarySideBarOptions];
@@ -60,25 +64,41 @@ export default class SideBar extends React.Component {
                     <SideBarButton type="main" {...settings.showMenu} />
                     <SideBarButton type="main" {...settings.showRouteEditingBar} />
                     <SideBarButton type="main" {...settings.showDataRecorder} />
-                    {pluginRegistry.navigationItems.map((item) => (
-                      <SideBarButton
-                        key={item.key}
-                        type="main"
-                        label={item.title}
-                        iconSrc={item.icon}
-                        active={pluginRegistry.activeSurface
-                          && pluginRegistry.activeSurface.key === item.key}
-                        disabled={item.disabled}
-                        onClick={() => {
-                          if (pluginRegistry.activeSurface
-                            && pluginRegistry.activeSurface.key === item.key) {
-                            pluginRegistry.requestCloseSurface();
-                          } else {
-                            pluginRegistry.requestOpenSurface(item);
-                          }
-                        }}
-                      />
-                    ))}
+                    {pluginNavigationItems.length > 0 && (
+                      <div
+                        className={`studio-navigation${
+                          pluginNavigationActive ? ' studio-navigation-active' : ''
+                        }`}
+                        role="group"
+                        aria-label="Wheel.OS Studio"
+                      >
+                        <div className="studio-navigation-title" aria-hidden="true">
+                          <span>WHEEL.OS</span>
+                          <span>STUDIO</span>
+                        </div>
+                        <div className="studio-navigation-items">
+                          {pluginNavigationItems.map((item) => (
+                            <SideBarButton
+                              key={item.key}
+                              type="main"
+                              label={item.title}
+                              iconSrc={item.icon}
+                              active={pluginRegistry.activeSurface
+                                && pluginRegistry.activeSurface.key === item.key}
+                              disabled={item.disabled}
+                              onClick={() => {
+                                if (pluginRegistry.activeSurface
+                                  && pluginRegistry.activeSurface.key === item.key) {
+                                  pluginRegistry.requestCloseSurface();
+                                } else {
+                                  pluginRegistry.requestOpenSurface(item);
+                                }
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                 </div>
                 <div className="sub-button-panel">
                     <SideBarButton
