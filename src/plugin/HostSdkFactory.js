@@ -8,6 +8,66 @@ import PLUGIN_INTERACTIONS from './InteractionManager';
 import SceneFacade from './SceneFacade';
 import { pluginHttpUrl } from './url';
 
+const BUILTIN_SURFACES = Object.freeze({
+  tasks: 'showTasks',
+  modules: 'showModuleController',
+  layers: 'showMenu',
+  route: 'showRouteEditingBar',
+  recorder: 'showDataRecorder',
+});
+
+const MAP_SELECTION_TIMEOUT_MS = 15000;
+
+function normalizeMapIdentity(value) {
+  return String(value || '')
+    .trim()
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+}
+
+function resolveAvailableMap(map) {
+  const target = normalizeMapIdentity(map);
+  return (STORE.hmi.maps || []).find(
+    (candidate) => normalizeMapIdentity(candidate) === target,
+  );
+}
+
+function waitForHostUpdate() {
+  return new Promise((resolve) => window.setTimeout(resolve, 100));
+}
+
+async function selectMapAndWait(map) {
+  const requestedMap = String(map || '').trim();
+  if (!requestedMap) {
+    throw new Error('A map name is required');
+  }
+
+  const catalogDeadline = Date.now() + MAP_SELECTION_TIMEOUT_MS;
+  let targetMap = resolveAvailableMap(requestedMap);
+  while (!targetMap && Date.now() < catalogDeadline) {
+    await waitForHostUpdate();
+    targetMap = resolveAvailableMap(requestedMap);
+  }
+  if (!targetMap) {
+    throw new Error(`Dreamview map catalog did not discover ${requestedMap}`);
+  }
+
+  const alreadySelected = STORE.hmi.currentMap === targetMap;
+  WS.changeMap(targetMap);
+  if (alreadySelected) {
+    return;
+  }
+
+  const selectionDeadline = Date.now() + MAP_SELECTION_TIMEOUT_MS;
+  while (STORE.hmi.currentMap !== targetMap && Date.now() < selectionDeadline) {
+    await waitForHostUpdate();
+  }
+  if (STORE.hmi.currentMap !== targetMap) {
+    throw new Error(`Dreamview did not switch to map ${targetMap}`);
+  }
+}
+
 function snapshot() {
   const { hmi } = STORE;
   const adc = (STORE.meters && STORE.meters.world) || {};
@@ -86,7 +146,7 @@ class PluginHostContextImpl {
     this.maps = {
       list: () => (STORE.hmi.maps || []).slice(),
       getCurrent: () => STORE.hmi.currentMap,
-      select: async (map) => WS.changeMap(map),
+      select: (map) => selectMapAndWait(map),
     };
     this.routing = {
       startEditing: () => STORE.setOptionStatus('showRouteEditingBar', true),
@@ -127,6 +187,18 @@ class PluginHostContextImpl {
           pluginId, 'workspaces', workspaceId,
         );
         return STORE.pluginRegistry.requestOpenSurface(target);
+      },
+      openBuiltin: async (surfaceId) => {
+        const option = BUILTIN_SURFACES[surfaceId];
+        if (!option) {
+          throw new Error(`Unknown Dreamview surface: ${surfaceId}`);
+        }
+        const closed = await STORE.pluginRegistry.requestCloseSurface();
+        if (!closed) {
+          return false;
+        }
+        STORE.setOptionStatus(option, true);
+        return true;
       },
       close: () => STORE.pluginRegistry.requestCloseSurface(),
     };
