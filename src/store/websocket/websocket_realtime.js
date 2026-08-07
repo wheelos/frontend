@@ -4,12 +4,21 @@ import MAP_NAVIGATOR from 'components/Navigation/MapNavigator';
 import UTTERANCE from 'store/utterance';
 import Worker from 'utils/webworker.js';
 
+function getSimWorldUpdatePeriodMs() {
+  const profile = new URLSearchParams(window.location.search).get('profile');
+  if (profile === 'remote') {
+    return PARAMETERS.websocket.remoteSimWorldUpdatePeriodMs;
+  }
+  return PARAMETERS.websocket.localSimWorldUpdatePeriodMs;
+}
+
 export default class RealtimeWebSocketEndpoint {
   constructor(serverAddr) {
     this.serverAddr = serverAddr;
     this.websocket = null;
-    this.simWorldUpdatePeriodMs = 100;
+    this.simWorldUpdatePeriodMs = getSimWorldUpdatePeriodMs();
     this.simWorldLastUpdateTimestamp = 0;
+    this.simWorldLastRequestTimestamp = 0;
     this.mapUpdatePeriodMs = 1000;
     this.mapLastUpdateTimestamp = 0;
     this.updatePOI = true;
@@ -20,6 +29,13 @@ export default class RealtimeWebSocketEndpoint {
     this.pointcloudWS = null;
     this.requestHmiStatus = this.requestHmiStatus.bind(this);
     this.updateParkingRoutingDistance = true;
+  }
+
+  shouldRequestSimulationWorld(now) {
+    const updatePeriodMs = STORE.options.showPNCMonitor
+      ? PARAMETERS.websocket.planningDebugUpdatePeriodMs
+      : this.simWorldUpdatePeriodMs;
+    return now - this.simWorldLastRequestTimestamp >= updatePeriodMs;
   }
 
   initialize() {
@@ -164,7 +180,8 @@ export default class RealtimeWebSocketEndpoint {
       this.initialize();
     };
 
-    // Request simulation world every 100ms.
+    // Keep auxiliary requests responsive while throttling the full world
+    // snapshot according to the local/remote profile.
     clearInterval(this.timer);
     this.timer = setInterval(() => {
       if (this.websocket.readyState === this.websocket.OPEN) {
@@ -182,7 +199,11 @@ export default class RealtimeWebSocketEndpoint {
         if (this.pointcloudWS.isEnabled()) {
           this.pointcloudWS.requestPointCloud();
         }
-        this.requestSimulationWorld(STORE.options.showPNCMonitor);
+        const now = new Date().getTime();
+        if (this.shouldRequestSimulationWorld(now)) {
+          this.requestSimulationWorld(STORE.options.showPNCMonitor);
+          this.simWorldLastRequestTimestamp = now;
+        }
         if (this.updateParkingRoutingDistance) {
           this.requestParkingRoutingDistance();
           this.updateParkingRoutingDistance = false;
@@ -247,6 +268,7 @@ export default class RealtimeWebSocketEndpoint {
     this.websocket.send(JSON.stringify({
       type: 'RequestSimulationWorld',
       planning: requestPlanningData,
+      compression: 'zstd',
     }));
   }
 

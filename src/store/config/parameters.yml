@@ -282,3 +282,8 @@ debug:
   performanceMonitor: false
 server:
   port: 8888
+
+websocket:
+  localSimWorldUpdatePeriodMs: 100
+  remoteSimWorldUpdatePeriodMs: 200
+  planningDebugUpdatePeriodMs: 500

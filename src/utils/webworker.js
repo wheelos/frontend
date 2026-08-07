@@ -1,4 +1,5 @@
 const protobuf = require('protobufjs/light');
+const { decompress } = require('fzstd');
 const simWorldRoot = protobuf.Root.fromJSON(
   require('proto_bundle/sim_world_proto_bundle.json'),
 );
@@ -11,6 +12,17 @@ const pointCloudRoot = protobuf.Root.fromJSON(
 );
 
 const pointCloudMessage = pointCloudRoot.lookupType('apollo.dreamview.PointCloud');
+const zstdHeader = new Uint8Array([68, 86, 90, 83, 84, 68, 1]);
+
+function decodeRealtimePayload(data) {
+  const bytes = new Uint8Array(data);
+  for (let i = 0; i < zstdHeader.length; i += 1) {
+    if (bytes[i] !== zstdHeader[i]) {
+      return bytes;
+    }
+  }
+  return decompress(bytes.subarray(zstdHeader.length));
+}
 
 self.addEventListener('message', (event) => {
   let message = null;
@@ -21,7 +33,7 @@ self.addEventListener('message', (event) => {
         message = JSON.parse(data);
       } else {
         message = SimWorldMessage.toObject(
-          SimWorldMessage.decode(new Uint8Array(data)),
+          SimWorldMessage.decode(decodeRealtimePayload(data)),
           { enums: String },
         );
         message.type = 'SimWorldUpdate';

@@ -62,6 +62,16 @@ Notes
 Integration
 - The frontend connects to backend websocket endpoints (map, pointcloud, camera, sim) on the same host/port. In development it defaults to the port in `config/parameters.js` (8888).
 
+Realtime bandwidth profile
+- Local Dreamview requests the full simulation world at 10 Hz.
+- Add `?profile=remote` to the Dreamview URL to request the full simulation world at 5 Hz.
+- Planning monitor requests are limited to 2 Hz in either profile.
+- `RequestSimulationWorld` requests zstd-compressed binary payloads by default.
+  The worker detects the `DVZSTD\1` header and decompresses before protobuf
+  decoding. Send `compression: "none"` when an uncompressed payload is needed.
+- The backend must support the `DVZSTD\1` protocol before using this frontend
+  bundle.
+
 Useful files
 - [.github/workflows/release.yml](.github/workflows/release.yml)
 - [package.json](package.json)

@@ -27,6 +27,7 @@
     "classnames": "^2.3.1",
     "compute-polynomial": "^1.1.0",
     "font-awesome": "^4.7.0",
+    "fzstd": "0.1.1",
     "lodash": "^4.17.14",
     "mobx": "^3.1.10",
     "mobx-react": "^4.1.8",
