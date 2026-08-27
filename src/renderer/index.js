@@ -136,6 +136,9 @@ class Renderer {
     // Geolocation of the mouse
     this.geolocation = { x: 0, y: 0 };
 
+    // Canvas-relative pointer used to reveal one obstacle label on hover.
+    this.obstacleHoverPoint = null;
+
     // FPS tracking for the point cloud metrics panel.
     this._fpsFrameCount = 0;
     this._fpsLastTimestamp = performance.now();
@@ -659,8 +662,13 @@ class Renderer {
     this.map.updateViewMode(cameraViewActive);
     this.map.animate(timestamp);
     this.adjustCamera(this.adc.mesh, this.options.cameraAngle, timestamp);
-    this.perceptionObstacles.animate(timestamp, this.camera, this.dimension.height);
-    this.pluginScene.animate(timestamp);
+    this.perceptionObstacles.animate(
+      timestamp,
+      this.camera,
+      this.dimension.height,
+      this.obstacleHoverPoint,
+    );
+    this.pluginScene.animate(timestamp, this.obstacleHoverPoint);
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -842,6 +850,30 @@ class Renderer {
     const geo = this.coordinates.applyOffset(pos, true);
 
     return geo;
+  }
+
+  updateObstacleHover(event) {
+    if (!event || !event.currentTarget) {
+      this.clearObstacleHover();
+      return;
+    }
+
+    const canvasPosition = event.currentTarget.getBoundingClientRect();
+    if (!canvasPosition.width || !canvasPosition.height) {
+      this.clearObstacleHover();
+      return;
+    }
+
+    this.obstacleHoverPoint = {
+      x: ((event.clientX - canvasPosition.left) * this.dimension.width)
+        / canvasPosition.width,
+      y: ((event.clientY - canvasPosition.top) * this.dimension.height)
+        / canvasPosition.height,
+    };
+  }
+
+  clearObstacleHover() {
+    this.obstacleHoverPoint = null;
   }
 
   // Debugging purpose function:

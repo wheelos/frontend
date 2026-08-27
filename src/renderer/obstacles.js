@@ -335,6 +335,7 @@ export default class PerceptionObstacles {
       scene,
       getObstacleFootprintRadius(obstacle),
       labelHeading,
+      obstaclePosition,
     );
   }
 
@@ -554,8 +555,8 @@ export default class PerceptionObstacles {
     }
   }
 
-  animate(timestamp, camera, viewportHeight) {
-    this.obstacleLabels.animate(timestamp, camera, viewportHeight);
+  animate(timestamp, camera, viewportHeight, hoverPoint) {
+    this.obstacleLabels.animate(timestamp, camera, viewportHeight, hoverPoint);
   }
 
   setVisible(visible) {
@@ -572,9 +573,7 @@ export default class PerceptionObstacles {
     ].forEach((collection) => collection.forEach((object) => {
       object.visible = visible;
     }));
-    this.obstacleLabels.labels.forEach((label) => {
-      label.sprite.visible = visible;
-    });
+    this.obstacleLabels.setVisible(visible);
   }
 
   dispose(scene) {

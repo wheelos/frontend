@@ -87,7 +87,7 @@ export default class Meters {
 
         if (world.autoDrivingCar.steeringAngle !== undefined
                 && !isNaN(world.autoDrivingCar.steeringAngle)) {
-          this.steeringAngle = -Math.round(
+          this.steeringAngle = Math.round(
             world.autoDrivingCar.steeringAngle * 180.0 / Math.PI,
           );
         }
@@ -103,4 +103,3 @@ export default class Meters {
       }
     }
 }
-

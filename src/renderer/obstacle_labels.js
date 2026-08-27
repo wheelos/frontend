@@ -12,6 +12,7 @@ const LABEL_OBSTACLE_GAP = 10;
 const LABEL_COLLISION_GAP = 4;
 const LABEL_MIN_FOOTPRINT_RADIUS = 10;
 const LABEL_MAX_FOOTPRINT_RADIUS = 96;
+const LABEL_HOVER_SCORE_WEIGHT = 100000;
 const METRIC_FONT = '600 12px "Roboto Mono", "SFMono-Regular", monospace';
 const ID_FONT = '700 14px "Roboto Mono", "SFMono-Regular", monospace';
 const TAG_FONT = '700 10px "Roboto Mono", "SFMono-Regular", monospace';
@@ -62,6 +63,9 @@ function projectToScreen(position, camera, viewportWidth, viewportHeight) {
   return {
     x: ((projected.x + 1) * viewportWidth) / 2,
     y: ((1 - projected.y) * viewportHeight) / 2,
+    inView: projected.x >= -1 && projected.x <= 1
+      && projected.y >= -1 && projected.y <= 1
+      && projected.z >= -1 && projected.z <= 1,
   };
 }
 
@@ -141,8 +145,10 @@ function createLabel(scene) {
     pixelHeight: 48,
     fadeStartedAt: 0,
     anchor: new THREE.Vector3(),
+    hitAnchor: new THREE.Vector3(),
     footprintRadius: 1,
     heading: null,
+    active: false,
   };
 }
 
@@ -250,6 +256,8 @@ export default class ObstacleLabels {
   constructor() {
     this.labels = [];
     this.activeCount = 0;
+    this.enabled = true;
+    this.hoveredLabel = null;
     this.reducedMotion = window.matchMedia
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
@@ -265,6 +273,7 @@ export default class ObstacleLabels {
     scene,
     footprintRadius = 1,
     heading = null,
+    hitPosition = position,
   ) {
     if (!content.id && !content.metrics.length && !content.tags.length) {
       return;
@@ -284,36 +293,34 @@ export default class ObstacleLabels {
       label.signature = signature;
     }
 
-    if (!label.sprite.visible) {
-      label.fadeStartedAt = performance.now();
-      label.material.opacity = this.reducedMotion ? 1 : 0;
-    }
     label.anchor.set(position.x, position.y, position.z);
+    label.hitAnchor.set(hitPosition.x, hitPosition.y, hitPosition.z);
     label.footprintRadius = Math.max(0.1, footprintRadius);
     label.heading = Number.isFinite(heading) ? heading : null;
     label.sprite.position.copy(label.anchor);
-    label.sprite.visible = true;
+    label.active = true;
     this.activeCount += 1;
   }
 
   endFrame() {
     for (let index = this.activeCount; index < this.labels.length; index += 1) {
+      this.labels[index].active = false;
       this.labels[index].sprite.visible = false;
     }
   }
 
-  animate(timestamp, camera, viewportHeight) {
+  animate(timestamp, camera, viewportHeight, hoverPoint) {
     const safeViewportHeight = Math.max(viewportHeight, 1);
     const safeViewportWidth = Math.max(safeViewportHeight * camera.aspect, 1);
     const verticalFov = THREE.Math.degToRad(camera.fov);
     camera.updateMatrixWorld();
     const cameraRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
     const cameraUp = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
-    const activeLabels = this.labels.filter((labelEntry) => labelEntry.sprite.visible);
+    const activeLabels = this.labels.filter((labelEntry) => labelEntry.active);
 
-    const layoutEntries = activeLabels.map((labelEntry) => {
+    const projectedEntries = activeLabels.map((labelEntry) => {
       const {
-        anchor, footprintRadius, pixelHeight, aspectRatio,
+        anchor, hitAnchor, footprintRadius, pixelHeight, aspectRatio,
       } = labelEntry;
       const distance = anchor.distanceTo(camera.position);
       const worldPerPixel = (
@@ -327,6 +334,12 @@ export default class ObstacleLabels {
       const renderedPixelWidth = renderedPixelHeight * aspectRatio;
       const screenAnchor = projectToScreen(
         anchor,
+        camera,
+        safeViewportWidth,
+        safeViewportHeight,
+      );
+      const screenHitAnchor = projectToScreen(
+        hitAnchor,
         camera,
         safeViewportWidth,
         safeViewportHeight,
@@ -368,14 +381,58 @@ export default class ObstacleLabels {
         height: renderedPixelHeight,
         footprintPixels,
         screenAnchor,
+        screenHitAnchor,
         screenHeading,
       };
-    }).sort((first, second) => first.distance - second.distance);
+    });
 
-    const obstacleRects = layoutEntries.map((entry) => expandRect(
+    let hoveredEntry = null;
+    let bestHoverScore = Number.POSITIVE_INFINITY;
+    if (this.enabled && hoverPoint) {
+      projectedEntries.forEach((entry) => {
+        if (!entry.screenHitAnchor.inView) {
+          return;
+        }
+        const deltaX = hoverPoint.x - entry.screenHitAnchor.x;
+        const deltaY = hoverPoint.y - entry.screenHitAnchor.y;
+        const pointerDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        if (pointerDistance > entry.footprintPixels) {
+          return;
+        }
+        const score = (pointerDistance / entry.footprintPixels) * LABEL_HOVER_SCORE_WEIGHT
+          + entry.distance;
+        if (score < bestHoverScore) {
+          bestHoverScore = score;
+          hoveredEntry = entry;
+        }
+      });
+    }
+
+    const nextHoveredLabel = hoveredEntry && hoveredEntry.labelEntry;
+    this.labels.forEach((labelEntry) => {
+      const { sprite } = labelEntry;
+      if (labelEntry !== nextHoveredLabel) {
+        sprite.visible = false;
+      }
+    });
+
+    if (!hoveredEntry) {
+      this.hoveredLabel = null;
+      return;
+    }
+
+    const hoveredLabel = hoveredEntry.labelEntry;
+    if (this.hoveredLabel !== hoveredLabel || !hoveredLabel.sprite.visible) {
+      hoveredLabel.fadeStartedAt = timestamp;
+      hoveredLabel.material.opacity = this.reducedMotion ? 1 : 0;
+    }
+    hoveredLabel.sprite.visible = true;
+    this.hoveredLabel = hoveredLabel;
+
+    const obstacleRects = projectedEntries.map((entry) => expandRect(
       createRect(
-        entry.screenAnchor.x,
-        entry.screenAnchor.y,
+        entry.screenHitAnchor.x,
+        entry.screenHitAnchor.y,
         entry.footprintPixels * 2,
         entry.footprintPixels * 2,
       ),
@@ -383,7 +440,7 @@ export default class ObstacleLabels {
     ));
     const placedLabelRects = [];
 
-    layoutEntries.forEach((entry) => {
+    [hoveredEntry].forEach((entry) => {
       const {
         labelEntry, width, height, footprintPixels, screenAnchor, screenHeading,
       } = entry;
@@ -457,6 +514,17 @@ export default class ObstacleLabels {
     });
   }
 
+  setVisible(visible) {
+    this.enabled = visible;
+    if (!visible) {
+      this.labels.forEach((label) => {
+        const { sprite } = label;
+        sprite.visible = false;
+      });
+      this.hoveredLabel = null;
+    }
+  }
+
   dispose(scene) {
     this.labels.forEach((label) => {
       scene.remove(label.sprite);
@@ -469,5 +537,6 @@ export default class ObstacleLabels {
     });
     this.labels = [];
     this.activeCount = 0;
+    this.hoveredLabel = null;
   }
 }
