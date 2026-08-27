@@ -35,6 +35,10 @@ export default class Scene extends React.Component {
     }
   }
 
+  componentWillUnmount() {
+    RENDERER.clearObstacleHover();
+  }
+
   render() {
     const { options, shouldDisplayOnRight } = this.props;
     const { routeEditingManager } = this.props.store;
@@ -61,10 +65,12 @@ export default class Scene extends React.Component {
                       'route-editing-active': options.showRouteEditingBar,
                     })}
                     style={{ left: leftPosition }}
-                    onMouseMove={(event) => {
-                      const geo = RENDERER.getGeolocation(event);
-                      STORE.setGeolocation(geo);
-                    }}
+                  onMouseMove={(event) => {
+                    RENDERER.updateObstacleHover(event);
+                    const geo = RENDERER.getGeolocation(event);
+                    STORE.setGeolocation(geo);
+                  }}
+                  onMouseLeave={() => RENDERER.clearObstacleHover()}
                 >
                     {options.showGeo && <Geolocation />}
                     <PointCloudMetrics />

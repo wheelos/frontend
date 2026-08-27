@@ -278,10 +278,15 @@ export default class PluginSceneRenderer {
     }, this.owner.coordinates, this.owner.scene);
   }
 
-  animate(timestamp) {
+  animate(timestamp, hoverPoint) {
     this.layers.forEach((layer) => {
       if (layer.obstacleRenderer) {
-        layer.obstacleRenderer.animate(timestamp, this.owner.camera, this.owner.dimension.height);
+        layer.obstacleRenderer.animate(
+          timestamp,
+          this.owner.camera,
+          this.owner.dimension.height,
+          hoverPoint,
+        );
       }
     });
   }
