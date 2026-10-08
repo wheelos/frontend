@@ -342,12 +342,14 @@ export default class Map {
           offsetPolylinePoints(points, 0.13),
           0.09,
           colorMapping.YELLOW,
-          0,
+          this.zOffsetFactor,
           1,
           false,
         );
-        left.add(right);
-        return this.setVisualRole(left, 'laneYellow');
+        // Each ribbon has its own local origin; keep them as siblings.
+        const boundary = new THREE.Group();
+        boundary.add(left, right);
+        return this.setVisualRole(boundary, 'laneYellow');
       }
       case 'CURB':
         return this.setVisualRole(
@@ -450,31 +452,21 @@ export default class Map {
       drewObjects.push(centerLine);
     });
 
-    const rightLaneType = _.get(
-      lane,
-      'rightBoundary.boundaryType[0].types[0]',
-      'UNKNOWN',
-    );
-    // TODO: this is a temp. fix for repeated boundary types.
-    lane.rightBoundary.curve.segment.forEach((segment, index) => {
-      const points = coordinates.applyOffsetToArray(segment.lineSegment.point);
-      const boundary = this.addLaneMesh(rightLaneType, points);
-      boundary.name = `RightBoundary-${lane.id.id}`;
-      scene.add(boundary);
-      drewObjects.push(boundary);
-    });
-
-    const leftLaneType = _.get(
-      lane,
-      'leftBoundary.boundaryType[0].types[0]',
-      'UNKNOWN',
-    );
-    lane.leftBoundary.curve.segment.forEach((segment, index) => {
-      const points = coordinates.applyOffsetToArray(segment.lineSegment.point);
-      const boundary = this.addLaneMesh(leftLaneType, points);
-      boundary.name = `LeftBoundary-${lane.id.id}`;
-      scene.add(boundary);
-      drewObjects.push(boundary);
+    ['leftBoundary', 'rightBoundary'].forEach((side) => {
+      const laneBoundary = lane[side];
+      // Include virtual boundaries to visualize lane connectivity inside junctions.
+      if (!laneBoundary) {
+        return;
+      }
+      const laneType = _.get(laneBoundary, 'boundaryType[0].types[0]', 'UNKNOWN');
+      _.get(laneBoundary, 'curve.segment', []).forEach((segment) => {
+        const points = coordinates.applyOffsetToArray(segment.lineSegment.point);
+        const boundary = this.addLaneMesh(laneType, points);
+        const prefix = side === 'leftBoundary' ? 'LeftBoundary' : 'RightBoundary';
+        boundary.name = `${prefix}-${lane.id.id}`;
+        scene.add(boundary);
+        drewObjects.push(boundary);
+      });
     });
 
     return drewObjects;
