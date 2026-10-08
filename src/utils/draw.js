@@ -201,10 +201,19 @@ function buildRibbonData(points, width) {
 }
 
 function createBandMesh(ribbonData, color, opacity, zOffset, matrixAutoUpdate) {
+  // Keep narrow ribbons precise even when the map is far from the scene origin.
+  // Subtract in JS (double precision), before uploading Float32 GPU attributes.
+  const origin = new THREE.Vector3().fromArray(
+    ribbonData.positions.length ? ribbonData.positions : [0, 0, 0],
+  ).floor();
+  // Three r84 also stores matrices as Float32: integer translations remain exact.
+  const localPositions = ribbonData.positions.map((value, index) => (
+    value - origin.getComponent(index % 3)
+  ));
   const geometry = new THREE.BufferGeometry();
   geometry.addAttribute(
     'position',
-    new THREE.Float32BufferAttribute(ribbonData.positions, 3),
+    new THREE.Float32BufferAttribute(localPositions, 3),
   );
   geometry.setIndex(ribbonData.indices);
   geometry.computeBoundingSphere();
@@ -217,6 +226,7 @@ function createBandMesh(ribbonData, color, opacity, zOffset, matrixAutoUpdate) {
     depthWrite: opacity >= 1,
   });
   const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.copy(origin);
   addOffsetZ(mesh, zOffset);
   mesh.frustumCulled = false;
   mesh.matrixAutoUpdate = matrixAutoUpdate;
@@ -333,7 +343,12 @@ export function drawPolygonSurfaceFromRings(
     return null;
   }
 
-  const contourVectors = contour.map((point) => new THREE.Vector2(point.x, point.y));
+  const origin = contour[0].clone().floor();
+  const toLocalVector = (point) => new THREE.Vector2(
+    point.x - origin.x,
+    point.y - origin.y,
+  );
+  const contourVectors = contour.map(toLocalVector);
   if (!THREE.ShapeUtils.isClockWise(contourVectors)) {
     contour.reverse();
     contourVectors.reverse();
@@ -343,7 +358,7 @@ export function drawPolygonSurfaceFromRings(
     .map(normalizePolygonRing)
     .filter((ring) => ring.length >= 3);
   const holeVectors = holes.map((ring) => {
-    let vectors = ring.map((point) => new THREE.Vector2(point.x, point.y));
+    let vectors = ring.map(toLocalVector);
     if (THREE.ShapeUtils.isClockWise(vectors)) {
       ring.reverse();
       vectors = vectors.reverse();
@@ -360,9 +375,12 @@ export function drawPolygonSurfaceFromRings(
   const positions = [];
   const uvs = [];
   const safeUvWorldSize = Math.max(0.001, uvWorldSize);
+  // Preserve world-aligned texture seams without large Float32 UV coordinates.
+  const uvOriginX = Math.floor(origin.x / safeUvWorldSize) * safeUvWorldSize;
+  const uvOriginY = Math.floor(origin.y / safeUvWorldSize) * safeUvWorldSize;
   vertices.forEach((point) => {
-    positions.push(point.x, point.y, point.z);
-    uvs.push(point.x / safeUvWorldSize, point.y / safeUvWorldSize);
+    positions.push(point.x - origin.x, point.y - origin.y, point.z - origin.z);
+    uvs.push((point.x - uvOriginX) / safeUvWorldSize, (point.y - uvOriginY) / safeUvWorldSize);
   });
 
   const geometry = new THREE.BufferGeometry();
@@ -372,6 +390,7 @@ export function drawPolygonSurfaceFromRings(
   geometry.computeBoundingSphere();
 
   const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.copy(origin);
   addOffsetZ(mesh, zOffset);
   mesh.matrixAutoUpdate = matrixAutoUpdate;
   mesh.frustumCulled = false;
