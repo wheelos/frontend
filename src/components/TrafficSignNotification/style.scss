@@ -1,0 +1,40 @@
+.traffic-sign-notification {
+  position: fixed;
+  top: 80px;
+  left: 80px;
+  z-index: 110;
+  width: 310px;
+  max-width: calc(100vw - 96px);
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border: 1px solid #4586cf;
+  border-left: 4px solid #60a5fa;
+  border-radius: 6px;
+  background: #172638;
+  color: #f5f7fa;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+
+  strong { font-size: 14px; }
+  ul { list-style: none; margin: 8px 0 0; padding: 0; }
+  li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 10px;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+}
+
+.traffic-sign-notification .traffic-sign-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  object-fit: contain;
+}
+
+.traffic-sign-notification .traffic-sign-label {
+  flex: 1;
+  min-width: 0;
+}

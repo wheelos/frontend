@@ -202,6 +202,8 @@ module.exports = (env, argv) => {
         {
           // For font-awesome (ttf)
           test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+          // Sign icons are SVG image assets, not legacy font files.
+          exclude: path.resolve(__dirname, 'src/components/TrafficSignNotification/icons'),
           loader: 'file-loader',
         },
         {
