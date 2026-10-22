@@ -4,6 +4,7 @@ import { ConfigProvider } from 'antd';
 
 import SplitPane from 'react-split-pane';
 import Header from 'components/Header';
+import TrafficSignNotification from 'components/TrafficSignNotification';
 import MainView from 'components/Layouts/MainView';
 import ToolView from 'components/Layouts/ToolView';
 import MonitorPanel from 'components/Layouts/MonitorPanel';
@@ -82,6 +83,7 @@ export default class Dreamview extends React.Component {
             <div className={`theme-${options.themeMode}`}>
                 <PluginLifecycleHost />
                 <Header />
+                <TrafficSignNotification />
                 <div
                     className={[
                       'pane-container',

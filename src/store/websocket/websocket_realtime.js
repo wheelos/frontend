@@ -58,6 +58,9 @@ export default class RealtimeWebSocketEndpoint {
     this.worker.onmessage = (event) => {
       const message = event.data;
       switch (message.type) {
+        case 'TrafficSignDetection':
+          STORE.trafficSigns.update(message);
+          break;
         case 'HMIStatus':
           STORE.hmi.updateStatus(message.data);
           STORE.studioConnector.updateLocalScenarioInfo(message.data);
@@ -162,6 +165,7 @@ export default class RealtimeWebSocketEndpoint {
       }
     };
     this.websocket.onclose = (event) => {
+      STORE.trafficSigns.clear();
       console.log(`WebSocket connection closed, close_code: ${event.code}`);
 
       // If connection has been lost for more than 10 sec, send the error message every 2 sec

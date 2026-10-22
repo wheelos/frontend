@@ -1,0 +1,883 @@
+{
+  "batchcomplete": "",
+  "query": {
+    "pages": {
+      "-1": {
+        "ns": 6,
+        "title": "File:Slovenia road sign II-30-10.svg",
+        "missing": "",
+        "imagerepository": ""
+      },
+      "-2": {
+        "ns": 6,
+        "title": "File:Slovenia road sign II-30-30.svg",
+        "missing": "",
+        "imagerepository": ""
+      },
+      "-3": {
+        "ns": 6,
+        "title": "File:Slovenia road sign II-30-40.svg",
+        "missing": "",
+        "imagerepository": ""
+      },
+      "-4": {
+        "ns": 6,
+        "title": "File:Slovenia road sign II-30-50.svg",
+        "missing": "",
+        "imagerepository": ""
+      },
+      "-5": {
+        "ns": 6,
+        "title": "File:Slovenia road sign II-30-60.svg",
+        "missing": "",
+        "imagerepository": ""
+      },
+      "-6": {
+        "ns": 6,
+        "title": "File:Slovenia road sign II-30-70.svg",
+        "missing": "",
+        "imagerepository": ""
+      },
+      "32732520": {
+        "pageid": 32732520,
+        "ns": 6,
+        "title": "File:Slovenia road sign II-1.svg",
+        "imagerepository": "local",
+        "imageinfo": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/d/de/Slovenia_road_sign_II-1.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Slovenia_road_sign_II-1.svg",
+            "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=32732520",
+            "extmetadata": {
+              "DateTime": {
+                "value": "2014-05-12 00:14:38",
+                "source": "mediawiki-metadata",
+                "hidden": ""
+              },
+              "ObjectName": {
+                "value": "Slovenia road sign II-1",
+                "source": "mediawiki-metadata"
+              },
+              "CommonsMetadataExtension": {
+                "value": 1.2,
+                "source": "extension",
+                "hidden": ""
+              },
+              "Categories": {
+                "value": "PD Slovenia-exempt|SVG priority road signs of Slovenia|Slovenia road sign II-1|Blank yield signs|SVG priority road signs \u2013 yield|Yield signs without text|Red and white triangular yield signs|Triangular yield signs",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "Assessments": {
+                "value": "",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "ImageDescription": {
+                "value": "Give way to major road.",
+                "source": "commons-desc-page"
+              },
+              "DateTimeOriginal": {
+                "value": "2014-05-11",
+                "source": "commons-desc-page"
+              },
+              "Credit": {
+                "value": "<b>Highway Code</b>",
+                "source": "commons-desc-page"
+              },
+              "Artist": {
+                "value": "<b>Government of Slovenia</b>",
+                "source": "commons-desc-page"
+              },
+              "LicenseShortName": {
+                "value": "Public domain",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "UsageTerms": {
+                "value": "Public domain",
+                "source": "commons-desc-page"
+              },
+              "AttributionRequired": {
+                "value": "false",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Copyrighted": {
+                "value": "False",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Restrictions": {
+                "value": "",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "License": {
+                "value": "pd",
+                "source": "commons-templates",
+                "hidden": ""
+              }
+            }
+          }
+        ]
+      },
+      "32732522": {
+        "pageid": 32732522,
+        "ns": 6,
+        "title": "File:Slovenia road sign II-2.svg",
+        "imagerepository": "local",
+        "imageinfo": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Slovenia_road_sign_II-2.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Slovenia_road_sign_II-2.svg",
+            "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=32732522",
+            "extmetadata": {
+              "DateTime": {
+                "value": "2014-05-12 00:14:39",
+                "source": "mediawiki-metadata",
+                "hidden": ""
+              },
+              "ObjectName": {
+                "value": "Slovenia road sign II-2",
+                "source": "mediawiki-metadata"
+              },
+              "CommonsMetadataExtension": {
+                "value": 1.2,
+                "source": "extension",
+                "hidden": ""
+              },
+              "Categories": {
+                "value": "PD Slovenia-exempt|SVG priority road signs of Slovenia|Diagrams with stop (text) on red octagonal stop signs|SVG priority road signs \u2013 stop",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "Assessments": {
+                "value": "",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "ImageDescription": {
+                "value": "Stop.",
+                "source": "commons-desc-page"
+              },
+              "DateTimeOriginal": {
+                "value": "2014-05-11",
+                "source": "commons-desc-page"
+              },
+              "Credit": {
+                "value": "<b>Highway Code</b>",
+                "source": "commons-desc-page"
+              },
+              "Artist": {
+                "value": "<b>Government of Slovenia</b>",
+                "source": "commons-desc-page"
+              },
+              "LicenseShortName": {
+                "value": "Public domain",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "UsageTerms": {
+                "value": "Public domain",
+                "source": "commons-desc-page"
+              },
+              "AttributionRequired": {
+                "value": "false",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Copyrighted": {
+                "value": "False",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Restrictions": {
+                "value": "",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "License": {
+                "value": "pd",
+                "source": "commons-templates",
+                "hidden": ""
+              }
+            }
+          }
+        ]
+      },
+      "32751265": {
+        "pageid": 32751265,
+        "ns": 6,
+        "title": "File:Slovenia road sign II-26.1.svg",
+        "imagerepository": "local",
+        "imageinfo": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/3/36/Slovenia_road_sign_II-26.1.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Slovenia_road_sign_II-26.1.svg",
+            "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=32751265",
+            "extmetadata": {
+              "DateTime": {
+                "value": "2014-05-13 01:06:04",
+                "source": "mediawiki-metadata",
+                "hidden": ""
+              },
+              "ObjectName": {
+                "value": "Slovenia road sign II-26.1",
+                "source": "mediawiki-metadata"
+              },
+              "CommonsMetadataExtension": {
+                "value": 1.2,
+                "source": "extension",
+                "hidden": ""
+              },
+              "Categories": {
+                "value": "SVG prohibitory road signs of Slovenia|PD Slovenia-exempt|SVG prohibitory road signs \u2013 no right turn",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "Assessments": {
+                "value": "",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "ImageDescription": {
+                "value": "Right turn prohibited.",
+                "source": "commons-desc-page"
+              },
+              "DateTimeOriginal": {
+                "value": "2014-05-12",
+                "source": "commons-desc-page"
+              },
+              "Credit": {
+                "value": "<b>Highway Code</b>",
+                "source": "commons-desc-page"
+              },
+              "Artist": {
+                "value": "<b>Government of Slovenia</b>",
+                "source": "commons-desc-page"
+              },
+              "LicenseShortName": {
+                "value": "Public domain",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "UsageTerms": {
+                "value": "Public domain",
+                "source": "commons-desc-page"
+              },
+              "AttributionRequired": {
+                "value": "false",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Copyrighted": {
+                "value": "False",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Restrictions": {
+                "value": "",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "License": {
+                "value": "pd",
+                "source": "commons-templates",
+                "hidden": ""
+              }
+            }
+          }
+        ]
+      },
+      "32751264": {
+        "pageid": 32751264,
+        "ns": 6,
+        "title": "File:Slovenia road sign II-26.svg",
+        "imagerepository": "local",
+        "imageinfo": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/4/43/Slovenia_road_sign_II-26.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Slovenia_road_sign_II-26.svg",
+            "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=32751264",
+            "extmetadata": {
+              "DateTime": {
+                "value": "2014-05-13 01:06:05",
+                "source": "mediawiki-metadata",
+                "hidden": ""
+              },
+              "ObjectName": {
+                "value": "Slovenia road sign II-26",
+                "source": "mediawiki-metadata"
+              },
+              "CommonsMetadataExtension": {
+                "value": 1.2,
+                "source": "extension",
+                "hidden": ""
+              },
+              "Categories": {
+                "value": "SVG prohibitory road signs of Slovenia|PD Slovenia-exempt|SVG prohibitory road signs \u2013 no left turn",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "Assessments": {
+                "value": "",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "ImageDescription": {
+                "value": "Left turn prohibited.",
+                "source": "commons-desc-page"
+              },
+              "DateTimeOriginal": {
+                "value": "2014-05-12",
+                "source": "commons-desc-page"
+              },
+              "Credit": {
+                "value": "<b>Highway Code</b>",
+                "source": "commons-desc-page"
+              },
+              "Artist": {
+                "value": "<b>Government of Slovenia</b>",
+                "source": "commons-desc-page"
+              },
+              "LicenseShortName": {
+                "value": "Public domain",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "UsageTerms": {
+                "value": "Public domain",
+                "source": "commons-desc-page"
+              },
+              "AttributionRequired": {
+                "value": "false",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Copyrighted": {
+                "value": "False",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Restrictions": {
+                "value": "",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "License": {
+                "value": "pd",
+                "source": "commons-templates",
+                "hidden": ""
+              }
+            }
+          }
+        ]
+      },
+      "32732521": {
+        "pageid": 32732521,
+        "ns": 6,
+        "title": "File:Slovenia road sign II-3.svg",
+        "imagerepository": "local",
+        "imageinfo": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/d/dd/Slovenia_road_sign_II-3.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Slovenia_road_sign_II-3.svg",
+            "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=32732521",
+            "extmetadata": {
+              "DateTime": {
+                "value": "2014-05-12 00:14:38",
+                "source": "mediawiki-metadata",
+                "hidden": ""
+              },
+              "ObjectName": {
+                "value": "Slovenia road sign II-3",
+                "source": "mediawiki-metadata"
+              },
+              "CommonsMetadataExtension": {
+                "value": 1.2,
+                "source": "extension",
+                "hidden": ""
+              },
+              "Categories": {
+                "value": "SVG prohibitory road signs of Slovenia|PD Slovenia-exempt|SVG prohibitory road signs \u2013 no vehicles|Round red and white road closed signs",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "Assessments": {
+                "value": "",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "ImageDescription": {
+                "value": "Road closed to all traffic in both directions.",
+                "source": "commons-desc-page"
+              },
+              "DateTimeOriginal": {
+                "value": "2014-05-11",
+                "source": "commons-desc-page"
+              },
+              "Credit": {
+                "value": "<b>Highway Code</b>",
+                "source": "commons-desc-page"
+              },
+              "Artist": {
+                "value": "<b>Government of Slovenia</b>",
+                "source": "commons-desc-page"
+              },
+              "LicenseShortName": {
+                "value": "Public domain",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "UsageTerms": {
+                "value": "Public domain",
+                "source": "commons-desc-page"
+              },
+              "AttributionRequired": {
+                "value": "false",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Copyrighted": {
+                "value": "False",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Restrictions": {
+                "value": "",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "License": {
+                "value": "pd",
+                "source": "commons-templates",
+                "hidden": ""
+              }
+            }
+          }
+        ]
+      },
+      "32734335": {
+        "pageid": 32734335,
+        "ns": 6,
+        "title": "File:Slovenia road sign II-4.svg",
+        "imagerepository": "local",
+        "imageinfo": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Slovenia_road_sign_II-4.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Slovenia_road_sign_II-4.svg",
+            "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=32734335",
+            "extmetadata": {
+              "DateTime": {
+                "value": "2014-05-12 01:52:07",
+                "source": "mediawiki-metadata",
+                "hidden": ""
+              },
+              "ObjectName": {
+                "value": "Slovenia road sign II-4",
+                "source": "mediawiki-metadata"
+              },
+              "CommonsMetadataExtension": {
+                "value": 1.2,
+                "source": "extension",
+                "hidden": ""
+              },
+              "Categories": {
+                "value": "SVG prohibitory road signs of Slovenia|PD Slovenia-exempt|White on red road signs|Round red and white do not enter signs|SVG prohibitory road signs \u2013 no entry|Blank no entry road signs|Diagrams of No Entry road signs with horizontal bar",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "Assessments": {
+                "value": "",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "ImageDescription": {
+                "value": "Road closed in this direction.",
+                "source": "commons-desc-page"
+              },
+              "DateTimeOriginal": {
+                "value": "2014-05-11",
+                "source": "commons-desc-page"
+              },
+              "Credit": {
+                "value": "<b>Highway Code</b>",
+                "source": "commons-desc-page"
+              },
+              "Artist": {
+                "value": "<b>Government of Slovenia</b>",
+                "source": "commons-desc-page"
+              },
+              "LicenseShortName": {
+                "value": "Public domain",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "UsageTerms": {
+                "value": "Public domain",
+                "source": "commons-desc-page"
+              },
+              "AttributionRequired": {
+                "value": "false",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Copyrighted": {
+                "value": "False",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Restrictions": {
+                "value": "",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "License": {
+                "value": "pd",
+                "source": "commons-templates",
+                "hidden": ""
+              }
+            }
+          }
+        ]
+      },
+      "32768122": {
+        "pageid": 32768122,
+        "ns": 6,
+        "title": "File:Slovenia road sign II-45.1.svg",
+        "imagerepository": "local",
+        "imageinfo": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Slovenia_road_sign_II-45.1.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Slovenia_road_sign_II-45.1.svg",
+            "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=32768122",
+            "extmetadata": {
+              "DateTime": {
+                "value": "2014-05-14 01:58:07",
+                "source": "mediawiki-metadata",
+                "hidden": ""
+              },
+              "ObjectName": {
+                "value": "Slovenia road sign II-45.1",
+                "source": "mediawiki-metadata"
+              },
+              "CommonsMetadataExtension": {
+                "value": 1.2,
+                "source": "extension",
+                "hidden": ""
+              },
+              "Categories": {
+                "value": "PD Slovenia-exempt|SVG mandatory road signs of Slovenia|SVG mandatory road signs \u2013 turn left",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "Assessments": {
+                "value": "",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "ImageDescription": {
+                "value": "Turn left.",
+                "source": "commons-desc-page"
+              },
+              "DateTimeOriginal": {
+                "value": "2014-05-13",
+                "source": "commons-desc-page"
+              },
+              "Credit": {
+                "value": "<b>Highway Code</b>",
+                "source": "commons-desc-page"
+              },
+              "Artist": {
+                "value": "<b>Government of Slovenia</b>",
+                "source": "commons-desc-page"
+              },
+              "LicenseShortName": {
+                "value": "Public domain",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "UsageTerms": {
+                "value": "Public domain",
+                "source": "commons-desc-page"
+              },
+              "AttributionRequired": {
+                "value": "false",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Copyrighted": {
+                "value": "False",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Restrictions": {
+                "value": "",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "License": {
+                "value": "pd",
+                "source": "commons-templates",
+                "hidden": ""
+              }
+            }
+          }
+        ]
+      },
+      "32768123": {
+        "pageid": 32768123,
+        "ns": 6,
+        "title": "File:Slovenia road sign II-45.2.svg",
+        "imagerepository": "local",
+        "imageinfo": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Slovenia_road_sign_II-45.2.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Slovenia_road_sign_II-45.2.svg",
+            "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=32768123",
+            "extmetadata": {
+              "DateTime": {
+                "value": "2014-05-14 01:58:07",
+                "source": "mediawiki-metadata",
+                "hidden": ""
+              },
+              "ObjectName": {
+                "value": "Slovenia road sign II-45.2",
+                "source": "mediawiki-metadata"
+              },
+              "CommonsMetadataExtension": {
+                "value": 1.2,
+                "source": "extension",
+                "hidden": ""
+              },
+              "Categories": {
+                "value": "PD Slovenia-exempt|SVG mandatory road signs of Slovenia|SVG mandatory road signs \u2013 turn right",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "Assessments": {
+                "value": "",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "ImageDescription": {
+                "value": "Turn right.",
+                "source": "commons-desc-page"
+              },
+              "DateTimeOriginal": {
+                "value": "2014-05-13",
+                "source": "commons-desc-page"
+              },
+              "Credit": {
+                "value": "<b>Highway Code</b>",
+                "source": "commons-desc-page"
+              },
+              "Artist": {
+                "value": "<b>Government of Slovenia</b>",
+                "source": "commons-desc-page"
+              },
+              "LicenseShortName": {
+                "value": "Public domain",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "UsageTerms": {
+                "value": "Public domain",
+                "source": "commons-desc-page"
+              },
+              "AttributionRequired": {
+                "value": "false",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Copyrighted": {
+                "value": "False",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Restrictions": {
+                "value": "",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "License": {
+                "value": "pd",
+                "source": "commons-templates",
+                "hidden": ""
+              }
+            }
+          }
+        ]
+      },
+      "32768121": {
+        "pageid": 32768121,
+        "ns": 6,
+        "title": "File:Slovenia road sign II-45.svg",
+        "imagerepository": "local",
+        "imageinfo": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/7/71/Slovenia_road_sign_II-45.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Slovenia_road_sign_II-45.svg",
+            "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=32768121",
+            "extmetadata": {
+              "DateTime": {
+                "value": "2014-05-14 01:58:07",
+                "source": "mediawiki-metadata",
+                "hidden": ""
+              },
+              "ObjectName": {
+                "value": "Slovenia road sign II-45",
+                "source": "mediawiki-metadata"
+              },
+              "CommonsMetadataExtension": {
+                "value": 1.2,
+                "source": "extension",
+                "hidden": ""
+              },
+              "Categories": {
+                "value": "PD Slovenia-exempt|SVG mandatory road signs of Slovenia|SVG mandatory road signs \u2013 go straight",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "Assessments": {
+                "value": "",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "ImageDescription": {
+                "value": "Proceed straight.",
+                "source": "commons-desc-page"
+              },
+              "DateTimeOriginal": {
+                "value": "2014-05-13",
+                "source": "commons-desc-page"
+              },
+              "Credit": {
+                "value": "<b>Highway Code</b>",
+                "source": "commons-desc-page"
+              },
+              "Artist": {
+                "value": "<b>Government of Slovenia</b>",
+                "source": "commons-desc-page"
+              },
+              "LicenseShortName": {
+                "value": "Public domain",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "UsageTerms": {
+                "value": "Public domain",
+                "source": "commons-desc-page"
+              },
+              "AttributionRequired": {
+                "value": "false",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Copyrighted": {
+                "value": "False",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Restrictions": {
+                "value": "",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "License": {
+                "value": "pd",
+                "source": "commons-templates",
+                "hidden": ""
+              }
+            }
+          }
+        ]
+      },
+      "32782795": {
+        "pageid": 32782795,
+        "ns": 6,
+        "title": "File:Slovenia road sign III-6.svg",
+        "imagerepository": "local",
+        "imageinfo": [
+          {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/5/5a/Slovenia_road_sign_III-6.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+            "descriptionurl": "https://commons.wikimedia.org/wiki/File:Slovenia_road_sign_III-6.svg",
+            "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=32782795",
+            "extmetadata": {
+              "DateTime": {
+                "value": "2014-05-15 01:06:49",
+                "source": "mediawiki-metadata",
+                "hidden": ""
+              },
+              "ObjectName": {
+                "value": "Slovenia road sign III-6",
+                "source": "mediawiki-metadata"
+              },
+              "CommonsMetadataExtension": {
+                "value": 1.2,
+                "source": "extension",
+                "hidden": ""
+              },
+              "Categories": {
+                "value": "PD Slovenia-exempt|Diagrams of indicatory road signs of Slovenia|SVG special regulation road signs \u2013 pedestrian crossing",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "Assessments": {
+                "value": "",
+                "source": "commons-categories",
+                "hidden": ""
+              },
+              "ImageDescription": {
+                "value": "Pedestrian crossing.",
+                "source": "commons-desc-page"
+              },
+              "DateTimeOriginal": {
+                "value": "2014-05-14",
+                "source": "commons-desc-page"
+              },
+              "Credit": {
+                "value": "<b>Highway Code</b>",
+                "source": "commons-desc-page"
+              },
+              "Artist": {
+                "value": "<b>Government of Slovenia</b>",
+                "source": "commons-desc-page"
+              },
+              "LicenseShortName": {
+                "value": "Public domain",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "UsageTerms": {
+                "value": "Public domain",
+                "source": "commons-desc-page"
+              },
+              "AttributionRequired": {
+                "value": "false",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Copyrighted": {
+                "value": "False",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "Restrictions": {
+                "value": "",
+                "source": "commons-desc-page",
+                "hidden": ""
+              },
+              "License": {
+                "value": "pd",
+                "source": "commons-templates",
+                "hidden": ""
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

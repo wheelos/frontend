@@ -15,6 +15,7 @@ import RouteEditingManager from 'store/route_editing_manager';
 import StoryTellers from 'store/story_tellers';
 import Teleop from 'store/teleop';
 import TrafficSignal from 'store/traffic_signal';
+import TrafficSigns from 'store/traffic_signs';
 import PointCloudMetrics from 'store/point_cloud_metrics';
 import PluginRegistryStore from '../plugin/PluginRegistryStore';
 
@@ -37,6 +38,8 @@ class DreamviewStore {
     @observable playback = OFFLINE_PLAYBACK ? new Playback() : null;
 
     @observable trafficSignal = new TrafficSignal();
+
+    @observable trafficSigns = new TrafficSigns();
 
     @observable meters = new Meters();
 
